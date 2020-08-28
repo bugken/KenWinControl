@@ -83,12 +83,11 @@ BEGIN
 		
 		--计算每种结果的输赢金额
 		declare @LotteryGame varchar(50) = '0,1,2,3,4,5,6,7,8,9,red,green,violet'
-		--select  CHARINDEX('violet', @LotteryGame)/2
 		declare @Result varchar(10) = ''
 		declare @Index int = 0
 		declare @MultiRate decimal(2, 1) = 0.0
 		declare @TotalBonus int = 0
-		--#LotteryEveryBonus记录每注输赢的临时表
+		--#LotteryTotalBonus记录输赢的临时表
 		create table #LotteryTotalBonus(TypeID int, IssueNumber varchar(30), SelectType varchar(20), TotalBonus bigint)
 		declare CursorResult cursor for select SelectType from caipiaos.dbo.tab_Game_All_SelectType ORDER BY SelectType
 		open CursorResult
@@ -121,7 +120,8 @@ BEGIN
 			return
 		end
 		select TypeID, SelectType, IssueNumber, TotalBonus from #LotteryTotalBonus
-		--获取彩票所有可能的结果
+		
+		--获取彩票所有可能出现的结果
 		create table #LotteryResult(TypeID int, IssueNumber varchar(50), SelectTypeNum varchar(20), SelectTypeColor varchar(20), AllTotalBonus bigint, WinRate decimal(10, 3))
 		insert into #LotteryResult(TypeID, IssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, WinRate) 
 			select TypeID, @CurrentIssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, 0.0 from caipiaos.dbo.tab_Game_Result
@@ -138,7 +138,7 @@ BEGIN
 		declare @TargetControlRate decimal(4,2) = (@ControlRate+0.0)/100
 		print '目标赢率@TargetControlRate:' + cast(@TargetControlRate as varchar(20))
 		update #LotteryResult set WinRate = (@BonusAlready+AllTotalBonus)/@AllBet
-		select * from #LotteryResult order by TypeID, WinRate desc
+		--select * from #LotteryResult order by TypeID, WinRate desc
 		
 		--更新游戏表并写入日志
 		declare @NumBegin Int=1000    --随机数的最小值 
