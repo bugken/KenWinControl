@@ -126,19 +126,25 @@ BEGIN
 		insert into #LotteryResult(TypeID, IssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, WinRate) 
 			select TypeID, @CurrentIssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, 0.0 from caipiaos.dbo.tab_Game_Result
 		--算出12种结果对应的输赢(0 violet) (5 violet)
-		UPDATE #LotteryResult SET #LotteryResult.AllTotalBonus = t1.AllTotalBonus + isnull(t2.TotalBonus,0) FROM #LotteryResult t1
-		inner join #LotteryTotalBonus t2 ON t1.TypeID = t2.TypeID and (t1.SelectTypeNum = t2.SelectType or t2.SelectType = t1.SelectTypeColor)
-		select * from #LotteryResult order by TypeID, WinRate desc
+		UPDATE #LotteryResult SET #LotteryResult.AllTotalBonus =+ isnull(t2.TotalBonus,0) FROM #LotteryResult t1
+		inner join #LotteryTotalBonus t2 ON (t1.TypeID = t2.TypeID and t1.SelectTypeNum = t2.SelectType) or (t1.TypeID = t2.TypeID and t2.SelectType = t1.SelectTypeColor)
+		--select * from #LotteryResult order by TypeID, WinRate desc
 		--更改结果的颜色
 		UPDATE #LotteryResult SET SelectTypeColor = (case SelectTypeNum when '0' then 'red,violet' when '5' then 'green,violet' else SelectTypeColor end)
+		--合并出10种结果
+		create table #LotteryResultFinal(TypeID int, IssueNumber varchar(50), SelectTypeNum varchar(20), SelectTypeColor varchar(20), AllTotalBonus bigint, WinRate decimal(10, 3))
+		insert into #LotteryResultFinal(TypeID, IssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, WinRate) 
+			select TypeID, IssueNumber, SelectTypeNum, SelectTypeColor, sum(AllTotalBonus), 0.0 from #LotteryResult 
+				group by TypeID, IssueNumber, SelectTypeNum, SelectTypeColor
+		drop table #LotteryResult
 		
-		--处理单杀情况，单杀只杀某ID最大中奖的下注，将玩家下注从表#LotteryResult中去掉即可，档位控制的话，需要去掉一个档位
+		--处理单杀情况，单杀只杀某ID最大中奖的下注，将玩家下注从表##LotteryResultFinal中去掉即可，档位控制的话，需要去掉一个档位
 		
 		--计算WinRate
 		declare @TargetControlRate decimal(4,2) = (@ControlRate+0.0)/100
 		print '目标赢率@TargetControlRate:' + cast(@TargetControlRate as varchar(20))
-		update #LotteryResult set WinRate = (@BonusAlready+AllTotalBonus)/@AllBet
-		--select * from #LotteryResult order by TypeID, WinRate desc
+		update #LotteryResultFinal set WinRate = (@BonusAlready+AllTotalBonus)/@AllBet
+		select * from #LotteryResultFinal order by TypeID, WinRate desc
 		
 		--更新游戏表并写入日志
 		declare @NumBegin Int=1000    --随机数的最小值 
@@ -175,7 +181,7 @@ BEGIN
 			select @BeforePrenium = Premium, @BeforeSelectTypeNum = Number, @BeforeSelectTypeColor = Colour from caipiaos.dbo.tab_Games where TypeID = @VarTypeID and IssueNumber = @CurrentIssueNumber
 			print '更改前随机数:' + @BeforePrenium + ',更改前中奖数字:' + @BeforeSelectTypeNum + ',更改前中奖颜色:' + @BeforeSelectTypeColor
 			declare CursorUpdate cursor for select IssueNumber, SelectTypeNum, SelectTypeColor, WinRate 
-					from #LotteryResult where TypeID = @VarTypeID ORDER BY WinRate desc
+					from #LotteryResultFinal where TypeID = @VarTypeID ORDER BY WinRate desc
 			open CursorUpdate
 			fetch next from CursorUpdate into @IssueNumber, @SelectTypeNum, @SelectTypeColor, @WinRate
 			while @@FETCH_STATUS = 0
@@ -212,7 +218,7 @@ BEGIN
 		deallocate CursorTypeID
 		
 		drop table #LotteryTotalBonus
-		drop table #LotteryResult
+		drop table #LotteryResultFinal
 	end
 END
 GO
