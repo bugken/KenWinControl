@@ -121,34 +121,11 @@ BEGIN
 			return
 		end
 		select TypeID, SelectType, IssueNumber, TotalBonus from #LotteryTotalBonus
-		--计算所有色彩派彩
-		declare @RedBonus decimal(10, 2) = 0.0
-		declare @GreenBonus decimal(10, 2) = 0.0
-		declare @VioletBonus decimal(10, 2) = 0.0
-		select @RedBonus = sum(TotalBonus) from #LotteryTotalBonus where SelectType = 'red'
-		select @GreenBonus = sum(TotalBonus) from #LotteryTotalBonus where SelectType = 'green'
-		select @VioletBonus = sum(TotalBonus)/2 from #LotteryTotalBonus where SelectType = 'violet'
 		--获取彩票所有可能的结果
 		create table #LotteryResult(TypeID int, IssueNumber varchar(50), SelectTypeNum varchar(20), SelectTypeColor varchar(20), AllTotalBonus bigint, WinRate decimal(10, 3))
 		insert into #LotteryResult(TypeID, IssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, WinRate) 
 			select TypeID, @CurrentIssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, 0.0 from caipiaos.dbo.tab_Game_Result
-		--算出10种结果对应的输赢(0 violet) (5 violet)
-		/*
-		insert into #LotteryResult(TypeID, IssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, WinRate) 
-			select a.TypeID, a.IssueNumber, a.SelectType, 'red', sum(a.TotalBonus) + sum(isnull(b.TotalBonus,0)), 0.0 from #LotteryTotalBonus a
-				left join #LotteryTotalBonus b on a.TypeID = b.TypeID and a.SelectType in('2','4','6','8') and b.SelectType = 'red'
-					where a.SelectType in('2','4','6','8') group by a.IssueNumber, a.TypeID, a.SelectType
-		insert into #LotteryResult(TypeID, IssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, WinRate) 
-			select a.TypeID, a.IssueNumber, a.SelectType, 'green', sum(a.TotalBonus) + sum(isnull(b.TotalBonus,0)), 0.0 from #LotteryTotalBonus a
-				left join #LotteryTotalBonus b on a.TypeID = b.TypeID and a.SelectType in('1','3','7','9') and b.SelectType = 'green'
-					where a.SelectType in('1','3','7','9') group by a.IssueNumber, a.TypeID, a.SelectType					
-		insert into #LotteryResult(TypeID, IssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, WinRate) 
-			select a.TypeID, a.IssueNumber, a.SelectType, case when a.SelectType = '0' then 'red,violet' when a.SelectType = '5' then 'green,violet' end, 
-				sum(a.TotalBonus) + sum(isnull(b.TotalBonus,0))/2, 0.0 from #LotteryTotalBonus a
-				left join #LotteryTotalBonus b on a.TypeID = b.TypeID and a.SelectType in('0','5') and b.SelectType = 'violet'
-					where a.SelectType in('0','5') group by a.IssueNumber, a.TypeID, a.SelectType
-		select * from #LotteryResult order by TypeID
-		*/
+		--算出12种结果对应的输赢(0 violet) (5 violet)
 		UPDATE #LotteryResult SET #LotteryResult.AllTotalBonus = t1.AllTotalBonus + isnull(t2.TotalBonus,0) FROM #LotteryResult t1
 		inner join #LotteryTotalBonus t2 ON t1.TypeID = t2.TypeID and (t1.SelectTypeNum = t2.SelectType or t2.SelectType = t1.SelectTypeColor)
 		select * from #LotteryResult order by TypeID, WinRate desc
