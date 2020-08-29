@@ -25,8 +25,13 @@ BEGIN
 	declare @UserWinGrade int = 0
 	select top 1 @UserControled = UserControled, @ControlRate = ControlRate, @PeriodGap = PeriodGap, @UserWinGrade = UserWinGrade
 		from caipiaos.dbo.tab_Game_Control order by UpdateTime desc
+	if @UserControled > 10
+		set @UserControled = 10
+	else if @UserControled < 0
+		set @UserControled = 0
 	print '选取期数区间@PeriodGap:' + cast(@PeriodGap as varchar(10))
 	print '控制指数@ControlRate:' + cast(@ControlRate as varchar(10))
+	print '控制档位@UserControled:' + cast(@UserControled as varchar(10))
 	--单杀情况 单杀的信息需要写入到数据库
 	
 	--计算区间投注金额 派彩金额,区间没有设置，默认当天作为区间
@@ -147,7 +152,7 @@ BEGIN
 		declare @TargetControlRate decimal(4,2) = (@ControlRate+0.0)/100
 		print '目标赢率@TargetControlRate:' + cast(@TargetControlRate as varchar(20))
 		update #LotteryResultFinal set WinRate = (isnull(@BonusAlready, 0)+AllTotalBonus)/@AllBet
-		select * from #LotteryResultFinal order by TypeID, WinRate desc
+		select * from #LotteryResultFinal order by WinRate desc
 		
 		--更新游戏表并写入日志
 		declare @NumBegin Int=1000    --随机数的最小值 
