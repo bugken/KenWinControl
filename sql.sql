@@ -280,10 +280,10 @@ BEGIN
 							begin
 								set @TypeNum = cast(@SelectTypeNum as int)
 								set @RandNum = @RandNum + @TypeNum
-								update caipiaos.dbo.tab_Games set Premium = @RandNum, Number = @SelectTypeNum, Colour = @SelectTypeColor
+								update caipiaos.dbo.tab_Games set Premium = @RandNum, Number = @FinalTypeNum, Colour = @FinalTypeColor
 									where TypeID = @VarTypeID and IssueNumber = @IssueNumber
 								insert into caipiaos.dbo.tab_Game_Control_Log(TypeID, IssueNumber, OldPremium, OldNumber, OldColour, NewPremium, NewNumber, NewColour, ControlType, UpdateTime)
-									values(@VarTypeID, @IssueNumber, @BeforePrenium, @BeforeSelectTypeNum, @BeforeSelectTypeColor, @RandNum, @SelectTypeNum, @SelectTypeColor, 1, getdate())
+									values(@VarTypeID, @IssueNumber, @BeforePrenium, @BeforeSelectTypeNum, @BeforeSelectTypeColor, @RandNum, @FinalTypeNum, @FinalTypeColor, 1, getdate())
 								break
 							end
 						end
