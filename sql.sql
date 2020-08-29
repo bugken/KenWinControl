@@ -32,6 +32,22 @@ BEGIN
 	print '选取期数区间@PeriodGap:' + cast(@PeriodGap as varchar(10))
 	print '控制指数@ControlRate:' + cast(@ControlRate as varchar(10))
 	print '控制档位@UserControled:' + cast(@UserControled as varchar(10))
+	--获取当前期号
+	declare @CurrentIssueNumber varchar(30) = ''
+	declare @CurrentTime datetime = GETDATE()
+	select top 1 @CurrentIssueNumber = IssueNumber from caipiaos.dbo.tab_Games where State=0 and StartTime<=@CurrentTime;
+	if @CurrentIssueNumber = '' or @CurrentIssueNumber is null
+		return 
+	print '当前(终止)期数@CurrentIssueNumber:' + @CurrentIssueNumber 
+	--获取预设字段
+	declare @PreControlType1 int = 0
+	declare @PreControlType2 int = 0
+	declare @PreControlType3 int = 0
+	declare @PreControlType4 int = 0
+	select @PreControlType1 = OptState from caipiaos.dbo.tab_Games where TypeID = 1 and State=0 and IssueNumber=@CurrentIssueNumber;
+	select @PreControlType2 = OptState from caipiaos.dbo.tab_Games where TypeID = 2 and State=0 and IssueNumber=@CurrentIssueNumber;
+	select @PreControlType3 = OptState from caipiaos.dbo.tab_Games where TypeID = 3 and State=0 and IssueNumber=@CurrentIssueNumber;
+	select @PreControlType4 = OptState from caipiaos.dbo.tab_Games where TypeID = 4 and State=0 and IssueNumber=@CurrentIssueNumber;
 	--单杀情况 单杀的信息需要写入到数据库
 	
 	--计算区间投注金额 派彩金额,区间没有设置，默认当天作为区间
@@ -39,16 +55,11 @@ BEGIN
 	begin
 		declare @BonusAlready decimal(20, 2) = 0.0 --派彩金额
 		declare @AllBet decimal(20, 2) = 0.0 --投注金额
-		declare @CurrentIssueNumber varchar(30) = ''
 		declare @StartIssueNumber varchar(30) = ''
-		declare @CurrentTime datetime = GETDATE()
 		declare @LastPeriodTime datetime = DATEADD(mi,-3,GETDATE()) --上一期时间
 		declare @DateTodayZero datetime = DATEADD(DAY,0,DATEDIFF(DAY,0,GETDATE()))
 		declare @DateTomorrow datetime = DATEADD(DAY,1,DATEDIFF(DAY,0,GETDATE()))
-		select top 1 @CurrentIssueNumber = IssueNumber from caipiaos.dbo.tab_Games where OptState!=1 and State=0 and StartTime<=@CurrentTime;
-		if @CurrentIssueNumber = '' or @CurrentIssueNumber is null
-			return --已经预设
-		print '当前(终止)期数@CurrentIssueNumber:' + @CurrentIssueNumber 
+
 
 		if @PeriodGap is not null and @PeriodGap <> 0 
 		begin
@@ -111,6 +122,7 @@ BEGIN
 			insert into #LotteryTotalBonus(TypeID, IssueNumber, SelectType, TotalBonus) 
 				select TypeID, IssueNumber, SelectType, sum(RealAmount) * @MultiRate TotalBonus 
 					from caipiaos.dbo.tab_GameOrder where @Result = SelectType and @CurrentIssueNumber = IssueNumber group by IssueNumber, TypeID, SelectType
+			--单人下注信息计算
 
 			fetch next from CursorResult into @Result
 		end				
@@ -178,7 +190,15 @@ BEGIN
 			select @BetCounts = count(*) from #LotteryTotalBonus where TypeID = @VarTypeID
 			if @BetCounts = 0
 			begin
-				print '彩票类型' + cast(@VarTypeID as varchar(10)) + '没有玩家下注' 
+				print '彩票类型 ' + cast(@VarTypeID as varchar(10)) + ' 没有玩家下注' 
+				fetch next from CursorTypeID into @VarTypeID
+				continue
+			end
+			--判断有没有预设
+			if (@VarTypeID = 1 and @PreControlType1 = 1) or (@VarTypeID = 2 and @PreControlType1 = 1) or
+				(@VarTypeID = 3 and @PreControlType1 = 1) or (@VarTypeID = 4 and @PreControlType1 = 1)
+			begin
+				print '彩票类型 ' + cast(@VarTypeID as varchar(10)) + ' 已经预设' 
 				fetch next from CursorTypeID into @VarTypeID
 				continue
 			end
