@@ -22,7 +22,9 @@ BEGIN
 	declare @UserControled int = 0
 	declare @ControlRate int = 0
 	declare @PeriodGap int = 0
-	select top 1 @UserControled = UserControled, @ControlRate = ControlRate, @PeriodGap = PeriodGap from caipiaos.dbo.tab_Game_Control order by UpdateTime desc
+	declare @UserWinGrade int = 0
+	select top 1 @UserControled = UserControled, @ControlRate = ControlRate, @PeriodGap = PeriodGap, @UserWinGrade = UserWinGrade
+		from caipiaos.dbo.tab_Game_Control order by UpdateTime desc
 	print '选取期数区间@PeriodGap:' + cast(@PeriodGap as varchar(10))
 	print '控制指数@ControlRate:' + cast(@ControlRate as varchar(10))
 	--单杀情况 单杀的信息需要写入到数据库
@@ -181,6 +183,7 @@ BEGIN
 			set @RandNum =  @RandNum * 10
 			select @BeforePrenium = Premium, @BeforeSelectTypeNum = Number, @BeforeSelectTypeColor = Colour from caipiaos.dbo.tab_Games where TypeID = @VarTypeID and IssueNumber = @CurrentIssueNumber
 			print '更改前随机数:' + @BeforePrenium + ',更改前中奖数字:' + @BeforeSelectTypeNum + ',更改前中奖颜色:' + @BeforeSelectTypeColor
+
 			declare CursorUpdate cursor for select IssueNumber, SelectTypeNum, SelectTypeColor, WinRate 
 					from #LotteryResultFinal where TypeID = @VarTypeID ORDER BY WinRate desc
 			open CursorUpdate
@@ -188,7 +191,26 @@ BEGIN
 			while @@FETCH_STATUS = 0
 			begin
 				set @Loops = @Loops + 1
-				print @Loops
+				--强弱档位控制
+				if @UserWinGrade > 0
+				begin 
+					if @UserWinGrade = @Loops
+					begin 
+						set @TypeNum = cast(@SelectTypeNum as int)
+						set @RandNum = @RandNum + @TypeNum
+						update caipiaos.dbo.tab_Games set Premium = @RandNum, Number = @SelectTypeNum, Colour = @SelectTypeColor
+							where TypeID = @VarTypeID and IssueNumber = @IssueNumber
+						insert into caipiaos.dbo.tab_Game_Control_Log(TypeID, IssueNumber, OldPremium, OldNumber, OldColour, NewPremium, NewNumber, NewColour, ControlType, UpdateTime)
+							values(@VarTypeID, @IssueNumber, @BeforePrenium, @BeforeSelectTypeNum, @BeforeSelectTypeColor, @RandNum, @SelectTypeNum, @SelectTypeColor, 1, getdate())
+						break
+					end
+					else
+					begin
+						fetch next from CursorUpdate into @IssueNumber, @SelectTypeNum, @SelectTypeColor, @WinRate
+						continue
+					end
+				end
+				--杀率控制
 				if @Loops = 10
 				begin
 					set @TypeNum = cast(@SelectTypeNum as int)
