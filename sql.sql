@@ -52,10 +52,10 @@ BEGIN
 		declare @BonusAlready decimal(20, 2) = 0.0 --派彩金额
 		declare @AllBet decimal(20, 2) = 0.0 --投注金额
 		declare @StartIssueNumber varchar(30) = ''
+		declare @LastIssueNumber varchar(30) = ''
 		declare @LastPeriodTime datetime = DATEADD(mi,-3,GETDATE()) --上一期时间
 		declare @DateTodayZero datetime = DATEADD(DAY,0,DATEDIFF(DAY,0,GETDATE()))
 		declare @DateTomorrow datetime = DATEADD(DAY,1,DATEDIFF(DAY,0,GETDATE()))
-
 
 		if @PeriodGap is not null and @PeriodGap <> 0 
 		begin
@@ -81,9 +81,10 @@ BEGIN
 				else
 					set @StartIssueNumber = @VarTargetDate + cast(@PeriodNums as varchar(4))
 			end
+			set @LastIssueNumber = cast((cast(@StartIssueNumber as bigint)-1) as varchar(30))
 			print '起始期数@StartIssueNumber:' + @StartIssueNumber 
 			select @AllBet = sum(RealAmount) from caipiaos.dbo.tab_GameOrder where IssueNumber >= @StartIssueNumber and IssueNumber <= @CurrentIssueNumber
-			select @BonusAlready = sum(ProfitAmount - RealAmount) from caipiaos.dbo.tab_GameOrder where IssueNumber >= @StartIssueNumber and IssueNumber < @CurrentIssueNumber
+			select @BonusAlready = sum(ProfitAmount - RealAmount) from caipiaos.dbo.tab_GameOrder where IssueNumber >= @StartIssueNumber and IssueNumber < @LastIssueNumber
 		end
 		else
 		begin 
