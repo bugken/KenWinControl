@@ -40,14 +40,10 @@ BEGIN
 		return 
 	print '当前(终止)期数@CurrentIssueNumber:' + @CurrentIssueNumber 
 	--获取预设字段
-	declare @PreControlType1 int = 0
-	declare @PreControlType2 int = 0
-	declare @PreControlType3 int = 0
-	declare @PreControlType4 int = 0
-	select @PreControlType1 = OptState from caipiaos.dbo.tab_Games where TypeID = 1 and State=0 and IssueNumber=@CurrentIssueNumber;
-	select @PreControlType2 = OptState from caipiaos.dbo.tab_Games where TypeID = 2 and State=0 and IssueNumber=@CurrentIssueNumber;
-	select @PreControlType3 = OptState from caipiaos.dbo.tab_Games where TypeID = 3 and State=0 and IssueNumber=@CurrentIssueNumber;
-	select @PreControlType4 = OptState from caipiaos.dbo.tab_Games where TypeID = 4 and State=0 and IssueNumber=@CurrentIssueNumber;
+	declare @PreControlOptState table(TyepIDEnable int)
+	insert into @PreControlOptState 
+		select case OptState when 1 then TypeID else 0 end from caipiaos.dbo.tab_Games where State=0 and IssueNumber=@CurrentIssueNumber;
+
 	--单杀情况 单杀的信息需要写入到数据库
 	
 	--计算区间投注金额 派彩金额,区间没有设置，默认当天作为区间
@@ -195,8 +191,7 @@ BEGIN
 				continue
 			end
 			--判断有没有预设
-			if (@VarTypeID = 1 and @PreControlType1 = 1) or (@VarTypeID = 2 and @PreControlType1 = 1) or
-				(@VarTypeID = 3 and @PreControlType1 = 1) or (@VarTypeID = 4 and @PreControlType1 = 1)
+			if (select isnull(TyepIDEnable,0) from @PreControlOptState where TyepIDEnable = @VarTypeID) = @VarTypeID
 			begin
 				print '彩票类型 ' + cast(@VarTypeID as varchar(10)) + ' 已经预设' 
 				fetch next from CursorTypeID into @VarTypeID
