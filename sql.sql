@@ -51,6 +51,8 @@ BEGIN
 	begin
 		declare @BonusAlready decimal(20, 2) = 0.0 --派彩金额
 		declare @AllBet decimal(20, 2) = 0.0 --投注金额
+		declare @AllBetUntilLast decimal(20, 2) = 0.0 --截止上期投注金额
+		declare @WinRateUntilLast decimal(20, 2) = 0.0 --截止上期玩家赢率
 		declare @StartIssueNumber varchar(30) = ''
 		declare @LastIssueNumber varchar(30) = ''
 		declare @LastPeriodTime datetime = DATEADD(mi,-3,GETDATE()) --上一期时间
@@ -81,9 +83,11 @@ BEGIN
 				else
 					set @StartIssueNumber = @VarTargetDate + cast(@PeriodNums as varchar(4))
 			end
-			set @LastIssueNumber = cast((cast(@StartIssueNumber as bigint)-1) as varchar(30))
+			set @LastIssueNumber = cast((cast(@CurrentIssueNumber as bigint)-1) as varchar(30))
 			print '起始期数@StartIssueNumber:' + @StartIssueNumber 
+			print '上一期数@LastIssueNumber:' + @LastIssueNumber 
 			select @AllBet = sum(RealAmount) from caipiaos.dbo.tab_GameOrder where IssueNumber >= @StartIssueNumber and IssueNumber <= @CurrentIssueNumber
+			select @AllBetUntilLast = sum(RealAmount) from caipiaos.dbo.tab_GameOrder where IssueNumber >= @StartIssueNumber and IssueNumber <= @LastIssueNumber
 			select @BonusAlready = sum(ProfitAmount - RealAmount) from caipiaos.dbo.tab_GameOrder where IssueNumber >= @StartIssueNumber and IssueNumber < @LastIssueNumber
 		end
 		else
@@ -91,10 +95,14 @@ BEGIN
 			--默认按照一天计算
 			print '默认区间为当天'
 			select @AllBet = sum(RealAmount) from caipiaos.dbo.tab_GameOrder where SettlementTime between @DateTodayZero and @CurrentTime
+			select @AllBetUntilLast = sum(RealAmount) from caipiaos.dbo.tab_GameOrder where SettlementTime between @DateTodayZero and @LastPeriodTime
 			select @BonusAlready = sum(ProfitAmount - RealAmount) from caipiaos.dbo.tab_GameOrder where SettlementTime between @DateTodayZero and @LastPeriodTime
 		end
+		set @WinRateUntilLast = isnull(@BonusAlready / @AllBetUntilLast, 0)
 		print '投注金额@AllBet:' + isnull(cast(@AllBet as varchar(20)),0)
+		print '截止上期投注金额@AllBetUntilLast:' + isnull(cast(@AllBetUntilLast as varchar(20)),0)
 		print '已派彩金额@BonusAlready:' + isnull(cast(@BonusAlready as varchar(20)),0)
+		print '截止上期赢率@WinRateUntilLast:' + isnull(cast(@WinRateUntilLast as varchar(20)),0)
 		
 		--计算每种结果的输赢金额
 		declare @LotteryGame varchar(50) = '0,1,2,3,4,5,6,7,8,9,red,green,violet'
