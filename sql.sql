@@ -22,8 +22,8 @@ BEGIN
 	declare @UserControled int = 0
 	declare @ControlRate int = 0
 	declare @PeriodGap int = 0
-	declare @UserWinGrade int = 0
-	select top 1 @UserControled = UserControled, @ControlRate = ControlRate, @PeriodGap = PeriodGap, @UserWinGrade = UserWinGrade
+	declare @PowerControl int = 0
+	select top 1 @UserControled = UserControled, @ControlRate = ControlRate, @PeriodGap = PeriodGap, @PowerControl = PowerControl
 		from caipiaos.dbo.tab_Game_Control order by UpdateTime desc
 	if @UserControled > 10
 		set @UserControled = 10
@@ -52,7 +52,7 @@ BEGIN
 		declare @BonusAlready decimal(20, 2) = 0.0 --派彩金额
 		declare @AllBet decimal(20, 2) = 0.0 --投注金额
 		declare @AllBetUntilLast decimal(20, 2) = 0.0 --截止上期投注金额
-		declare @WinRateUntilLast decimal(20, 2) = 0.0 --截止上期玩家赢率
+		declare @WinRateAsOfLast decimal(20, 2) = 0.0 --截止上期玩家赢率
 		declare @StartIssueNumber varchar(30) = ''
 		declare @LastIssueNumber varchar(30) = ''
 		declare @LastPeriodTime datetime = DATEADD(mi,-3,GETDATE()) --上一期时间
@@ -98,11 +98,11 @@ BEGIN
 			select @AllBetUntilLast = sum(RealAmount) from caipiaos.dbo.tab_GameOrder where SettlementTime between @DateTodayZero and @LastPeriodTime
 			select @BonusAlready = sum(ProfitAmount - RealAmount) from caipiaos.dbo.tab_GameOrder where SettlementTime between @DateTodayZero and @LastPeriodTime
 		end
-		set @WinRateUntilLast = isnull(@BonusAlready / @AllBetUntilLast, 0)
+		set @WinRateAsOfLast = isnull(@BonusAlready / @AllBetUntilLast, 0)
 		print '投注金额@AllBet:' + isnull(cast(@AllBet as varchar(20)),0)
 		print '截止上期投注金额@AllBetUntilLast:' + isnull(cast(@AllBetUntilLast as varchar(20)),0)
 		print '已派彩金额@BonusAlready:' + isnull(cast(@BonusAlready as varchar(20)),0)
-		print '截止上期赢率@WinRateUntilLast:' + isnull(cast(@WinRateUntilLast as varchar(20)),0)
+		print '截止上期赢率@WinRateAsOfLast:' + isnull(cast(@WinRateAsOfLast as varchar(20)),0)
 		
 		--计算每种结果的输赢金额
 		declare @LotteryGame varchar(50) = '0,1,2,3,4,5,6,7,8,9,red,green,violet'
@@ -177,14 +177,28 @@ BEGIN
 		declare @RandNum int = 0
 		declare @Loops int = 0
 		declare @IssueNumber varchar(50) = ''
+		declare @WinRate decimal(10, 2) = 0.0
 		declare @SelectTypeNum varchar(20) = ''
 		declare @SelectTypeColor varchar(20) = ''
-		declare @WinRate decimal(10, 2) = 0.0
+		declare @FinalTypeNum varchar(20) = ''
+		declare @FinalTypeColor varchar(20) = ''
 		declare @BeforeSelectTypeNum varchar(20) = ''
 		declare @BeforeSelectTypeColor varchar(20) = ''
 		declare @BeforePrenium varchar(20) = ''
 		declare @TypeNum int = 0
 		declare @VarTypeID int = 0
+		declare @PushUp bit = 0 --是否将用户赢率上拉向目标赢率靠近
+		declare @BingoCounts int = 0
+		declare @FirstLowWinRatePos int = 0 --第一个小值的位置
+		declare @IsFound bit = 0 --是否继续找小值位置
+		declare @StopPos int = 0 --遍历停止位置
+		
+		if @WinRateAsOfLast < @TargetControlRate
+			set @PushUp = 1
+		if @PushUp = 1 and @PowerControl = 1 --强制上拉
+			set @StopPos = 1
+		if @PushUp = 1 and @PowerControl = 1 --强制下拉
+			set @StopPos = 10
 		
 		declare CursorTypeID cursor for select TypeID from caipiaos.dbo.tab_GameType
 		open CursorTypeID
@@ -208,6 +222,12 @@ BEGIN
 			end
 
 			set @Loops = 0
+			set @BingoCounts = 0
+			set @FinalTypeNum = ''
+			set @FinalTypeColor = ''
+			set @FirstLowWinRatePos = 0 
+			set @IsFound = 0
+			set @StopPos = 0 
 			set @RandNum = @NumBegin+(@NumEnd-@NumBegin)*rand()
 			set @RandNum =  @RandNum * 10
 			select @BeforePrenium = Premium, @BeforeSelectTypeNum = Number, @BeforeSelectTypeColor = Colour from caipiaos.dbo.tab_Games where TypeID = @VarTypeID and IssueNumber = @CurrentIssueNumber
@@ -220,11 +240,90 @@ BEGIN
 			while @@FETCH_STATUS = 0
 			begin
 				set @Loops = @Loops + 1
-				--强弱档位控制
-				if @UserWinGrade > 0
-				begin 
-					if @UserWinGrade = @Loops
+				if @PowerControl > 0 --设置了强弱拉回
+				begin
+					--拉回到设定值(强弱两种方式)@PowerControl->1:强拉 2:弱拉
+					if @PowerControl = 1
 					begin 
+						if @StopPos = @Loops
+						begin 
+							set @TypeNum = cast(@SelectTypeNum as int)
+							set @RandNum = @RandNum + @TypeNum
+							update caipiaos.dbo.tab_Games set Premium = @RandNum, Number = @SelectTypeNum, Colour = @SelectTypeColor
+								where TypeID = @VarTypeID and IssueNumber = @IssueNumber
+							insert into caipiaos.dbo.tab_Game_Control_Log(TypeID, IssueNumber, OldPremium, OldNumber, OldColour, NewPremium, NewNumber, NewColour, ControlType, UpdateTime)
+								values(@VarTypeID, @IssueNumber, @BeforePrenium, @BeforeSelectTypeNum, @BeforeSelectTypeColor, @RandNum, @SelectTypeNum, @SelectTypeColor, 1, getdate())
+							break
+						end
+						else
+						begin
+							fetch next from CursorUpdate into @IssueNumber, @SelectTypeNum, @SelectTypeColor, @WinRate
+							continue
+						end
+					end
+					else if @PowerControl = 2
+					begin
+						if @PushUp = 1	--上拉找大值
+						begin
+							if @Loops = 1 --@WinRate都比@WinRateAsOfLast小
+							begin
+								set @FinalTypeNum = @SelectTypeNum
+								set @FinalTypeColor = @SelectTypeColor
+							end
+							if @WinRate > @WinRateAsOfLast
+							begin 
+								set @FinalTypeNum = @SelectTypeNum
+								set @FinalTypeColor = @SelectTypeColor
+								set @BingoCounts =+ 1
+							end
+							if @BingoCounts = 3 or @Loops = 10 --遍历到第三个大的值或结束
+							begin
+								set @TypeNum = cast(@SelectTypeNum as int)
+								set @RandNum = @RandNum + @TypeNum
+								update caipiaos.dbo.tab_Games set Premium = @RandNum, Number = @SelectTypeNum, Colour = @SelectTypeColor
+									where TypeID = @VarTypeID and IssueNumber = @IssueNumber
+								insert into caipiaos.dbo.tab_Game_Control_Log(TypeID, IssueNumber, OldPremium, OldNumber, OldColour, NewPremium, NewNumber, NewColour, ControlType, UpdateTime)
+									values(@VarTypeID, @IssueNumber, @BeforePrenium, @BeforeSelectTypeNum, @BeforeSelectTypeColor, @RandNum, @SelectTypeNum, @SelectTypeColor, 1, getdate())
+								break
+							end
+						end
+						else	--下拉找小值
+						begin
+							if @WinRate < @WinRateAsOfLast and @IsFound = 0  
+							begin 
+								set @FirstLowWinRatePos = @Loops
+								set @IsFound = 1
+								if @FirstLowWinRatePos >= 8
+								begin
+									set @TypeNum = cast(@SelectTypeNum as int)
+									set @RandNum = @RandNum + @TypeNum
+									update caipiaos.dbo.tab_Games set Premium = @RandNum, Number = @SelectTypeNum, Colour = @SelectTypeColor
+										where TypeID = @VarTypeID and IssueNumber = @IssueNumber
+									insert into caipiaos.dbo.tab_Game_Control_Log(TypeID, IssueNumber, OldPremium, OldNumber, OldColour, NewPremium, NewNumber, NewColour, ControlType, UpdateTime)
+										values(@VarTypeID, @IssueNumber, @BeforePrenium, @BeforeSelectTypeNum, @BeforeSelectTypeColor, @RandNum, @SelectTypeNum, @SelectTypeColor, 1, getdate())
+									break
+								end
+								else
+									set @StopPos = 8
+							end
+							if @Loops = @StopPos or @Loops = 10 
+							begin
+								set @TypeNum = cast(@SelectTypeNum as int)
+								set @RandNum = @RandNum + @TypeNum
+								update caipiaos.dbo.tab_Games set Premium = @RandNum, Number = @SelectTypeNum, Colour = @SelectTypeColor
+									where TypeID = @VarTypeID and IssueNumber = @IssueNumber
+								insert into caipiaos.dbo.tab_Game_Control_Log(TypeID, IssueNumber, OldPremium, OldNumber, OldColour, NewPremium, NewNumber, NewColour, ControlType, UpdateTime)
+									values(@VarTypeID, @IssueNumber, @BeforePrenium, @BeforeSelectTypeNum, @BeforeSelectTypeColor, @RandNum, @SelectTypeNum, @SelectTypeColor, 1, getdate())
+								break
+							end
+						end
+					end
+				end
+				else
+				begin
+					--保持用户赢率在设定值
+					if @Loops = 10
+					begin
 						set @TypeNum = cast(@SelectTypeNum as int)
 						set @RandNum = @RandNum + @TypeNum
 						update caipiaos.dbo.tab_Games set Premium = @RandNum, Number = @SelectTypeNum, Colour = @SelectTypeColor
@@ -233,34 +332,20 @@ BEGIN
 							values(@VarTypeID, @IssueNumber, @BeforePrenium, @BeforeSelectTypeNum, @BeforeSelectTypeColor, @RandNum, @SelectTypeNum, @SelectTypeColor, 1, getdate())
 						break
 					end
-					else
+					if @WinRate <= @TargetControlRate
 					begin
-						fetch next from CursorUpdate into @IssueNumber, @SelectTypeNum, @SelectTypeColor, @WinRate
-						continue
+						set @TypeNum = cast(@SelectTypeNum as int)
+						set @RandNum = @RandNum + @TypeNum
+						update caipiaos.dbo.tab_Games set Premium = @RandNum, Number = @SelectTypeNum, Colour = @SelectTypeColor
+							where TypeID = @VarTypeID and IssueNumber = @IssueNumber
+						insert into caipiaos.dbo.tab_Game_Control_Log(TypeID, IssueNumber, OldPremium, OldNumber, OldColour, NewPremium, NewNumber, NewColour, ControlType, UpdateTime)
+							values(@VarTypeID, @IssueNumber, @BeforePrenium, @BeforeSelectTypeNum, @BeforeSelectTypeColor, @RandNum, @SelectTypeNum, @SelectTypeColor, 1, getdate())
+						break 
 					end
+					fetch next from CursorUpdate into @IssueNumber, @SelectTypeNum, @SelectTypeColor, @WinRate
 				end
-				--杀率控制
-				if @Loops = 10
-				begin
-					set @TypeNum = cast(@SelectTypeNum as int)
-					set @RandNum = @RandNum + @TypeNum
-					update caipiaos.dbo.tab_Games set Premium = @RandNum, Number = @SelectTypeNum, Colour = @SelectTypeColor
-						where TypeID = @VarTypeID and IssueNumber = @IssueNumber
-					insert into caipiaos.dbo.tab_Game_Control_Log(TypeID, IssueNumber, OldPremium, OldNumber, OldColour, NewPremium, NewNumber, NewColour, ControlType, UpdateTime)
-						values(@VarTypeID, @IssueNumber, @BeforePrenium, @BeforeSelectTypeNum, @BeforeSelectTypeColor, @RandNum, @SelectTypeNum, @SelectTypeColor, 1, getdate())
-					break
-				end
-				if @WinRate <= @TargetControlRate
-				begin
-					set @TypeNum = cast(@SelectTypeNum as int)
-					set @RandNum = @RandNum + @TypeNum
-					update caipiaos.dbo.tab_Games set Premium = @RandNum, Number = @SelectTypeNum, Colour = @SelectTypeColor
-						where TypeID = @VarTypeID and IssueNumber = @IssueNumber
-					insert into caipiaos.dbo.tab_Game_Control_Log(TypeID, IssueNumber, OldPremium, OldNumber, OldColour, NewPremium, NewNumber, NewColour, ControlType, UpdateTime)
-						values(@VarTypeID, @IssueNumber, @BeforePrenium, @BeforeSelectTypeNum, @BeforeSelectTypeColor, @RandNum, @SelectTypeNum, @SelectTypeColor, 1, getdate())
-					break 
-				end
-				fetch next from CursorUpdate into @IssueNumber, @SelectTypeNum, @SelectTypeColor, @WinRate
+				UpdateAndInsertLog:
+					print 'UpdateAndInsertLog' 
 			end				
 			close CursorUpdate
 			deallocate CursorUpdate
