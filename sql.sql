@@ -116,6 +116,7 @@ BEGIN
 		declare @TotalBonus int = 0
 		--#LotteryTotalBonus记录输赢的临时表
 		create table #LotteryTotalBonus(TypeID int, IssueNumber varchar(30), SelectType varchar(20), TotalBonus bigint)
+		create table #UserControledBonus(TypeID int, IssueNumber varchar(30), SelectType varchar(20), TotalBonus bigint)
 		declare CursorResult cursor for select SelectType from caipiaos.dbo.tab_Game_All_SelectType ORDER BY SelectType
 		open CursorResult
 		fetch next from CursorResult into @Result
@@ -132,6 +133,10 @@ BEGIN
 				select TypeID, IssueNumber, SelectType, sum(RealAmount) * @MultiRate TotalBonus 
 					from caipiaos.dbo.tab_GameOrder where @Result = SelectType and @CurrentIssueNumber = IssueNumber group by IssueNumber, TypeID, SelectType
 			--单人下注信息计算
+			insert into #UserControledBonus(TypeID, IssueNumber, SelectType, TotalBonus) 
+				select TypeID, IssueNumber, SelectType, sum(RealAmount) * @MultiRate TotalBonus 
+					from caipiaos.dbo.tab_GameOrder where @Result = SelectType and @CurrentIssueNumber = IssueNumber and UserID = @UserControled
+						group by IssueNumber, TypeID, SelectType
 
 			fetch next from CursorResult into @Result
 		end				
@@ -145,6 +150,7 @@ BEGIN
 		begin
 			print '玩家没有下注'
 			drop table #LotteryTotalBonus
+			drop table #UserControledBonus
 			return
 		end
 		select TypeID, SelectType, IssueNumber, TotalBonus from #LotteryTotalBonus
@@ -167,12 +173,12 @@ BEGIN
 				group by TypeID, IssueNumber, SelectTypeNum, SelectTypeColor
 		drop table #LotteryResult
 		
-		--处理单杀情况，单杀只杀某ID最大中奖的下注，将玩家下注从表##LotteryResultFinal中去掉即可，档位控制的话，需要去掉一个档位
-		
 		--计算WinRate
 		declare @TargetControlRate decimal(4,2) = (@ControlRate+0.0)/100
 		print '目标赢率@TargetControlRate:' + cast(@TargetControlRate as varchar(20))
 		update #LotteryResultFinal set WinRate = (isnull(@BonusAlready, 0)+AllTotalBonus)/@AllBet
+		delete from #UserControledBonus where SelectType in ('red', 'green', 'violet')
+		select TypeID, SelectType, IssueNumber, TotalBonus from #UserControledBonus
 		select * from #LotteryResultFinal order by WinRate desc
 		
 		--更新游戏表并写入日志
@@ -195,7 +201,9 @@ BEGIN
 		declare @BingoCounts int = 0
 		declare @FirstLowWinRatePos int = 0 --第一个小值的位置
 		declare @IsFound bit = 0 --是否继续找小值位置
-		declare @StopPos int = 0 --遍历停止位置
+		declare @StopPos int = 0 --强弱拉遍历停止位置
+		declare @StepCounts int = 10 --遍历总数
+		declare @UserControlType varchar(10) = '' --受控的类型
 		
 		if @WinRateAsOfLast < @TargetControlRate
 			set @PushUp = 1
@@ -231,11 +239,22 @@ BEGIN
 			set @FinalTypeColor = ''
 			set @FirstLowWinRatePos = 0 
 			set @IsFound = 0
-			set @StopPos = 0 
+			set @UserControlType = ''
+			set @StepCounts = 10
 			set @RandNum = @NumBegin+(@NumEnd-@NumBegin)*rand()
 			set @RandNum =  @RandNum * 10
 			select @BeforePrenium = Premium, @BeforeSelectTypeNum = Number, @BeforeSelectTypeColor = Colour from caipiaos.dbo.tab_Games where TypeID = @VarTypeID and IssueNumber = @CurrentIssueNumber
 			print '更改前随机数:' + @BeforePrenium + ',更改前中奖数字:' + @BeforeSelectTypeNum + ',更改前中奖颜色:' + @BeforeSelectTypeColor
+			
+			--去除单杀中的中奖结果
+			select top 1 @UserControlType = SelectType from #UserControledBonus order by TotalBonus desc
+			if @UserControlType is not null and @UserControlType <> ''
+			begin
+				delete from #LotteryResultFinal where SelectTypeNum = @UserControlType
+				set @StepCounts = 9
+				if @PushUp = 1 and @PowerControl = 1 --强制下拉
+					set @StopPos = 9
+			end
 
 			declare CursorUpdate cursor for select IssueNumber, SelectTypeNum, SelectTypeColor, WinRate 
 					from #LotteryResultFinal where TypeID = @VarTypeID ORDER BY WinRate desc
@@ -249,7 +268,7 @@ BEGIN
 					--拉回到设定值(强弱两种方式)@PowerControl->1:强拉 2:弱拉
 					if @PowerControl = 1
 					begin 
-						if @StopPos = @Loops
+						if @StopPos = @Loops 
 						begin 
 							set @TypeNum = cast(@SelectTypeNum as int)
 							set @RandNum = @RandNum + @TypeNum
@@ -280,7 +299,7 @@ BEGIN
 								set @FinalTypeColor = @SelectTypeColor
 								set @BingoCounts =+ 1
 							end
-							if @BingoCounts = 3 or @Loops = 10 --遍历到第三个大的值或结束
+							if @BingoCounts = 3 or @Loops = @StepCounts --遍历到第三个大的值或结束
 							begin
 								set @TypeNum = cast(@SelectTypeNum as int)
 								set @RandNum = @RandNum + @TypeNum
@@ -297,7 +316,7 @@ BEGIN
 							begin 
 								set @FirstLowWinRatePos = @Loops
 								set @IsFound = 1
-								if @FirstLowWinRatePos >= 8
+								if @FirstLowWinRatePos >= @StepCounts - 2
 								begin
 									set @TypeNum = cast(@SelectTypeNum as int)
 									set @RandNum = @RandNum + @TypeNum
@@ -308,9 +327,9 @@ BEGIN
 									break
 								end
 								else
-									set @StopPos = 8
+									set @StopPos = @StepCounts -2
 							end
-							if @Loops = @StopPos or @Loops = 10 
+							if @Loops = @StopPos or @Loops = @StepCounts 
 							begin
 								set @TypeNum = cast(@SelectTypeNum as int)
 								set @RandNum = @RandNum + @TypeNum
@@ -326,7 +345,7 @@ BEGIN
 				else
 				begin
 					--保持用户赢率在设定值
-					if @Loops = 10
+					if @Loops = @StepCounts
 					begin
 						set @TypeNum = cast(@SelectTypeNum as int)
 						set @RandNum = @RandNum + @TypeNum
@@ -360,6 +379,7 @@ BEGIN
 		deallocate CursorTypeID
 		
 		drop table #LotteryTotalBonus
+		drop table #UserControledBonus
 		drop table #LotteryResultFinal
 	end
 END
