@@ -47,8 +47,6 @@ BEGIN
 	declare @PreControlOptState table(TyepIDEnable int)
 	insert into @PreControlOptState 
 		select case OptState when 1 then TypeID else 0 end from caipiaos.dbo.tab_Games where State=0 and IssueNumber=@CurrentIssueNumber;
-
-	--单杀情况 单杀的信息需要写入到数据库
 	
 	--计算区间投注金额 派彩金额,区间没有设置，默认当天作为区间
 	if (select ISNULL(GameUpdateNumberOpen,0) from caipiaos.dbo.tab_GameNumberSet)=1 and @ControlRate <> 0
@@ -179,7 +177,7 @@ BEGIN
 		update #LotteryResultFinal set WinRate = (isnull(@BonusAlready, 0)+AllTotalBonus)/@AllBet
 		delete from #UserControledBonus where SelectType in ('red', 'green', 'violet')
 		select TypeID, SelectType, IssueNumber, TotalBonus from #UserControledBonus
-		select * from #LotteryResultFinal order by WinRate desc
+		select * from #LotteryResultFinal order by TypeID, WinRate desc
 		
 		--更新游戏表并写入日志
 		declare @NumBegin Int=1000    --随机数的最小值 
@@ -209,8 +207,9 @@ BEGIN
 			set @PushUp = 1
 		if @PushUp = 1 and @PowerControl = 1 --强制上拉
 			set @StopPos = 1
-		if @PushUp = 1 and @PowerControl = 1 --强制下拉
+		if @PushUp = 0 and @PowerControl = 1 --强制下拉
 			set @StopPos = 10
+		print '强弱拉停止位置@StopPos:' + isnull(cast(@StopPos as varchar(20)),0)
 		
 		declare CursorTypeID cursor for select TypeID from caipiaos.dbo.tab_GameType
 		open CursorTypeID
@@ -250,6 +249,7 @@ BEGIN
 			select top 1 @UserControlType = SelectType from #UserControledBonus order by TotalBonus desc
 			if @UserControlType is not null and @UserControlType <> ''
 			begin
+				print '去除单杀中奖结果数字@UserControlType:' + isnull(cast(@UserControlType as varchar(20)),0)
 				delete from #LotteryResultFinal where SelectTypeNum = @UserControlType
 				set @StepCounts = 9
 				if @PushUp = 1 and @PowerControl = 1 --强制下拉
@@ -367,14 +367,16 @@ BEGIN
 					end
 					fetch next from CursorUpdate into @IssueNumber, @SelectTypeNum, @SelectTypeColor, @WinRate
 				end
+				UpdateAndInsertLog:
+					print 'UpdateAndInsertLog' 
+					if @VarTypeID <> 4
+					begin
+						fetch next from CursorUpdate into @IssueNumber, @SelectTypeNum, @SelectTypeColor, @WinRate
+						continue
+					end
 			end				
 			close CursorUpdate
 			deallocate CursorUpdate
-			
-			UpdateAndInsertLog:
-				print 'UpdateAndInsertLog' 
-				if @VarTypeID = 4
-					break
 			
 			fetch next from CursorTypeID into @VarTypeID
 		end				
