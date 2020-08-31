@@ -28,13 +28,14 @@ BEGIN
 	declare @PowerControl int = 0
 	select top 1 @UserControled = UserControled, @ControlRate = ControlRate, @PeriodGap = PeriodGap, @PowerControl = PowerControl
 		from caipiaos.dbo.tab_Game_Control order by UpdateTime desc
-	if @UserControled > 10
-		set @UserControled = 10
-	else if @UserControled < 0
-		set @UserControled = 0
+	if @PowerControl > 2
+		set @PowerControl = 2
+	else if @PowerControl < 0
+		set @PowerControl = 0
 	print '选取期数区间@PeriodGap:' + cast(@PeriodGap as varchar(10))
 	print '控制指数@ControlRate:' + cast(@ControlRate as varchar(10))
-	print '控制档位@PowerControl:' + cast(@PowerControl as varchar(10))
+	print '强弱控制@PowerControl:' + cast(@PowerControl as varchar(10))
+	print '受控用户@UserControled:' + cast(@UserControled as varchar(10))
 	--获取当前期号
 	declare @CurrentIssueNumber varchar(30) = ''
 	declare @CurrentTime datetime = GETDATE()
