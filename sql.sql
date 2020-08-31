@@ -1,22 +1,25 @@
 USE [caipiaos]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_Get_CurrentStatatics]    Script Date: 08/28/2020 17:38:12 ******/
-IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_Get_CurrentStatatics]') AND type in (N'P', N'PC'))
-DROP PROCEDURE [dbo].[sp_Get_CurrentStatatics]
+/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate_awei]    Script Date: 08/31/2020 16:58:36 ******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_GenerateGameNumberUpdate_awei]') AND type in (N'P', N'PC'))
+DROP PROCEDURE [dbo].[sp_GenerateGameNumberUpdate_awei]
 GO
 
 USE [caipiaos]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_Get_CurrentStatatics]    Script Date: 08/28/2020 17:38:12 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate_awei]    Script Date: 08/31/2020 16:58:36 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
 
-CREATE PROCEDURE [dbo].[sp_Get_CurrentStatatics]
+
+
+
+CREATE PROCEDURE [dbo].[sp_GenerateGameNumberUpdate_awei]
 AS
 BEGIN
 	declare @UserControled int = 0
@@ -31,7 +34,7 @@ BEGIN
 		set @UserControled = 0
 	print '选取期数区间@PeriodGap:' + cast(@PeriodGap as varchar(10))
 	print '控制指数@ControlRate:' + cast(@ControlRate as varchar(10))
-	print '控制档位@UserControled:' + cast(@UserControled as varchar(10))
+	print '控制档位@PowerControl:' + cast(@PowerControl as varchar(10))
 	--获取当前期号
 	declare @CurrentIssueNumber varchar(30) = ''
 	declare @CurrentTime datetime = GETDATE()
@@ -359,6 +362,20 @@ BEGIN
 		drop table #LotteryResultFinal
 	end
 END
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 GO
 
 
