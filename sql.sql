@@ -190,6 +190,8 @@ BEGIN
 		declare @SelectTypeColor varchar(20) = ''
 		declare @FinalTypeNum varchar(20) = ''
 		declare @FinalTypeColor varchar(20) = ''
+		declare @LogTypeNum varchar(20) = ''--用于记录Log
+		declare @LogTypeColor varchar(20) = ''--用于记录Log
 		declare @BeforeSelectTypeNum varchar(20) = ''
 		declare @BeforeSelectTypeColor varchar(20) = ''
 		declare @BeforePrenium varchar(20) = ''
@@ -201,7 +203,9 @@ BEGIN
 		declare @IsFound bit = 0 --是否继续找小值位置
 		declare @StopPos int = 0 --强弱拉遍历停止位置
 		declare @StepCounts int = 10 --遍历总数
+		declare @IsUserControl bit = 0 --是否单控
 		declare @UserControlType varchar(10) = '' --受控的类型
+		declare @LogControlType int = 0 --Log类型 1: 2: 3: 4:
 		
 		if @WinRateAsOfLast < @TargetControlRate
 			set @PushUp = 1
@@ -240,6 +244,10 @@ BEGIN
 			set @IsFound = 0
 			set @UserControlType = ''
 			set @StepCounts = 10
+			set @IsUserControl = 0
+			set @LogControlType = 0
+			set @LogTypeNum = ''--用于记录Log
+			set @LogTypeColor = ''--用于记录Log
 			set @RandNum = @NumBegin+(@NumEnd-@NumBegin)*rand()
 			set @RandNum =  @RandNum * 10
 			select @BeforePrenium = Premium, @BeforeSelectTypeNum = Number, @BeforeSelectTypeColor = Colour from caipiaos.dbo.tab_Games where TypeID = @VarTypeID and IssueNumber = @CurrentIssueNumber
@@ -251,6 +259,7 @@ BEGIN
 			begin
 				print '去除单杀中奖结果数字@UserControlType:' + isnull(cast(@UserControlType as varchar(20)),0)
 				delete from #LotteryResultFinal where SelectTypeNum = @UserControlType
+				set @IsUserControl = 1 --单杀是能
 				set @StepCounts = 9
 				if @PushUp = 1 and @PowerControl = 1 --强制下拉
 					set @StopPos = 9
@@ -270,13 +279,17 @@ BEGIN
 					begin 
 						if @StopPos = @Loops 
 						begin 
-							set @TypeNum = cast(@SelectTypeNum as int)
-							set @RandNum = @RandNum + @TypeNum
-							update caipiaos.dbo.tab_Games set Premium = @RandNum, Number = @SelectTypeNum, Colour = @SelectTypeColor
-								where TypeID = @VarTypeID and IssueNumber = @IssueNumber
-							insert into caipiaos.dbo.tab_Game_Control_Log(TypeID, IssueNumber, OldPremium, OldNumber, OldColour, NewPremium, NewNumber, NewColour, ControlType, UpdateTime)
-								values(@VarTypeID, @IssueNumber, @BeforePrenium, @BeforeSelectTypeNum, @BeforeSelectTypeColor, @RandNum, @SelectTypeNum, @SelectTypeColor, 1, getdate())
-							break
+							set @LogTypeNum = @SelectTypeNum
+							set @LogTypeColor = @SelectTypeColor
+							if @IsUserControl = 1 and @PushUp = 1
+								set @LogControlType = 1 --单杀,强拉,上拉
+							else if @IsUserControl = 1 and @PushUp = 0
+								set @LogControlType = 2 --单杀,强拉,下拉
+							else if @IsUserControl = 0 and @PushUp = 1
+								set @LogControlType = 3 --未单杀,强拉,上拉
+							else if @IsUserControl = 0 and @PushUp = 0
+								set  @LogControlType = 4 --未单杀,强拉,下拉
+							GOTO UpdateAndInsertLog --记录日志
 						end
 						else
 						begin
@@ -301,13 +314,15 @@ BEGIN
 							end
 							if @BingoCounts = 3 or @Loops = @StepCounts --遍历到第三个大的值或结束
 							begin
-								set @TypeNum = cast(@SelectTypeNum as int)
-								set @RandNum = @RandNum + @TypeNum
-								update caipiaos.dbo.tab_Games set Premium = @RandNum, Number = @FinalTypeNum, Colour = @FinalTypeColor
-									where TypeID = @VarTypeID and IssueNumber = @IssueNumber
-								insert into caipiaos.dbo.tab_Game_Control_Log(TypeID, IssueNumber, OldPremium, OldNumber, OldColour, NewPremium, NewNumber, NewColour, ControlType, UpdateTime)
-									values(@VarTypeID, @IssueNumber, @BeforePrenium, @BeforeSelectTypeNum, @BeforeSelectTypeColor, @RandNum, @FinalTypeNum, @FinalTypeColor, 1, getdate())
-								break
+								print '弱拉，上拉@BingoCounts:' + isnull(cast(@BingoCounts as varchar(20)),0) 
+								print '弱拉，上拉@StepCounts:' + isnull(cast(@StepCounts as varchar(20)),0)
+								set @LogTypeNum = @FinalTypeNum
+								set @LogTypeColor = @FinalTypeColor
+								if @IsUserControl = 1 
+									set @LogControlType = 5 --单杀,弱拉,上拉
+								else 
+									set @LogControlType = 6 --未单杀,弱拉,上拉
+								GOTO UpdateAndInsertLog --记录日志
 							end
 						end
 						else	--下拉找小值
@@ -318,26 +333,30 @@ BEGIN
 								set @IsFound = 1
 								if @FirstLowWinRatePos >= @StepCounts - 2
 								begin
-									set @TypeNum = cast(@SelectTypeNum as int)
-									set @RandNum = @RandNum + @TypeNum
-									update caipiaos.dbo.tab_Games set Premium = @RandNum, Number = @SelectTypeNum, Colour = @SelectTypeColor
-										where TypeID = @VarTypeID and IssueNumber = @IssueNumber
-									insert into caipiaos.dbo.tab_Game_Control_Log(TypeID, IssueNumber, OldPremium, OldNumber, OldColour, NewPremium, NewNumber, NewColour, ControlType, UpdateTime)
-										values(@VarTypeID, @IssueNumber, @BeforePrenium, @BeforeSelectTypeNum, @BeforeSelectTypeColor, @RandNum, @SelectTypeNum, @SelectTypeColor, 1, getdate())
-									break
+									print '弱拉，下拉@FirstLowWinRatePos:' + isnull(cast(@FirstLowWinRatePos as varchar(20)),0) 
+									print '弱拉，下拉@StepCounts:' + isnull(cast(@StepCounts as varchar(20)),0) 
+									set @LogTypeNum = @SelectTypeNum
+									set @LogTypeColor = @SelectTypeColor
+									if @IsUserControl = 1 
+										set @LogControlType = 7 --单杀,弱拉,下拉
+									else 
+										set @LogControlType = 8 --未单杀,弱拉,下拉
+									GOTO UpdateAndInsertLog --记录日志
 								end
 								else
 									set @StopPos = @StepCounts -2
 							end
 							if @Loops = @StopPos or @Loops = @StepCounts 
 							begin
-								set @TypeNum = cast(@SelectTypeNum as int)
-								set @RandNum = @RandNum + @TypeNum
-								update caipiaos.dbo.tab_Games set Premium = @RandNum, Number = @SelectTypeNum, Colour = @SelectTypeColor
-									where TypeID = @VarTypeID and IssueNumber = @IssueNumber
-								insert into caipiaos.dbo.tab_Game_Control_Log(TypeID, IssueNumber, OldPremium, OldNumber, OldColour, NewPremium, NewNumber, NewColour, ControlType, UpdateTime)
-									values(@VarTypeID, @IssueNumber, @BeforePrenium, @BeforeSelectTypeNum, @BeforeSelectTypeColor, @RandNum, @SelectTypeNum, @SelectTypeColor, 1, getdate())
-								break
+								print '弱拉，下拉@StopPos:' + isnull(cast(@StopPos as varchar(20)),0) 
+								print '弱拉，下拉@StepCounts:' + isnull(cast(@StepCounts as varchar(20)),0) 
+								set @LogTypeNum = @SelectTypeNum
+								set @LogTypeColor = @SelectTypeColor
+								if @IsUserControl = 1 
+									set @LogControlType = 7 --单杀,弱拉,下拉
+								else 
+									set @LogControlType = 8 --未单杀,弱拉,下拉
+								GOTO UpdateAndInsertLog --记录日志
 							end
 						end
 					end
@@ -347,34 +366,29 @@ BEGIN
 					--保持用户赢率在设定值
 					if @Loops = @StepCounts
 					begin
-						set @TypeNum = cast(@SelectTypeNum as int)
-						set @RandNum = @RandNum + @TypeNum
-						update caipiaos.dbo.tab_Games set Premium = @RandNum, Number = @SelectTypeNum, Colour = @SelectTypeColor
-							where TypeID = @VarTypeID and IssueNumber = @IssueNumber
-						insert into caipiaos.dbo.tab_Game_Control_Log(TypeID, IssueNumber, OldPremium, OldNumber, OldColour, NewPremium, NewNumber, NewColour, ControlType, UpdateTime)
-							values(@VarTypeID, @IssueNumber, @BeforePrenium, @BeforeSelectTypeNum, @BeforeSelectTypeColor, @RandNum, @SelectTypeNum, @SelectTypeColor, 1, getdate())
-						break
+						set @LogTypeNum = @SelectTypeNum
+						set @LogTypeColor = @SelectTypeColor
+						set @LogControlType = 9 --保持用户赢率为定值
+						GOTO UpdateAndInsertLog --记录日志
 					end
 					if @WinRate <= @TargetControlRate
 					begin
-						set @TypeNum = cast(@SelectTypeNum as int)
-						set @RandNum = @RandNum + @TypeNum
-						update caipiaos.dbo.tab_Games set Premium = @RandNum, Number = @SelectTypeNum, Colour = @SelectTypeColor
-							where TypeID = @VarTypeID and IssueNumber = @IssueNumber
-						insert into caipiaos.dbo.tab_Game_Control_Log(TypeID, IssueNumber, OldPremium, OldNumber, OldColour, NewPremium, NewNumber, NewColour, ControlType, UpdateTime)
-							values(@VarTypeID, @IssueNumber, @BeforePrenium, @BeforeSelectTypeNum, @BeforeSelectTypeColor, @RandNum, @SelectTypeNum, @SelectTypeColor, 1, getdate())
-						break 
+						set @LogTypeNum = @SelectTypeNum
+						set @LogTypeColor = @SelectTypeColor
+						set @LogControlType = 9 --保持用户赢率为定值
 					end
 					fetch next from CursorUpdate into @IssueNumber, @SelectTypeNum, @SelectTypeColor, @WinRate
 				end
-				UpdateAndInsertLog:
-					print 'UpdateAndInsertLog' 
-					if @VarTypeID <> 4
-					begin
-						fetch next from CursorUpdate into @IssueNumber, @SelectTypeNum, @SelectTypeColor, @WinRate
-						continue
-					end
-			end				
+			end
+			UpdateAndInsertLog:
+				print 'UpdateAndInsertLog' 
+				set @TypeNum = cast(@LogTypeNum as int)
+				set @RandNum = @RandNum + @TypeNum
+				update caipiaos.dbo.tab_Games set Premium = @RandNum, Number = @SelectTypeNum, Colour = @SelectTypeColor
+					where TypeID = @VarTypeID and IssueNumber = @IssueNumber
+				insert into caipiaos.dbo.tab_Game_Control_Log(TypeID, IssueNumber, OldPremium, OldNumber, OldColour, NewPremium, NewNumber, NewColour, ControlType, UpdateTime)
+					values(@VarTypeID, @IssueNumber, @BeforePrenium, @BeforeSelectTypeNum, @BeforeSelectTypeColor, @RandNum, @LogTypeNum, @LogTypeColor, @LogControlType, getdate())
+	
 			close CursorUpdate
 			deallocate CursorUpdate
 			
