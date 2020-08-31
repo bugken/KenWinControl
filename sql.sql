@@ -367,11 +367,14 @@ BEGIN
 					end
 					fetch next from CursorUpdate into @IssueNumber, @SelectTypeNum, @SelectTypeColor, @WinRate
 				end
-				UpdateAndInsertLog:
-					print 'UpdateAndInsertLog' 
 			end				
 			close CursorUpdate
 			deallocate CursorUpdate
+			
+			UpdateAndInsertLog:
+				print 'UpdateAndInsertLog' 
+				if @VarTypeID = 4
+					break
 			
 			fetch next from CursorTypeID into @VarTypeID
 		end				
