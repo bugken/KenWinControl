@@ -205,7 +205,8 @@ BEGIN
 		declare @StepCounts int = 10 --遍历总数
 		declare @IsUserControl bit = 0 --是否单控
 		declare @UserControlType varchar(10) = '' --受控的类型
-		declare @LogControlType int = 0 --Log类型 1: 2: 3: 4:
+		declare @LogControlType int = 0 --Log类型 1:单杀,强拉,上拉 2:单杀,强拉,下拉 3:未单杀,强拉,上拉 4:未单杀,强拉,下拉 5:单杀,弱拉,上拉
+										--6:未单杀,弱拉,上拉 7:单杀,弱拉,下拉 8:未单杀,弱拉,下拉 9:保持用户赢率为定值	
 		
 		if @WinRateAsOfLast < @TargetControlRate
 			set @PushUp = 1
