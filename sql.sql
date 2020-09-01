@@ -210,9 +210,9 @@ BEGIN
 		
 		if @WinRateAsOfLast < @TargetControlRate
 			set @PushUp = 1
-		if @PushUp = 1 and @PowerControl = 1 --强制上拉
+		if @PushUp = 1 and @PowerControl = 1 --强上拉
 			set @StopPos = 1
-		if @PushUp = 0 and @PowerControl = 1 --强制下拉
+		if @PushUp = 0 and @PowerControl = 1 --强下拉
 			set @StopPos = 10
 		print '强弱拉停止位置@StopPos:' + isnull(cast(@StopPos as varchar(20)),0)
 		
@@ -262,8 +262,8 @@ BEGIN
 				delete from #LotteryResultFinal where SelectTypeNum = @UserControlType
 				set @IsUserControl = 1 --单杀是能
 				set @StepCounts = 9
-				if @PushUp = 1 and @PowerControl = 1 --强制下拉
-					set @StopPos = 9
+				if @PushUp = 0 and @PowerControl = 1 --强下拉
+					set @StopPos = 9 
 			end
 
 			declare CursorUpdate cursor for select IssueNumber, SelectTypeNum, SelectTypeColor, WinRate 
@@ -334,8 +334,8 @@ BEGIN
 						end
 						else	--下拉找小值
 						begin
-							--print '弱拉，下拉@WinRate:' + isnull(cast(@WinRate as varchar(20)),0)
-							--print '弱拉，下拉@WinRateAsOfLast:' + isnull(cast(@WinRateAsOfLast as varchar(20)),0)
+							print '弱拉，下拉@WinRate:' + isnull(cast(@WinRate as varchar(20)),0)
+							print '弱拉，下拉@WinRateAsOfLast:' + isnull(cast(@WinRateAsOfLast as varchar(20)),0)
 							if @WinRate < @WinRateAsOfLast and @IsFound = 0  
 							begin 
 								set @FirstLowWinRatePos = @Loops
