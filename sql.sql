@@ -383,6 +383,7 @@ BEGIN
 					--保持用户赢率在设定值
 					if @Loops = @StepCounts
 					begin
+						print '控制杀率到固定值@StepCounts:' + isnull(cast(@StepCounts as varchar(20)),0)
 						set @LogTypeNum = @SelectTypeNum
 						set @LogTypeColor = @SelectTypeColor
 						set @LogControlType = 9 --保持用户赢率为定值
@@ -390,9 +391,12 @@ BEGIN
 					end
 					if @WinRate <= @TargetControlRate
 					begin
+						print '1控制杀率到固定值@WinRate:' + isnull(cast(@WinRate as varchar(20)),0)
+						print '1控制杀率到固定值@TargetControlRate:' + isnull(cast(@TargetControlRate as varchar(20)),0)
 						set @LogTypeNum = @SelectTypeNum
 						set @LogTypeColor = @SelectTypeColor
 						set @LogControlType = 9 --保持用户赢率为定值
+						GOTO UpdateAndInsertLog --记录日志
 					end
 					fetch next from CursorUpdate into @IssueNumber, @SelectTypeNum, @SelectTypeColor, @WinRate
 					continue
