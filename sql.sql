@@ -214,7 +214,7 @@ BEGIN
 			set @StopPos = 1
 		if @PushUp = 0 and @PowerControl = 1 --强下拉
 			set @StopPos = 10
-		print '强弱拉停止位置@StopPos:' + isnull(cast(@StopPos as varchar(20)),0)
+		--print '强弱拉停止位置@StopPos:' + isnull(cast(@StopPos as varchar(20)),0)
 		
 		declare CursorTypeID cursor for select TypeID from caipiaos.dbo.tab_GameType
 		open CursorTypeID
@@ -252,7 +252,7 @@ BEGIN
 			set @RandNum = @NumBegin+(@NumEnd-@NumBegin)*rand()
 			set @RandNum =  @RandNum * 10
 			select @BeforePrenium = Premium, @BeforeSelectTypeNum = Number, @BeforeSelectTypeColor = Colour from caipiaos.dbo.tab_Games where TypeID = @VarTypeID and IssueNumber = @CurrentIssueNumber
-			print '更改前随机数:' + @BeforePrenium + ',更改前中奖数字:' + @BeforeSelectTypeNum + ',更改前中奖颜色:' + @BeforeSelectTypeColor
+			--print '更改前随机数:' + @BeforePrenium + ',更改前中奖数字:' + @BeforeSelectTypeNum + ',更改前中奖颜色:' + @BeforeSelectTypeColor
 			
 			--去除单杀中的中奖结果
 			select top 1 @UserControlType = SelectType from #UserControledBonus order by TotalBonus desc
@@ -307,8 +307,8 @@ BEGIN
 								set @FinalTypeNum = @SelectTypeNum
 								set @FinalTypeColor = @SelectTypeColor
 							end
-							print '弱拉，上拉@WinRate:' + isnull(cast(@WinRate as varchar(20)),0)
-							print '弱拉，上拉@WinRateAsOfLast:' + isnull(cast(@WinRateAsOfLast as varchar(20)),0)
+							--print '弱拉，上拉@WinRate:' + isnull(cast(@WinRate as varchar(20)),0)
+							--print '弱拉，上拉@WinRateAsOfLast:' + isnull(cast(@WinRateAsOfLast as varchar(20)),0)
 							if @WinRate > @WinRateAsOfLast
 							begin 
 								set @FinalTypeNum = @SelectTypeNum
@@ -317,12 +317,12 @@ BEGIN
 							end
 							if @BingoCounts = 3 or @Loops = @StepCounts --遍历到第三个大的值或结束
 							begin
-								print '弱拉，上拉@BingoCounts:' + isnull(cast(@BingoCounts as varchar(20)),0) 
-								print '弱拉，上拉@StepCounts:' + isnull(cast(@StepCounts as varchar(20)),0)
+								--print '弱拉，上拉@BingoCounts:' + isnull(cast(@BingoCounts as varchar(20)),0) 
+								--print '弱拉，上拉@StepCounts:' + isnull(cast(@StepCounts as varchar(20)),0)
 								set @LogTypeNum = @FinalTypeNum
 								set @LogTypeColor = @FinalTypeColor
-								print '弱拉，上拉@LogTypeNum:' + isnull(cast(@LogTypeNum as varchar(20)),0) 
-								print '弱拉，上拉@LogTypeColor:' + isnull(cast(@LogTypeColor as varchar(20)),0)
+								--print '弱拉，上拉@LogTypeNum:' + isnull(cast(@LogTypeNum as varchar(20)),0) 
+								--print '弱拉，上拉@LogTypeColor:' + isnull(cast(@LogTypeColor as varchar(20)),0)
 								if @IsUserControl = 1 
 									set @LogControlType = 5 --单杀,弱拉,上拉
 								else 
@@ -334,21 +334,21 @@ BEGIN
 						end
 						else	--下拉找小值
 						begin
-							print '弱拉，下拉@WinRate:' + isnull(cast(@WinRate as varchar(20)),0)
-							print '弱拉，下拉@WinRateAsOfLast:' + isnull(cast(@WinRateAsOfLast as varchar(20)),0)
+							--print '弱拉，下拉@WinRate:' + isnull(cast(@WinRate as varchar(20)),0)
+							--print '弱拉，下拉@WinRateAsOfLast:' + isnull(cast(@WinRateAsOfLast as varchar(20)),0)
 							if @WinRate < @WinRateAsOfLast and @IsFound = 0  
 							begin 
 								set @FirstLowWinRatePos = @Loops
 								set @IsFound = 1
-								print '弱拉，下拉@FirstLowWinRatePos:' + isnull(cast(@FirstLowWinRatePos as varchar(20)),0) 
+								--print '弱拉，下拉@FirstLowWinRatePos:' + isnull(cast(@FirstLowWinRatePos as varchar(20)),0) 
 								if @FirstLowWinRatePos >= @StepCounts - 2
 								begin
-									print '弱拉，下拉@FirstLowWinRatePos:' + isnull(cast(@FirstLowWinRatePos as varchar(20)),0) 
-									print '弱拉，下拉@StepCounts:' + isnull(cast(@StepCounts as varchar(20)),0) 
+									--print '弱拉，下拉@FirstLowWinRatePos:' + isnull(cast(@FirstLowWinRatePos as varchar(20)),0) 
+									--print '弱拉，下拉@StepCounts:' + isnull(cast(@StepCounts as varchar(20)),0) 
 									set @LogTypeNum = @SelectTypeNum
 									set @LogTypeColor = @SelectTypeColor
-									print '弱拉，下拉@LogTypeNum:' + isnull(cast(@LogTypeNum as varchar(20)),0) 
-									print '弱拉，下拉@LogTypeColor:' + isnull(cast(@LogTypeColor as varchar(20)),0) 
+									--print '弱拉，下拉@LogTypeNum:' + isnull(cast(@LogTypeNum as varchar(20)),0) 
+									--print '弱拉，下拉@LogTypeColor:' + isnull(cast(@LogTypeColor as varchar(20)),0) 
 									if @IsUserControl = 1 
 										set @LogControlType = 7 --单杀,弱拉,下拉
 									else 
@@ -362,11 +362,11 @@ BEGIN
 							begin
 								set @LogTypeNum = @SelectTypeNum
 								set @LogTypeColor = @SelectTypeColor
-								print '1弱拉，下拉@FirstLowWinRatePos:' + isnull(cast(@FirstLowWinRatePos as varchar(20)),0) 
-								print '1弱拉，下拉@StopPos:' + isnull(cast(@StopPos as varchar(20)),0) 
-								print '1弱拉，下拉@StepCounts:' + isnull(cast(@StepCounts as varchar(20)),0) 
-								print '1弱拉，下拉@LogTypeNum:' + isnull(cast(@LogTypeNum as varchar(20)),0) 
-								print '1弱拉，下拉@LogTypeColor:' + isnull(cast(@LogTypeColor as varchar(20)),0)
+								--print '1弱拉，下拉@FirstLowWinRatePos:' + isnull(cast(@FirstLowWinRatePos as varchar(20)),0) 
+								--print '1弱拉，下拉@StopPos:' + isnull(cast(@StopPos as varchar(20)),0) 
+								--print '1弱拉，下拉@StepCounts:' + isnull(cast(@StepCounts as varchar(20)),0) 
+								--print '1弱拉，下拉@LogTypeNum:' + isnull(cast(@LogTypeNum as varchar(20)),0) 
+								--print '1弱拉，下拉@LogTypeColor:' + isnull(cast(@LogTypeColor as varchar(20)),0)
 								if @IsUserControl = 1 
 									set @LogControlType = 7 --单杀,弱拉,下拉
 								else 
@@ -383,7 +383,7 @@ BEGIN
 					--保持用户赢率在设定值
 					if @Loops = @StepCounts
 					begin
-						print '控制杀率到固定值@StepCounts:' + isnull(cast(@StepCounts as varchar(20)),0)
+						--print '控制杀率到固定值@StepCounts:' + isnull(cast(@StepCounts as varchar(20)),0)
 						set @LogTypeNum = @SelectTypeNum
 						set @LogTypeColor = @SelectTypeColor
 						set @LogControlType = 9 --保持用户赢率为定值
@@ -391,8 +391,8 @@ BEGIN
 					end
 					if @WinRate <= @TargetControlRate
 					begin
-						print '1控制杀率到固定值@WinRate:' + isnull(cast(@WinRate as varchar(20)),0)
-						print '1控制杀率到固定值@TargetControlRate:' + isnull(cast(@TargetControlRate as varchar(20)),0)
+						--print '1控制杀率到固定值@WinRate:' + isnull(cast(@WinRate as varchar(20)),0)
+						--print '1控制杀率到固定值@TargetControlRate:' + isnull(cast(@TargetControlRate as varchar(20)),0)
 						set @LogTypeNum = @SelectTypeNum
 						set @LogTypeColor = @SelectTypeColor
 						set @LogControlType = 9 --保持用户赢率为定值
@@ -402,7 +402,7 @@ BEGIN
 					continue
 				end
 			UpdateAndInsertLog:
-				print 'UpdateAndInsertLog' 
+				--print 'UpdateAndInsertLog' 
 				set @TypeNum = cast(@LogTypeNum as int)
 				set @RandNum = @RandNum + @TypeNum
 				update caipiaos.dbo.tab_Games set Premium = @RandNum, Number = @LogTypeNum, Colour = @LogTypeColor
