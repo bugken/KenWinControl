@@ -1,15 +1,15 @@
 USE [caipiaos]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate_awei]    Script Date: 08/31/2020 16:58:36 ******/
-IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_GenerateGameNumberUpdate_awei]') AND type in (N'P', N'PC'))
-DROP PROCEDURE [dbo].[sp_GenerateGameNumberUpdate_awei]
+/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/01/2020 19:09:14 ******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_GenerateGameNumberUpdate]') AND type in (N'P', N'PC'))
+DROP PROCEDURE [dbo].[sp_GenerateGameNumberUpdate]
 GO
 
 USE [caipiaos]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate_awei]    Script Date: 08/31/2020 16:58:36 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/01/2020 19:09:14 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -19,7 +19,8 @@ GO
 
 
 
-CREATE PROCEDURE [dbo].[sp_GenerateGameNumberUpdate_awei]
+
+CREATE PROCEDURE [dbo].[sp_GenerateGameNumberUpdate]
 AS
 BEGIN
 	declare @UserControled int = 0
@@ -425,6 +426,7 @@ BEGIN
 		drop table #LotteryResultFinal
 	end
 END
+
 
 
 
