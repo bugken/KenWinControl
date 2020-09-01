@@ -90,7 +90,7 @@ BEGIN
 			print '上一期数@LastIssueNumber:' + @LastIssueNumber 
 			select @AllBet = sum(RealAmount) from caipiaos.dbo.tab_GameOrder where IssueNumber >= @StartIssueNumber and IssueNumber <= @CurrentIssueNumber
 			select @AllBetUntilLast = sum(RealAmount) from caipiaos.dbo.tab_GameOrder where IssueNumber >= @StartIssueNumber and IssueNumber <= @LastIssueNumber
-			select @BonusAlready = sum(ProfitAmount - RealAmount) from caipiaos.dbo.tab_GameOrder where IssueNumber >= @StartIssueNumber and IssueNumber < @LastIssueNumber
+			select @BonusAlready = sum(ProfitAmount - RealAmount) from caipiaos.dbo.tab_GameOrder where IssueNumber >= @StartIssueNumber and IssueNumber <= @LastIssueNumber
 		end
 		else
 		begin 
@@ -185,7 +185,7 @@ BEGIN
 		declare @RandNum int = 0
 		declare @Loops int = 0
 		declare @IssueNumber varchar(50) = ''
-		declare @WinRate decimal(10, 2) = 0.0
+		declare @WinRate decimal(10, 3) = 0.0
 		declare @SelectTypeNum varchar(20) = ''
 		declare @SelectTypeColor varchar(20) = ''
 		declare @FinalTypeNum varchar(20) = ''
@@ -201,7 +201,7 @@ BEGIN
 		declare @BingoCounts int = 0
 		declare @FirstLowWinRatePos int = 0 --第一个小值的位置
 		declare @IsFound bit = 0 --是否继续找小值位置
-		declare @StopPos int = 0 --强弱拉遍历停止位置
+		declare @StopPos int = 10 --强弱拉遍历停止位置
 		declare @StepCounts int = 10 --遍历总数
 		declare @IsUserControl bit = 0 --是否单控
 		declare @UserControlType varchar(10) = '' --受控的类型
@@ -307,11 +307,13 @@ BEGIN
 								set @FinalTypeNum = @SelectTypeNum
 								set @FinalTypeColor = @SelectTypeColor
 							end
+							print '弱拉，上拉@WinRate:' + isnull(cast(@WinRate as varchar(20)),0)
+							print '弱拉，上拉@WinRateAsOfLast:' + isnull(cast(@WinRateAsOfLast as varchar(20)),0)
 							if @WinRate > @WinRateAsOfLast
 							begin 
 								set @FinalTypeNum = @SelectTypeNum
 								set @FinalTypeColor = @SelectTypeColor
-								set @BingoCounts =+ 1
+								set @BingoCounts = @BingoCounts + 1
 							end
 							if @BingoCounts = 3 or @Loops = @StepCounts --遍历到第三个大的值或结束
 							begin
@@ -319,25 +321,34 @@ BEGIN
 								print '弱拉，上拉@StepCounts:' + isnull(cast(@StepCounts as varchar(20)),0)
 								set @LogTypeNum = @FinalTypeNum
 								set @LogTypeColor = @FinalTypeColor
+								print '弱拉，上拉@LogTypeNum:' + isnull(cast(@LogTypeNum as varchar(20)),0) 
+								print '弱拉，上拉@LogTypeColor:' + isnull(cast(@LogTypeColor as varchar(20)),0)
 								if @IsUserControl = 1 
 									set @LogControlType = 5 --单杀,弱拉,上拉
 								else 
 									set @LogControlType = 6 --未单杀,弱拉,上拉
 								GOTO UpdateAndInsertLog --记录日志
 							end
+							fetch next from CursorUpdate into @IssueNumber, @SelectTypeNum, @SelectTypeColor, @WinRate
+							continue
 						end
 						else	--下拉找小值
 						begin
+							--print '弱拉，下拉@WinRate:' + isnull(cast(@WinRate as varchar(20)),0)
+							--print '弱拉，下拉@WinRateAsOfLast:' + isnull(cast(@WinRateAsOfLast as varchar(20)),0)
 							if @WinRate < @WinRateAsOfLast and @IsFound = 0  
 							begin 
 								set @FirstLowWinRatePos = @Loops
 								set @IsFound = 1
+								print '弱拉，下拉@FirstLowWinRatePos:' + isnull(cast(@FirstLowWinRatePos as varchar(20)),0) 
 								if @FirstLowWinRatePos >= @StepCounts - 2
 								begin
 									print '弱拉，下拉@FirstLowWinRatePos:' + isnull(cast(@FirstLowWinRatePos as varchar(20)),0) 
 									print '弱拉，下拉@StepCounts:' + isnull(cast(@StepCounts as varchar(20)),0) 
 									set @LogTypeNum = @SelectTypeNum
 									set @LogTypeColor = @SelectTypeColor
+									print '弱拉，下拉@LogTypeNum:' + isnull(cast(@LogTypeNum as varchar(20)),0) 
+									print '弱拉，下拉@LogTypeColor:' + isnull(cast(@LogTypeColor as varchar(20)),0) 
 									if @IsUserControl = 1 
 										set @LogControlType = 7 --单杀,弱拉,下拉
 									else 
@@ -349,16 +360,21 @@ BEGIN
 							end
 							if @Loops = @StopPos or @Loops = @StepCounts 
 							begin
-								print '弱拉，下拉@StopPos:' + isnull(cast(@StopPos as varchar(20)),0) 
-								print '弱拉，下拉@StepCounts:' + isnull(cast(@StepCounts as varchar(20)),0) 
 								set @LogTypeNum = @SelectTypeNum
 								set @LogTypeColor = @SelectTypeColor
+								print '1弱拉，下拉@FirstLowWinRatePos:' + isnull(cast(@FirstLowWinRatePos as varchar(20)),0) 
+								print '1弱拉，下拉@StopPos:' + isnull(cast(@StopPos as varchar(20)),0) 
+								print '1弱拉，下拉@StepCounts:' + isnull(cast(@StepCounts as varchar(20)),0) 
+								print '1弱拉，下拉@LogTypeNum:' + isnull(cast(@LogTypeNum as varchar(20)),0) 
+								print '1弱拉，下拉@LogTypeColor:' + isnull(cast(@LogTypeColor as varchar(20)),0)
 								if @IsUserControl = 1 
 									set @LogControlType = 7 --单杀,弱拉,下拉
 								else 
 									set @LogControlType = 8 --未单杀,弱拉,下拉
 								GOTO UpdateAndInsertLog --记录日志
 							end
+							fetch next from CursorUpdate into @IssueNumber, @SelectTypeNum, @SelectTypeColor, @WinRate
+							continue
 						end
 					end
 				end
@@ -379,17 +395,19 @@ BEGIN
 						set @LogControlType = 9 --保持用户赢率为定值
 					end
 					fetch next from CursorUpdate into @IssueNumber, @SelectTypeNum, @SelectTypeColor, @WinRate
+					continue
 				end
-			end
 			UpdateAndInsertLog:
 				print 'UpdateAndInsertLog' 
 				set @TypeNum = cast(@LogTypeNum as int)
 				set @RandNum = @RandNum + @TypeNum
-				update caipiaos.dbo.tab_Games set Premium = @RandNum, Number = @SelectTypeNum, Colour = @SelectTypeColor
+				update caipiaos.dbo.tab_Games set Premium = @RandNum, Number = @LogTypeNum, Colour = @LogTypeColor
 					where TypeID = @VarTypeID and IssueNumber = @IssueNumber
 				insert into caipiaos.dbo.tab_Game_Control_Log(TypeID, IssueNumber, OldPremium, OldNumber, OldColour, NewPremium, NewNumber, NewColour, ControlType, UpdateTime)
 					values(@VarTypeID, @IssueNumber, @BeforePrenium, @BeforeSelectTypeNum, @BeforeSelectTypeColor, @RandNum, @LogTypeNum, @LogTypeColor, @LogControlType, getdate())
-	
+				break
+			end
+
 			close CursorUpdate
 			deallocate CursorUpdate
 			
