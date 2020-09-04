@@ -1,4 +1,4 @@
-USE [caipiaos]
+USE [9lottery]
 GO
 
 /****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdateTrigger]    Script Date: 09/04/2020 16:35:45 ******/
@@ -6,7 +6,7 @@ IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_Ge
 DROP PROCEDURE [dbo].[sp_GenerateGameNumberUpdateTrigger]
 GO
 
-USE [caipiaos]
+USE [9lottery]
 GO
 
 /****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdateTrigger]    Script Date: 09/04/2020 16:35:45 ******/
@@ -26,7 +26,7 @@ CREATE PROCEDURE [dbo].[sp_GenerateGameNumberUpdateTrigger]
 AS
 BEGIN
 	--控制开关未开启，不控制
-	if (select ISNULL(GameUpdateNumberOpen,0) from caipiaos.dbo.tab_GameNumberSet) = 0
+	if (select ISNULL(GameUpdateNumberOpen,0) from 9lottery.dbo.tab_GameNumberSet) = 0
 		return
 
 	--获取控制信息
@@ -35,7 +35,7 @@ BEGIN
 	declare @PeriodGap int = 0
 	declare @PowerControl int = 0
 	select top 1 @UserControled = UserControled, @ControlRate = ControlRate, @PeriodGap = ISNULL(PeriodGap, 100), @PowerControl = PowerControl
-		from caipiaos.dbo.tab_Game_Control order by UpdateTime desc
+		from 9lottery.dbo.tab_Game_Control order by UpdateTime desc
 	if @PowerControl > 2
 		set @PowerControl = 2
 	else if @PowerControl < 0
@@ -56,12 +56,12 @@ BEGIN
 	declare @BeginIssueNumber varchar(30) = ''
 	declare @LastIssueNumber varchar(30) = ''
 	
-	select @Counts = count(*) from caipiaos.dbo.tab_Games_Awei where State=0 and StartTime>@CurrentTimeLastMin and StartTime<='2020-09-03 23:30:20.000'
+	select @Counts = count(*) from 9lottery.dbo.tab_Games_Awei where State=0 and StartTime>@CurrentTimeLastMin and StartTime<='2020-09-03 23:30:20.000'
 	while @LoopCounts < @Counts
 	begin
 		set @LoopCounts = @LoopCounts + 1
 		select @CurrentIssueNumber=IssueNumber, @OptState=OptState, @IntervalM = IntervalM from  
-			(select row_number() over(order by TypeID) as rowid, * from caipiaos.dbo.tab_Games_Awei where State=0 
+			(select row_number() over(order by TypeID) as rowid, * from 9lottery.dbo.tab_Games_Awei where State=0 
 				and StartTime>@CurrentTimeLastMin and StartTime<='2020-09-03 23:30:20.000') as t 
 			where rowid=@LoopCounts
 		
