@@ -31,12 +31,14 @@ BEGIN
 	declare @ControlRate int = 0
 	declare @PeriodGap int = 0
 	declare @PowerControl int = 0
-	select top 1 @UserControled = UserControled, @ControlRate = ControlRate, @PeriodGap = ISNULL(PeriodGap, 100), @PowerControl = PowerControl
+	select top 1 @UserControled = UserControled, @ControlRate = isnull(ControlRate, 30), @PeriodGap = isnull(PeriodGap, 100), @PowerControl = PowerControl
 		from [9lottery].[dbo].tab_Game_Control order by UpdateTime desc
 	if @PowerControl > 2
 		set @PowerControl = 2
 	else if @PowerControl < 0
 		set @PowerControl = 0
+	if @ControlRate <= 0
+		set @ControlRate = 30
 	print '受控用户@UserControled:' + cast(@UserControled as varchar(10))
 	print '控制指数@ControlRate:' + cast(@ControlRate as varchar(10))
 	print '选取期数区间@PeriodGap:' + cast(@PeriodGap as varchar(10))
@@ -55,6 +57,7 @@ BEGIN
 	select @Counts = count(*) from [9lottery].[dbo].tab_Games where State=0 and StartTime>@CurrentTimeLastMin and StartTime<=@CurrentTime
 	while @LoopCounts < @Counts
 	begin
+		print '-----------------------------------begin------------------------------------------------'
 		set @LoopCounts = @LoopCounts + 1
 		select @CurrentIssueNumber=IssueNumber, @OptState=OptState, @IntervalM = IntervalM from  
 				(select row_number() over(order by TypeID) as rowid, * from [9lottery].[dbo].tab_Games where State=0 
@@ -98,7 +101,7 @@ BEGIN
 		execute sp_GenerateGameNumberUpdate @UserControled, @ControlRate, @PowerControl, 
 					@TypeID, @OptState, @BeginIssueNumber, @CurrentIssueNumber, @LastIssueNumber
 		
-		print '-----------------------------------------------------------------------'
+		print '-----------------------------------end------------------------------------------------'
 	end
 END
 
