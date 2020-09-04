@@ -1,24 +1,20 @@
-USE [caipiaos]
+USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/01/2020 19:09:14 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/04/2020 20:11:04 ******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_GenerateGameNumberUpdate]') AND type in (N'P', N'PC'))
 DROP PROCEDURE [dbo].[sp_GenerateGameNumberUpdate]
 GO
 
-USE [caipiaos]
+USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/01/2020 19:09:14 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/04/2020 20:11:04 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
-
-
-
-
 
 CREATE PROCEDURE [dbo].[sp_GenerateGameNumberUpdate]
 AS
@@ -28,7 +24,7 @@ BEGIN
 	declare @PeriodGap int = 0
 	declare @PowerControl int = 0
 	select top 1 @UserControled = UserControled, @ControlRate = ControlRate, @PeriodGap = PeriodGap, @PowerControl = PowerControl
-		from caipiaos.dbo.tab_Game_Control order by UpdateTime desc
+		from [9lottery].dbo.tab_Game_Control order by UpdateTime desc
 	if @PowerControl > 2
 		set @PowerControl = 2
 	else if @PowerControl < 0
@@ -40,17 +36,17 @@ BEGIN
 	--获取当前期号
 	declare @CurrentIssueNumber varchar(30) = ''
 	declare @CurrentTime datetime = GETDATE()
-	select top 1 @CurrentIssueNumber = IssueNumber from caipiaos.dbo.tab_Games where State=0 and StartTime<=@CurrentTime;
+	select top 1 @CurrentIssueNumber = IssueNumber from [9lottery].dbo.tab_Games where State=0 and StartTime<=@CurrentTime;
 	if @CurrentIssueNumber = '' or @CurrentIssueNumber is null
 		return 
 	print '当前(终止)期数@CurrentIssueNumber:' + @CurrentIssueNumber 
 	--获取预设字段
 	declare @PreControlOptState table(TyepIDEnable int)
 	insert into @PreControlOptState 
-		select case OptState when 1 then TypeID else 0 end from caipiaos.dbo.tab_Games where State=0 and IssueNumber=@CurrentIssueNumber;
+		select case OptState when 1 then TypeID else 0 end from [9lottery].dbo.tab_Games where State=0 and IssueNumber=@CurrentIssueNumber;
 	
 	--计算区间投注金额 派彩金额,区间没有设置，默认当天作为区间
-	if (select ISNULL(GameUpdateNumberOpen,0) from caipiaos.dbo.tab_GameNumberSet)=1 and @ControlRate <> 0
+	if (select ISNULL(GameUpdateNumberOpen,0) from [9lottery].dbo.tab_GameNumberSet)=1 and @ControlRate <> 0
 	begin
 		declare @BonusAlready decimal(20, 2) = 0.0 --派彩金额
 		declare @AllBet decimal(20, 2) = 0.0 --投注金额
@@ -89,17 +85,17 @@ BEGIN
 			set @LastIssueNumber = cast((cast(@CurrentIssueNumber as bigint)-1) as varchar(30))
 			print '起始期数@StartIssueNumber:' + @StartIssueNumber 
 			print '上一期数@LastIssueNumber:' + @LastIssueNumber 
-			select @AllBet = sum(RealAmount) from caipiaos.dbo.tab_GameOrder where IssueNumber >= @StartIssueNumber and IssueNumber <= @CurrentIssueNumber
-			select @AllBetUntilLast = sum(RealAmount) from caipiaos.dbo.tab_GameOrder where IssueNumber >= @StartIssueNumber and IssueNumber <= @LastIssueNumber
-			select @BonusAlready = sum(ProfitAmount - RealAmount) from caipiaos.dbo.tab_GameOrder where IssueNumber >= @StartIssueNumber and IssueNumber <= @LastIssueNumber
+			select @AllBet = sum(RealAmount) from [9lottery].dbo.tab_GameOrder where IssueNumber >= @StartIssueNumber and IssueNumber <= @CurrentIssueNumber
+			select @AllBetUntilLast = sum(RealAmount) from [9lottery].dbo.tab_GameOrder where IssueNumber >= @StartIssueNumber and IssueNumber <= @LastIssueNumber
+			select @BonusAlready = sum(ProfitAmount - RealAmount) from [9lottery].dbo.tab_GameOrder where IssueNumber >= @StartIssueNumber and IssueNumber <= @LastIssueNumber
 		end
 		else
 		begin 
 			--默认按照一天计算
 			print '默认区间为当天'
-			select @AllBet = sum(RealAmount) from caipiaos.dbo.tab_GameOrder where SettlementTime between @DateTodayZero and @CurrentTime
-			select @AllBetUntilLast = sum(RealAmount) from caipiaos.dbo.tab_GameOrder where SettlementTime between @DateTodayZero and @LastPeriodTime
-			select @BonusAlready = sum(ProfitAmount - RealAmount) from caipiaos.dbo.tab_GameOrder where SettlementTime between @DateTodayZero and @LastPeriodTime
+			select @AllBet = sum(RealAmount) from [9lottery].dbo.tab_GameOrder where SettlementTime between @DateTodayZero and @CurrentTime
+			select @AllBetUntilLast = sum(RealAmount) from [9lottery].dbo.tab_GameOrder where SettlementTime between @DateTodayZero and @LastPeriodTime
+			select @BonusAlready = sum(ProfitAmount - RealAmount) from [9lottery].dbo.tab_GameOrder where SettlementTime between @DateTodayZero and @LastPeriodTime
 		end
 		set @WinRateAsOfLast = isnull(@BonusAlready / @AllBetUntilLast, 0)
 		print '投注金额@AllBet:' + isnull(cast(@AllBet as varchar(20)),0)
@@ -116,7 +112,7 @@ BEGIN
 		--#LotteryTotalBonus记录输赢的临时表
 		create table #LotteryTotalBonus(TypeID int, IssueNumber varchar(30), SelectType varchar(20), TotalBonus bigint)
 		create table #UserControledBonus(TypeID int, IssueNumber varchar(30), SelectType varchar(20), TotalBonus bigint)
-		declare CursorResult cursor for select SelectType from caipiaos.dbo.tab_Game_All_SelectType ORDER BY SelectType
+		declare CursorResult cursor for select SelectType from [9lottery].dbo.tab_Game_All_SelectType ORDER BY SelectType
 		open CursorResult
 		fetch next from CursorResult into @Result
 		while @@FETCH_STATUS = 0
@@ -130,11 +126,11 @@ BEGIN
 				set @MultiRate = 4.5
 			insert into #LotteryTotalBonus(TypeID, IssueNumber, SelectType, TotalBonus) 
 				select TypeID, IssueNumber, SelectType, sum(RealAmount) * @MultiRate TotalBonus 
-					from caipiaos.dbo.tab_GameOrder where @Result = SelectType and @CurrentIssueNumber = IssueNumber group by IssueNumber, TypeID, SelectType
+					from [9lottery].dbo.tab_GameOrder where @Result = SelectType and @CurrentIssueNumber = IssueNumber group by IssueNumber, TypeID, SelectType
 			--单人下注信息计算
 			insert into #UserControledBonus(TypeID, IssueNumber, SelectType, TotalBonus) 
 				select TypeID, IssueNumber, SelectType, sum(RealAmount) * @MultiRate TotalBonus 
-					from caipiaos.dbo.tab_GameOrder where @Result = SelectType and @CurrentIssueNumber = IssueNumber and UserID = @UserControled
+					from [9lottery].dbo.tab_GameOrder where @Result = SelectType and @CurrentIssueNumber = IssueNumber and UserID = @UserControled
 						group by IssueNumber, TypeID, SelectType
 
 			fetch next from CursorResult into @Result
@@ -157,7 +153,7 @@ BEGIN
 		--获取彩票所有可能出现的结果
 		create table #LotteryResult(TypeID int, IssueNumber varchar(50), SelectTypeNum varchar(20), SelectTypeColor varchar(20), AllTotalBonus bigint, WinRate decimal(10, 3))
 		insert into #LotteryResult(TypeID, IssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, WinRate) 
-			select TypeID, @CurrentIssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, 0.0 from caipiaos.dbo.tab_Game_Result
+			select TypeID, @CurrentIssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, 0.0 from [9lottery].dbo.tab_Game_Result
 		--算出12种结果对应的输赢(0 violet) (5 violet)
 		UPDATE #LotteryResult SET #LotteryResult.AllTotalBonus =+ isnull(t2.TotalBonus,0) FROM #LotteryResult t1
 		inner join #LotteryTotalBonus t2 ON (t1.TypeID = t2.TypeID and t1.SelectTypeNum = t2.SelectType) or (t1.TypeID = t2.TypeID and t2.SelectType = t1.SelectTypeColor)
@@ -217,7 +213,7 @@ BEGIN
 			set @StopPos = 10
 		--print '强弱拉停止位置@StopPos:' + isnull(cast(@StopPos as varchar(20)),0)
 		
-		declare CursorTypeID cursor for select TypeID from caipiaos.dbo.tab_GameType
+		declare CursorTypeID cursor for select TypeID from [9lottery].dbo.tab_GameType
 		open CursorTypeID
 		fetch next from CursorTypeID into @VarTypeID
 		while @@FETCH_STATUS = 0
@@ -252,7 +248,7 @@ BEGIN
 			set @LogTypeColor = ''--用于记录Log
 			set @RandNum = @NumBegin+(@NumEnd-@NumBegin)*rand()
 			set @RandNum =  @RandNum * 10
-			select @BeforePrenium = Premium, @BeforeSelectTypeNum = Number, @BeforeSelectTypeColor = Colour from caipiaos.dbo.tab_Games where TypeID = @VarTypeID and IssueNumber = @CurrentIssueNumber
+			select @BeforePrenium = Premium, @BeforeSelectTypeNum = Number, @BeforeSelectTypeColor = Colour from [9lottery].dbo.tab_Games where TypeID = @VarTypeID and IssueNumber = @CurrentIssueNumber
 			--print '更改前随机数:' + @BeforePrenium + ',更改前中奖数字:' + @BeforeSelectTypeNum + ',更改前中奖颜色:' + @BeforeSelectTypeColor
 			
 			--去除单杀中的中奖结果
@@ -406,9 +402,9 @@ BEGIN
 				--print 'UpdateAndInsertLog' 
 				set @TypeNum = cast(@LogTypeNum as int)
 				set @RandNum = @RandNum + @TypeNum
-				update caipiaos.dbo.tab_Games set Premium = @RandNum, Number = @LogTypeNum, Colour = @LogTypeColor
+				update [9lottery].dbo.tab_Games set Premium = @RandNum, Number = @LogTypeNum, Colour = @LogTypeColor
 					where TypeID = @VarTypeID and IssueNumber = @IssueNumber
-				insert into caipiaos.dbo.tab_Game_Control_Log(TypeID, IssueNumber, OldPremium, OldNumber, OldColour, NewPremium, NewNumber, NewColour, ControlType, UpdateTime)
+				insert into [9lottery].dbo.tab_Game_Control_Log(TypeID, IssueNumber, OldPremium, OldNumber, OldColour, NewPremium, NewNumber, NewColour, ControlType, UpdateTime)
 					values(@VarTypeID, @IssueNumber, @BeforePrenium, @BeforeSelectTypeNum, @BeforeSelectTypeColor, @RandNum, @LogTypeNum, @LogTypeColor, @LogControlType, getdate())
 				break
 			end
@@ -426,20 +422,6 @@ BEGIN
 		drop table #LotteryResultFinal
 	end
 END
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 GO
 
