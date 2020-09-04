@@ -46,7 +46,7 @@ BEGIN
 	
 	--循环处理开奖
 	declare @CurrentTime datetime = getdate()
-	declare @CurrentTimeLastMin datetime = dateadd(minute,-1,convert(char(16),getdate(),120)+':00.000')
+	declare @CurrentTimeNextMin datetime = dateadd(minute,1,getdate())
 	declare @Counts int = 0
 	declare @LoopCounts int = 0
 	declare @OptState int = -1
@@ -54,16 +54,21 @@ BEGIN
 	declare @CurrentIssueNumber varchar(60) = ''
 	declare @BeginIssueNumber varchar(30) = ''
 	declare @LastIssueNumber varchar(30) = ''
-	select @Counts = count(*) from [9lottery].[dbo].tab_Games where State=0 and StartTime>@CurrentTimeLastMin and StartTime<=@CurrentTime
-	while @LoopCounts < @Counts
+	declare @MinutesElapse int = datediff(minute, convert(datetime,convert(varchar(10),getdate(),120)), @CurrentTimeNextMin)--距离凌晨的分钟数
+	select @Counts = count(*) from [9lottery].[dbo].tab_Games where State=0 and StartTime<=@CurrentTime
+	while @LoopCounts < @Counts and @LoopCounts < 4
 	begin
 		print '-----------------------------------begin------------------------------------------------'
+		--获取开奖期号
 		set @LoopCounts = @LoopCounts + 1
-		select @CurrentIssueNumber=IssueNumber, @OptState=OptState, @IntervalM = IntervalM from  
-				(select row_number() over(order by TypeID) as rowid, * from [9lottery].[dbo].tab_Games where State=0 
-					and StartTime>@CurrentTimeLastMin and StartTime<=@CurrentTime) as t 
-			where rowid=@LoopCounts
-		
+		select @CurrentIssueNumber = IssueNumber, @IntervalM = IntervalM from  
+				(select row_number() over(order by TypeID) as rowid, * from [9lottery].[dbo].tab_Games 
+					where State=0 and StartTime<=@CurrentTime) as t 
+			where rowid=@LoopCounts 
+		if @MinutesElapse = 0--考虑凌晨情况
+			set @MinutesElapse = 1
+		if @MinutesElapse%@IntervalM <> 0
+			continue
 		--计算@LastIssueNumber @BeginIssueNumber
 		set @LastIssueNumber = cast((cast(@CurrentIssueNumber as bigint)-1) as varchar(30))
 		declare @VarDay int = cast(substring(@CurrentIssueNumber, 0, 9) as int)
@@ -104,9 +109,6 @@ BEGIN
 		print '-----------------------------------end------------------------------------------------'
 	end
 END
-
-
-
 
 
 
