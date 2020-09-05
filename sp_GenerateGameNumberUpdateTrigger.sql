@@ -39,10 +39,10 @@ BEGIN
 		set @PowerControl = 0
 	if @ControlRate <= 0
 		set @ControlRate = 30
-	print '受控用户@UserControled:' + cast(@UserControled as varchar(10))
-	print '控制指数@ControlRate:' + cast(@ControlRate as varchar(10))
-	print '选取期数区间@PeriodGap:' + cast(@PeriodGap as varchar(10))
-	print '强弱控制@PowerControl:' + cast(@PowerControl as varchar(10))
+	--print '受控用户@UserControled:' + cast(@UserControled as varchar(10))
+	--print '控制指数@ControlRate:' + cast(@ControlRate as varchar(10))
+	--print '选取期数区间@PeriodGap:' + cast(@PeriodGap as varchar(10))
+	--print '强弱控制@PowerControl:' + cast(@PowerControl as varchar(10))
 	
 	--循环处理开奖
 	declare @CurrentTime datetime = getdate()
@@ -62,7 +62,7 @@ BEGIN
 		--获取开奖期号
 		set @LoopCounts = @LoopCounts + 1
 		select @CurrentIssueNumber = IssueNumber, @IntervalM = IntervalM from  
-				(select row_number() over(order by TypeID) as rowid, * from [9lottery].[dbo].tab_Games 
+				(select row_number() over(order by StartTime desc, TypeID asc) as rowid, * from [9lottery].[dbo].tab_Games 
 					where State=0 and StartTime<=@CurrentTime) as t 
 			where rowid=@LoopCounts 
 		if @MinutesElapse = 0--考虑凌晨情况
@@ -96,11 +96,11 @@ BEGIN
 			else
 				set @BeginIssueNumber = @VarTargetDate + cast(@TypeID as varchar(2)) +cast(@PeriodNums as varchar(10))
 		end
-		print '当前期数@CurrentIssueNumber:' + @CurrentIssueNumber
-		print '上一期数@LastIssueNumber:' + @LastIssueNumber
-		print '起始期数@BeginIssueNumber:' + @BeginIssueNumber 
-		print 'Game类型@TypeID:' + cast(@TypeID as varchar(2)) 
-		print '是否预设@OptState:' + cast(@OptState as varchar(10)) 
+		--print '当前期数@CurrentIssueNumber:' + @CurrentIssueNumber
+		--print '上一期数@LastIssueNumber:' + @LastIssueNumber
+		--print '起始期数@BeginIssueNumber:' + @BeginIssueNumber 
+		--print 'Game类型@TypeID:' + cast(@TypeID as varchar(2)) 
+		--print '是否预设@OptState:' + cast(@OptState as varchar(10)) 
 
 		--调用存储过程处理开奖
 		execute sp_GenerateGameNumberUpdate @UserControled, @ControlRate, @PowerControl, 
