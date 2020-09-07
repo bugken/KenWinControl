@@ -1,7 +1,7 @@
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdateTrigger]    Script Date: 09/04/2020 20:22:17 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdateTrigger]    Script Date: 09/07/2020 19:56:29 ******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_GenerateGameNumberUpdateTrigger]') AND type in (N'P', N'PC'))
 DROP PROCEDURE [dbo].[sp_GenerateGameNumberUpdateTrigger]
 GO
@@ -9,7 +9,7 @@ GO
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdateTrigger]    Script Date: 09/04/2020 20:22:17 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdateTrigger]    Script Date: 09/07/2020 19:56:29 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -23,33 +23,20 @@ GO
 
 
 
+
 CREATE PROCEDURE [dbo].[sp_GenerateGameNumberUpdateTrigger]
 AS
 BEGIN
-	--控制开关未开启或者已经预设,不进行控制
+	--控制总开关是否开启
 	if (select ISNULL(GameUpdateNumberOpen,0) from [9lottery].dbo.tab_GameNumberSet) = 0
-	begin
-		--print '控制开关未开启或该期已经预设'
 		return
-	end
-	--获取控制信息
+	
+	--控制信息变量
 	declare @UserControled int = 0
 	declare @ControlRate int = 0
 	declare @PeriodGap int = 0
 	declare @PowerControl int = 0
-	select top 1 @UserControled = UserControled, @ControlRate = isnull(ControlRate, 30), @PeriodGap = isnull(PeriodGap, 100), @PowerControl = PowerControl
-		from [9lottery].[dbo].tab_Game_Control order by UpdateTime desc
-	if @PowerControl > 2
-		set @PowerControl = 2
-	else if @PowerControl < 0
-		set @PowerControl = 0
-	if @ControlRate <= 0
-		set @ControlRate = 30
-	--print '受控用户@UserControled:' + cast(@UserControled as varchar(10))
-	--print '控制指数@ControlRate:' + cast(@ControlRate as varchar(10))
-	--print '选取期数区间@PeriodGap:' + cast(@PeriodGap as varchar(10))
-	--print '强弱控制@PowerControl:' + cast(@PowerControl as varchar(10))
-	
+	declare @Enabled int = 0
 	--循环处理开奖
 	declare @CurrentTime datetime = getdate()
 	declare @CurrentTimeNextMin datetime = dateadd(minute,1,getdate())
@@ -61,6 +48,7 @@ BEGIN
 	declare @BeginIssueNumber varchar(30) = ''
 	declare @LastIssueNumber varchar(30) = ''
 	declare @MinutesElapse int = datediff(minute, convert(datetime,convert(varchar(10),getdate(),120)), @CurrentTimeNextMin)--距离凌晨的分钟数
+	
 	select @Counts = count(*) from [9lottery].[dbo].tab_Games where State=0 and StartTime<=@CurrentTime
 	while @LoopCounts < @Counts and @LoopCounts < 4
 	begin
@@ -107,21 +95,29 @@ BEGIN
 		--print '起始期数@BeginIssueNumber:' + @BeginIssueNumber 
 		--print 'Game类型@TypeID:' + cast(@TypeID as varchar(2)) 
 		--print '是否预设@OptState:' + cast(@OptState as varchar(10)) 
+		
+		select top 1 @Enabled = Enabled, @UserControled = UserControled, @ControlRate = isnull(ControlRate, 30), @PeriodGap = isnull(PeriodGap, 100), @PowerControl = PowerControl
+			from [9lottery].[dbo].tab_Game_Control where TypeID = @TypeID order by UpdateTime desc
+		if @PowerControl > 2
+			set @PowerControl = 2
+		else if @PowerControl < 0
+			set @PowerControl = 0
+		if @ControlRate <= 0
+			set @ControlRate = 30
+		--print '受控用户@UserControled:' + cast(@UserControled as varchar(10))
+		--print '控制指数@ControlRate:' + cast(@ControlRate as varchar(10))
+		--print '选取期数区间@PeriodGap:' + cast(@PeriodGap as varchar(10))
+		--print '强弱控制@PowerControl:' + cast(@PowerControl as varchar(10))
 
 		--调用存储过程处理开奖
-		execute sp_GenerateGameNumberUpdate @UserControled, @ControlRate, @PowerControl, 
-					@TypeID, @OptState, @BeginIssueNumber, @CurrentIssueNumber, @LastIssueNumber
-		
+		if @Enabled = 1 --判断单个游戏是否开启
+		begin
+			execute sp_GenerateGameNumberUpdate @UserControled, @ControlRate, @PowerControl, 
+						@TypeID, @OptState, @BeginIssueNumber, @CurrentIssueNumber, @LastIssueNumber
+		end
 		print '-----------------------------------end------------------------------------------------'
 	end
 END
-
-
-
-
-
-
-
 
 
 
