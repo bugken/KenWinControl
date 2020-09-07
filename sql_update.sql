@@ -44,10 +44,24 @@ END
 
 GO
 
+IF  EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[DF__tab_Game___TypeI__23C93658]') AND type = 'D')
+BEGIN
+ALTER TABLE [dbo].[tab_Game_Control] DROP CONSTRAINT [DF__tab_Game___TypeI__23C93658]
+END
+
+GO
+
+IF  EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[DF__tab_Game___Enabl__24BD5A91]') AND type = 'D')
+BEGIN
+ALTER TABLE [dbo].[tab_Game_Control] DROP CONSTRAINT [DF__tab_Game___Enabl__24BD5A91]
+END
+
+GO
+
 USE [9lottery]
 GO
 
-/****** Object:  Table [dbo].[tab_Game_Control]    Script Date: 09/07/2020 19:40:29 ******/
+/****** Object:  Table [dbo].[tab_Game_Control]    Script Date: 09/07/2020 19:50:55 ******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[tab_Game_Control]') AND type in (N'U'))
 DROP TABLE [dbo].[tab_Game_Control]
 GO
@@ -55,7 +69,7 @@ GO
 USE [9lottery]
 GO
 
-/****** Object:  Table [dbo].[tab_Game_Control]    Script Date: 09/07/2020 19:40:31 ******/
+/****** Object:  Table [dbo].[tab_Game_Control]    Script Date: 09/07/2020 19:50:58 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -64,6 +78,8 @@ GO
 
 CREATE TABLE [dbo].[tab_Game_Control](
 	[GID] [bigint] IDENTITY(1,1) NOT FOR REPLICATION NOT NULL,
+	[TypeID] [int] NULL,
+	[Enabled] [int] NULL,
 	[UserControled] [int] NULL,
 	[ControlRate] [int] NULL,
 	[PeriodGap] [int] NULL,
@@ -95,6 +111,12 @@ GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'最后更新时间' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tab_Game_Control', @level2type=N'COLUMN',@level2name=N'UpdateTime'
 GO
 
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'游戏类型' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tab_Game_Control', @level2type=N'COLUMN',@level2name=N'TypeID'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'游戏是否开启控杀,每中游戏单独的控制开关' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tab_Game_Control', @level2type=N'COLUMN',@level2name=N'Enabled'
+GO
+
 ALTER TABLE [dbo].[tab_Game_Control] ADD  DEFAULT ((0)) FOR [UserControled]
 GO
 
@@ -110,9 +132,21 @@ GO
 ALTER TABLE [dbo].[tab_Game_Control] ADD  DEFAULT (getdate()) FOR [UpdateTime]
 GO
 
+ALTER TABLE [dbo].[tab_Game_Control] ADD  DEFAULT ((0)) FOR [TypeID]
+GO
+
+ALTER TABLE [dbo].[tab_Game_Control] ADD  DEFAULT ((0)) FOR [Enabled]
+GO
+
+
+
 
 --增加一条记录
-INSERT INTO [9lottery].[dbo].[tab_Game_Control] ([UserControled], [ControlRate], [PeriodGap], [PowerControl]) VALUES ('0', '50', '100', '0');
+INSERT INTO [9lottery].[dbo].[tab_Game_Control] ([TypeID], [Enabled], [UserControled], [ControlRate], [PeriodGap], [PowerControl], [UpdateTime]) VALUES ('1', '0', '0', '50', '100', '0', getdate());
+INSERT INTO [9lottery].[dbo].[tab_Game_Control] ([TypeID], [Enabled], [UserControled], [ControlRate], [PeriodGap], [PowerControl], [UpdateTime]) VALUES ('2', '0', '0', '50', '100', '0', getdate());
+INSERT INTO [9lottery].[dbo].[tab_Game_Control] ([TypeID], [Enabled], [UserControled], [ControlRate], [PeriodGap], [PowerControl], [UpdateTime]) VALUES ('3', '0', '0', '50', '100', '0', getdate());
+INSERT INTO [9lottery].[dbo].[tab_Game_Control] ([TypeID], [Enabled], [UserControled], [ControlRate], [PeriodGap], [PowerControl], [UpdateTime]) VALUES ('4', '0', '0', '50', '100', '0', getdate());
+
 
 ---------------------------------------增加 tab_Game_Control_Log--------------------------------------------------------------------------------------------
 USE [9lottery]
