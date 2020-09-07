@@ -1,7 +1,7 @@
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/07/2020 20:08:04 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/07/2020 22:02:16 ******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_GenerateGameNumberUpdate]') AND type in (N'P', N'PC'))
 DROP PROCEDURE [dbo].[sp_GenerateGameNumberUpdate]
 GO
@@ -9,12 +9,13 @@ GO
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/07/2020 20:08:04 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/07/2020 22:02:16 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
 
 
 
@@ -132,9 +133,7 @@ BEGIN
 	select * from #LotteryResultFinal order by TypeID, WinRate desc
 	
 	--更新游戏表并写入日志
-	declare @NumBegin Int=1000    --随机数的最小值 
-	declare @NumEnd Int=9999   --随机数的最大值 
-	declare @RandNum int = 0
+	declare @RandNumVar varchar(20) = ''
 	declare @Loops int = 0
 	declare @IssueNumber varchar(50) = ''
 	declare @WinRate decimal(10, 3) = 0.0
@@ -167,8 +166,6 @@ BEGIN
 		set @StopPos = 10
 	--print '强弱拉停止位置@StopPos:' + isnull(cast(@StopPos as varchar(20)),0)
 
-	set @RandNum = @NumBegin+(@NumEnd-@NumBegin)*rand()
-	set @RandNum =  @RandNum * 10
 	select @BeforePrenium = Premium, @BeforeSelectTypeNum = Number, @BeforeSelectTypeColor = Colour from [9lottery].dbo.tab_Games where TypeID = @InTypeID and IssueNumber = @InCurrentIssueNumber
 	--print '更改前随机数:' + @BeforePrenium + ',更改前中奖数字:' + @BeforeSelectTypeNum + ',更改前中奖颜色:' + @BeforeSelectTypeColor
 	
@@ -321,12 +318,11 @@ BEGIN
 		end
 	UpdateAndInsertLog:
 		--print 'UpdateAndInsertLog' 
-		set @TypeNum = cast(@LogTypeNum as int)
-		set @RandNum = @RandNum + @TypeNum
-		update [9lottery].dbo.tab_Games set Premium = @RandNum, Number = @LogTypeNum, Colour = @LogTypeColor
+		set @RandNumVar = substring(@BeforePrenium, 0, 5) + @LogTypeNum
+		update [9lottery].dbo.tab_Games set Premium = @RandNumVar, Number = @LogTypeNum, Colour = @LogTypeColor
 			where TypeID = @InTypeID and IssueNumber = @IssueNumber
 		insert into [9lottery].dbo.tab_Game_Control_Log(TypeID, IssueNumber, OldPremium, OldNumber, OldColour, NewPremium, NewNumber, NewColour, ControlType, UpdateTime)
-			values(@InTypeID, @IssueNumber, @BeforePrenium, @BeforeSelectTypeNum, @BeforeSelectTypeColor, @RandNum, @LogTypeNum, @LogTypeColor, @LogControlType, getdate())
+			values(@InTypeID, @IssueNumber, @BeforePrenium, @BeforeSelectTypeNum, @BeforeSelectTypeColor, @RandNumVar, @LogTypeNum, @LogTypeColor, @LogControlType, getdate())
 		break
 	end
 
@@ -337,6 +333,7 @@ BEGIN
 	drop table #UserControledBonus
 	drop table #LotteryResultFinal
 END
+
 
 
 
