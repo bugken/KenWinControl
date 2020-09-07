@@ -1,7 +1,7 @@
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/04/2020 20:35:01 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/07/2020 20:08:04 ******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_GenerateGameNumberUpdate]') AND type in (N'P', N'PC'))
 DROP PROCEDURE [dbo].[sp_GenerateGameNumberUpdate]
 GO
@@ -9,12 +9,14 @@ GO
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/04/2020 20:35:01 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/07/2020 20:08:04 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
+
 
 CREATE PROCEDURE [dbo].[sp_GenerateGameNumberUpdate]
 	@InUserControled int = 0,
@@ -30,9 +32,17 @@ BEGIN
 	--控制开关未开启或者已经预设,不进行控制
 	if (select ISNULL(GameUpdateNumberOpen,0) from [9lottery].dbo.tab_GameNumberSet) = 0 or @InOptState = 1
 	begin
-		print '控制开关未开启或该期已经预设'
+		--print '控制开关未开启或该期已经预设'
 		return
 	end
+	
+	--投注人数不得少于5，否则不调控
+	declare @UserCounts int = 0
+	select @UserCounts = count(UserCounts) from 
+			(select count(distinct UserID) UserCounts from [9lottery].[dbo].tab_GameOrder where IssueNumber = @InCurrentIssueNumber group by UserID) as t
+	if @UserCounts <= 5
+		return 
+	
 	--计算区间投注金额 派彩金额
 	declare @BonusAlready decimal(20, 2) = 0.0 --派彩金额
 	declare @AllBet decimal(20, 2) = 0.0 --投注金额
@@ -42,10 +52,10 @@ BEGIN
 	select @AllBetUntilLast = sum(RealAmount) from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and IssueNumber >= @InBeginIssueNumber and IssueNumber <= @InLastIssueNumber
 	select @BonusAlready = sum(ProfitAmount - RealAmount) from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and IssueNumber >= @InBeginIssueNumber and IssueNumber <= @InLastIssueNumber
 	set @WinRateAsOfLast = isnull(@BonusAlready / @AllBetUntilLast, 0)
-	print '投注金额@AllBet:' + isnull(cast(@AllBet as varchar(20)),0)
-	print '截止上期投注金额@AllBetUntilLast:' + isnull(cast(@AllBetUntilLast as varchar(20)),0)
-	print '已派彩金额@BonusAlready:' + isnull(cast(@BonusAlready as varchar(20)),0)
-	print '截止上期赢率@WinRateAsOfLast:' + isnull(cast(@WinRateAsOfLast as varchar(20)),0)
+	--print '投注金额@AllBet:' + isnull(cast(@AllBet as varchar(20)),0)
+	--print '截止上期投注金额@AllBetUntilLast:' + isnull(cast(@AllBetUntilLast as varchar(20)),0)
+	--print '已派彩金额@BonusAlready:' + isnull(cast(@BonusAlready as varchar(20)),0)
+	--print '截止上期赢率@WinRateAsOfLast:' + isnull(cast(@WinRateAsOfLast as varchar(20)),0)
 	
 	--计算每种结果的输赢金额
 	declare @LotteryGame varchar(50) = '0,1,2,3,4,5,6,7,8,9,red,green,violet'
@@ -88,7 +98,7 @@ BEGIN
 	select @BetCounts = count(*) from #LotteryTotalBonus
 	if @BetCounts = 0
 	begin
-		print '玩家没有下注'
+		--print '玩家没有下注'
 		drop table #LotteryTotalBonus
 		drop table #UserControledBonus
 		return
@@ -115,7 +125,7 @@ BEGIN
 	
 	--计算WinRate
 	declare @TargetControlRate decimal(4,2) = (@InControlRate+0.0)/100
-	print '目标赢率@TargetControlRate:' + cast(@TargetControlRate as varchar(20))
+	--print '目标赢率@TargetControlRate:' + cast(@TargetControlRate as varchar(20))
 	update #LotteryResultFinal set WinRate = (isnull(@BonusAlready, 0)+AllTotalBonus)/@AllBet
 	delete from #UserControledBonus where SelectType in ('red', 'green', 'violet') --个人颜色下注不处理，如果去掉颜色，可选结果就减半，调控力度不够
 	select TypeID, SelectType, IssueNumber, TotalBonus from #UserControledBonus
@@ -166,7 +176,7 @@ BEGIN
 	select top 1 @UserControlType = SelectType from #UserControledBonus order by TotalBonus desc
 	if @UserControlType is not null and @UserControlType <> ''
 	begin
-		print '去除单杀中奖结果数字@UserControlType:' + isnull(cast(@UserControlType as varchar(20)),0)
+		--print '去除单杀中奖结果数字@UserControlType:' + isnull(cast(@UserControlType as varchar(20)),0)
 		delete from #LotteryResultFinal where SelectTypeNum = @UserControlType
 		set @IsUserControl = 1 --单杀使能
 		set @StepCounts = 9
@@ -327,6 +337,8 @@ BEGIN
 	drop table #UserControledBonus
 	drop table #LotteryResultFinal
 END
+
+
 
 GO
 
