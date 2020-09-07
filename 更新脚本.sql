@@ -6,56 +6,56 @@
 4.增加表 tab_Game_Result
 */
 ---------------------------------------增加 tab_Game_Control--------------------------------------------------------------------------------------------
-USE [caipiaos]
+USE [9lottery]
 GO
 
-IF  EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[DF__tab_Game___UserC__035C66C6]') AND type = 'D')
+IF  EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[DF__tab_Game___UserC__1A74D648]') AND type = 'D')
 BEGIN
-ALTER TABLE [dbo].[tab_Game_Control] DROP CONSTRAINT [DF__tab_Game___UserC__035C66C6]
+ALTER TABLE [dbo].[tab_Game_Control] DROP CONSTRAINT [DF__tab_Game___UserC__1A74D648]
 END
 
 GO
 
-IF  EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[DF__tab_Game___Contr__04508AFF]') AND type = 'D')
+IF  EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[DF__tab_Game___Contr__1B68FA81]') AND type = 'D')
 BEGIN
-ALTER TABLE [dbo].[tab_Game_Control] DROP CONSTRAINT [DF__tab_Game___Contr__04508AFF]
+ALTER TABLE [dbo].[tab_Game_Control] DROP CONSTRAINT [DF__tab_Game___Contr__1B68FA81]
 END
 
 GO
 
-IF  EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[DF__tab_Game___Perio__0544AF38]') AND type = 'D')
+IF  EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[DF__tab_Game___Perio__1C5D1EBA]') AND type = 'D')
 BEGIN
-ALTER TABLE [dbo].[tab_Game_Control] DROP CONSTRAINT [DF__tab_Game___Perio__0544AF38]
+ALTER TABLE [dbo].[tab_Game_Control] DROP CONSTRAINT [DF__tab_Game___Perio__1C5D1EBA]
 END
 
 GO
 
-IF  EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[DF__tab_Game___Power__072CF7AA]') AND type = 'D')
+IF  EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[DF__tab_Game___Power__1D5142F3]') AND type = 'D')
 BEGIN
-ALTER TABLE [dbo].[tab_Game_Control] DROP CONSTRAINT [DF__tab_Game___Power__072CF7AA]
+ALTER TABLE [dbo].[tab_Game_Control] DROP CONSTRAINT [DF__tab_Game___Power__1D5142F3]
 END
 
 GO
 
-IF  EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[DF__tab_Game___Updat__0638D371]') AND type = 'D')
+IF  EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[DF__tab_Game___Updat__1E45672C]') AND type = 'D')
 BEGIN
-ALTER TABLE [dbo].[tab_Game_Control] DROP CONSTRAINT [DF__tab_Game___Updat__0638D371]
+ALTER TABLE [dbo].[tab_Game_Control] DROP CONSTRAINT [DF__tab_Game___Updat__1E45672C]
 END
 
 GO
 
-USE [caipiaos]
+USE [9lottery]
 GO
 
-/****** Object:  Table [dbo].[tab_Game_Control]    Script Date: 09/01/2020 19:22:36 ******/
+/****** Object:  Table [dbo].[tab_Game_Control]    Script Date: 09/07/2020 19:40:29 ******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[tab_Game_Control]') AND type in (N'U'))
 DROP TABLE [dbo].[tab_Game_Control]
 GO
 
-USE [caipiaos]
+USE [9lottery]
 GO
 
-/****** Object:  Table [dbo].[tab_Game_Control]    Script Date: 09/01/2020 19:22:38 ******/
+/****** Object:  Table [dbo].[tab_Game_Control]    Script Date: 09/07/2020 19:40:31 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -110,11 +110,12 @@ GO
 ALTER TABLE [dbo].[tab_Game_Control] ADD  DEFAULT (getdate()) FOR [UpdateTime]
 GO
 
+
 --增加一条记录
-INSERT INTO [caipiaos].[dbo].[tab_Game_Control] ([UserControled], [ControlRate], [PeriodGap], [PowerControl]) VALUES ('0', '50', '100', '0');
+INSERT INTO [9lottery].[dbo].[tab_Game_Control] ([UserControled], [ControlRate], [PeriodGap], [PowerControl]) VALUES ('0', '50', '100', '0');
 
 ---------------------------------------增加 tab_Game_Control_Log--------------------------------------------------------------------------------------------
-USE [caipiaos]
+USE [9lottery]
 GO
 
 IF  EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[DF_tab_Game_Control_Log_ControlType]') AND type = 'D')
@@ -124,25 +125,25 @@ END
 
 GO
 
-IF  EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[DF__tab_Game___Updat__1392CE8F]') AND type = 'D')
+IF  EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[DF__tab_Game___Updat__23FE4082]') AND type = 'D')
 BEGIN
-ALTER TABLE [dbo].[tab_Game_Control_Log] DROP CONSTRAINT [DF__tab_Game___Updat__1392CE8F]
+ALTER TABLE [dbo].[tab_Game_Control_Log] DROP CONSTRAINT [DF__tab_Game___Updat__23FE4082]
 END
 
 GO
 
-USE [caipiaos]
+USE [9lottery]
 GO
 
-/****** Object:  Table [dbo].[tab_Game_Control_Log]    Script Date: 09/01/2020 19:29:55 ******/
+/****** Object:  Table [dbo].[tab_Game_Control_Log]    Script Date: 09/07/2020 19:41:09 ******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[tab_Game_Control_Log]') AND type in (N'U'))
 DROP TABLE [dbo].[tab_Game_Control_Log]
 GO
 
-USE [caipiaos]
+USE [9lottery]
 GO
 
-/****** Object:  Table [dbo].[tab_Game_Control_Log]    Script Date: 09/01/2020 19:29:57 ******/
+/****** Object:  Table [dbo].[tab_Game_Control_Log]    Script Date: 09/07/2020 19:41:11 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -215,29 +216,31 @@ ALTER TABLE [dbo].[tab_Game_Control_Log] ADD  DEFAULT (getdate()) FOR [UpdateTim
 GO
 
 
+
+
 -----------------------------------------------------增加表 tab_Game_All_SelectType--------------------------------------------------------------------------------
-USE [caipiaos]
+USE [9lottery]
 GO
 
-IF  EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[DF__tab_Game___Resul__0E0EFF63]') AND type = 'D')
+IF  EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[DF__tab_Game___Selec__28C2F59F]') AND type = 'D')
 BEGIN
-ALTER TABLE [dbo].[tab_Game_All_SelectType] DROP CONSTRAINT [DF__tab_Game___Resul__0E0EFF63]
+ALTER TABLE [dbo].[tab_Game_All_SelectType] DROP CONSTRAINT [DF__tab_Game___Selec__28C2F59F]
 END
 
 GO
 
-USE [caipiaos]
+USE [9lottery]
 GO
 
-/****** Object:  Table [dbo].[tab_Game_All_SelectType]    Script Date: 09/01/2020 19:35:35 ******/
+/****** Object:  Table [dbo].[tab_Game_All_SelectType]    Script Date: 09/07/2020 19:41:43 ******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[tab_Game_All_SelectType]') AND type in (N'U'))
 DROP TABLE [dbo].[tab_Game_All_SelectType]
 GO
 
-USE [caipiaos]
+USE [9lottery]
 GO
 
-/****** Object:  Table [dbo].[tab_Game_All_SelectType]    Script Date: 09/01/2020 19:35:38 ******/
+/****** Object:  Table [dbo].[tab_Game_All_SelectType]    Script Date: 09/07/2020 19:41:46 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -264,52 +267,55 @@ GO
 ALTER TABLE [dbo].[tab_Game_All_SelectType] ADD  DEFAULT (NULL) FOR [SelectType]
 GO
 
+
+
+
 --增加数据
-INSERT INTO [caipiaos].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'0');
-INSERT INTO [caipiaos].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'1');
-INSERT INTO [caipiaos].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'2');
-INSERT INTO [caipiaos].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'3');
-INSERT INTO [caipiaos].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'4');
-INSERT INTO [caipiaos].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'5');
-INSERT INTO [caipiaos].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'6');
-INSERT INTO [caipiaos].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'7');
-INSERT INTO [caipiaos].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'8');
-INSERT INTO [caipiaos].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'9');
-INSERT INTO [caipiaos].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'red');
-INSERT INTO [caipiaos].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'green');
-INSERT INTO [caipiaos].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'violet');
+INSERT INTO [9lottery].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'0');
+INSERT INTO [9lottery].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'1');
+INSERT INTO [9lottery].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'2');
+INSERT INTO [9lottery].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'3');
+INSERT INTO [9lottery].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'4');
+INSERT INTO [9lottery].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'5');
+INSERT INTO [9lottery].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'6');
+INSERT INTO [9lottery].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'7');
+INSERT INTO [9lottery].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'8');
+INSERT INTO [9lottery].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'9');
+INSERT INTO [9lottery].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'red');
+INSERT INTO [9lottery].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'green');
+INSERT INTO [9lottery].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'violet');
 
 
 -----------------------------------------------------增加表 tab_Game_Result----------------------------------------------------------------------------------------------------
-USE [caipiaos]
+USE [9lottery]
 GO
 
-IF  EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[DF__tab_Game___AllTo__492FC531]') AND type = 'D')
+IF  EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[DF__tab_Game___AllTo__2D87AABC]') AND type = 'D')
 BEGIN
-ALTER TABLE [dbo].[tab_Game_Result] DROP CONSTRAINT [DF__tab_Game___AllTo__492FC531]
+ALTER TABLE [dbo].[tab_Game_Result] DROP CONSTRAINT [DF__tab_Game___AllTo__2D87AABC]
 END
 
 GO
 
-IF  EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[DF__tab_Game___WinRa__4A23E96A]') AND type = 'D')
+IF  EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[DF__tab_Game___WinRa__2E7BCEF5]') AND type = 'D')
 BEGIN
-ALTER TABLE [dbo].[tab_Game_Result] DROP CONSTRAINT [DF__tab_Game___WinRa__4A23E96A]
+ALTER TABLE [dbo].[tab_Game_Result] DROP CONSTRAINT [DF__tab_Game___WinRa__2E7BCEF5]
 END
 
 GO
 
-USE [caipiaos]
+USE [9lottery]
 GO
 
-/****** Object:  Table [dbo].[tab_Game_Result]    Script Date: 09/01/2020 19:40:28 ******/
+/****** Object:  Table [dbo].[tab_Game_Result]    Script Date: 09/07/2020 19:43:35 ******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[tab_Game_Result]') AND type in (N'U'))
 DROP TABLE [dbo].[tab_Game_Result]
 GO
 
-USE [caipiaos]
+USE [9lottery]
 GO
 
-/****** Object:  Table [dbo].[tab_Game_Result]    Script Date: 09/01/2020 19:40:31 ******/
+/****** Object:  Table [dbo].[tab_Game_Result]    Script Date: 09/07/2020 19:43:38 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -360,55 +366,58 @@ GO
 
 ALTER TABLE [dbo].[tab_Game_Result] ADD  DEFAULT ((0)) FOR [WinRate]
 GO
+
+
+
 ----------------------------增加数据
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('1', '0', 'red', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('1', '1', 'green', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('1', '2', 'red', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('1', '3', 'green', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('1', '4', 'red', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('1', '5', 'green', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('1', '6', 'red', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('1', '7', 'green', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('1', '8', 'red', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('1', '9', 'green', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('1', '0', 'violet', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('1', '5', 'violet', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('2', '0', 'red', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('2', '1', 'green', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('2', '2', 'red', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('2', '3', 'green', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('2', '4', 'red', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('2', '5', 'green', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('2', '6', 'red', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('2', '7', 'green', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('2', '8', 'red', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('2', '9', 'green', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('2', '0', 'violet', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('2', '5', 'violet', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('3', '0', 'red', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('3', '1', 'green', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('3', '2', 'red', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('3', '3', 'green', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('3', '4', 'red', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('3', '5', 'green', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('3', '6', 'red', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('3', '7', 'green', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('3', '8', 'red', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('3', '9', 'green', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('3', '0', 'violet', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('3', '5', 'violet', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('4', '0', 'red', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('4', '1', 'green', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('4', '2', 'red', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('4', '3', 'green', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('4', '4', 'red', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('4', '5', 'green', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('4', '6', 'red', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('4', '7', 'green', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('4', '8', 'red', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('4', '9', 'green', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('4', '0', 'violet', '0', '.00');
-INSERT INTO [caipiaos].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('4', '5', 'violet', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('1', '0', 'red', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('1', '1', 'green', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('1', '2', 'red', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('1', '3', 'green', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('1', '4', 'red', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('1', '5', 'green', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('1', '6', 'red', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('1', '7', 'green', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('1', '8', 'red', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('1', '9', 'green', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('1', '0', 'violet', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('1', '5', 'violet', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('2', '0', 'red', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('2', '1', 'green', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('2', '2', 'red', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('2', '3', 'green', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('2', '4', 'red', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('2', '5', 'green', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('2', '6', 'red', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('2', '7', 'green', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('2', '8', 'red', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('2', '9', 'green', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('2', '0', 'violet', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('2', '5', 'violet', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('3', '0', 'red', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('3', '1', 'green', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('3', '2', 'red', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('3', '3', 'green', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('3', '4', 'red', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('3', '5', 'green', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('3', '6', 'red', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('3', '7', 'green', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('3', '8', 'red', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('3', '9', 'green', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('3', '0', 'violet', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('3', '5', 'violet', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('4', '0', 'red', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('4', '1', 'green', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('4', '2', 'red', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('4', '3', 'green', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('4', '4', 'red', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('4', '5', 'green', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('4', '6', 'red', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('4', '7', 'green', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('4', '8', 'red', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('4', '9', 'green', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('4', '0', 'violet', '0', '.00');
+INSERT INTO [9lottery].[dbo].[tab_Game_Result] ([TypeID], [SelectTypeNum], [SelectTypeColor], [AllTotalBonus], [WinRate]) VALUES ('4', '5', 'violet', '0', '.00');
 
 
 --------------------------------------------------------------------------------------------------------------------------
