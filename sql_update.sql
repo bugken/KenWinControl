@@ -174,7 +174,8 @@ INSERT INTO [9lottery].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'
 INSERT INTO [9lottery].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'red');
 INSERT INTO [9lottery].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'green');
 INSERT INTO [9lottery].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'violet');
-
+INSERT INTO [9lottery].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'big');
+INSERT INTO [9lottery].[dbo].[tab_Game_All_SelectType] ([SelectType]) VALUES (N'small');
 
 -----------------------------------------------------增加表 tab_Game_Result----------------------------------------------------------------------------------------------------
 USE [9lottery]

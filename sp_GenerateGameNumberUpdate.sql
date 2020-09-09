@@ -59,10 +59,10 @@ BEGIN
 	--print '截止上期赢率@WinRateAsOfLast:' + isnull(cast(@WinRateAsOfLast as varchar(20)),0)
 	
 	--计算每种结果的输赢金额
-	declare @LotteryGame varchar(50) = '0,1,2,3,4,5,6,7,8,9,red,green,violet'
+	declare @GameAllType varchar(50) = '0,1,2,3,4,5,6,7,8,9,violet,red,green,big,small'
 	declare @Result varchar(10) = ''
 	declare @Index int = 0
-	declare @MultiRate decimal(2, 1) = 0.0
+	declare @MultiRate decimal(2, 1) = 1.0
 	declare @TotalBonus int = 0
 	--#LotteryTotalBonus记录输赢的临时表
 	create table #LotteryTotalBonus(TypeID int, IssueNumber varchar(30), SelectType varchar(20), TotalBonus bigint)
@@ -72,13 +72,13 @@ BEGIN
 	fetch next from CursorResult into @Result
 	while @@FETCH_STATUS = 0
 	begin
-		select @Index = CHARINDEX(@Result, @LotteryGame)/2
-		if @Index < 10 --数字
+		select @Index = CHARINDEX(@Result, @GameAllType)
+		if @Index < 20 --数字
 			set @MultiRate = 8
-		else if @Index = 10	or @Index = 12--red green
-			set @MultiRate = 1
-		else if @Index = 15 --violet
+		else if @Index = 21 --violet
 			set @MultiRate = 4.5
+		else if @Index >= 28 --red:28 green:32 big:38 small:42
+			set @MultiRate = 1
 		insert into #LotteryTotalBonus(TypeID, IssueNumber, SelectType, TotalBonus) 
 			select TypeID, IssueNumber, SelectType, sum(RealAmount) * @MultiRate TotalBonus 
 				from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and @Result = SelectType and @InCurrentIssueNumber = IssueNumber 
