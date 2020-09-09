@@ -110,9 +110,15 @@ BEGIN
 	create table #LotteryResult(TypeID int, IssueNumber varchar(50), SelectTypeNum varchar(20), SelectTypeColor varchar(20), AllTotalBonus bigint, WinRate decimal(10, 3))
 	insert into #LotteryResult(TypeID, IssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, WinRate) 
 		select TypeID, @InCurrentIssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, 0.0 from [9lottery].dbo.tab_Game_Result
-	--算出12种结果对应的输赢(0 violet) (5 violet)
+	--算出12种结果对应的派彩(0 violet) (5 violet)
 	UPDATE #LotteryResult SET #LotteryResult.AllTotalBonus =+ isnull(t2.TotalBonus,0) FROM #LotteryResult t1
-		inner join #LotteryTotalBonus t2 ON (t1.TypeID = t2.TypeID and t1.SelectTypeNum = t2.SelectType) or (t1.TypeID = t2.TypeID and t2.SelectType = t1.SelectTypeColor)
+		inner join #LotteryTotalBonus t2 ON t1.TypeID = t2.TypeID and (t1.SelectTypeNum = t2.SelectType or t2.SelectType = t1.SelectTypeColor)
+	--加入大小下注的派彩
+	UPDATE #LotteryResult SET #LotteryResult.AllTotalBonus =+ isnull(t2.TotalBonus,0) FROM #LotteryResult t1  
+		inner join #LotteryTotalBonus t2 ON t1.TypeID = t2.TypeID and t2.SelectType='big' and t1.SelectTypeNum in ('5','6','7','8','9')
+	UPDATE #LotteryResult SET #LotteryResult.AllTotalBonus =+ isnull(t2.TotalBonus,0) FROM #LotteryResult t1  
+		inner join #LotteryTotalBonus t2 ON t1.TypeID = t2.TypeID and t2.SelectType='small' and t1.SelectTypeNum in ('0','1','2','3','4')
+	
 	--select * from #LotteryResult order by TypeID, WinRate desc
 	--更改结果的颜色
 	UPDATE #LotteryResult SET SelectTypeColor = (case SelectTypeNum when '0' then 'red,violet' when '5' then 'green,violet' else SelectTypeColor end)
