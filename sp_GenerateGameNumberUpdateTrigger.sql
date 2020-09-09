@@ -1,7 +1,7 @@
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdateTrigger]    Script Date: 09/07/2020 19:56:29 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdateTrigger]    Script Date: 09/09/2020 16:02:43 ******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_GenerateGameNumberUpdateTrigger]') AND type in (N'P', N'PC'))
 DROP PROCEDURE [dbo].[sp_GenerateGameNumberUpdateTrigger]
 GO
@@ -9,12 +9,13 @@ GO
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdateTrigger]    Script Date: 09/07/2020 19:56:29 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdateTrigger]    Script Date: 09/09/2020 16:02:43 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
 
 
 
@@ -96,8 +97,8 @@ BEGIN
 		--print 'Game类型@TypeID:' + cast(@TypeID as varchar(2)) 
 		--print '是否预设@OptState:' + cast(@OptState as varchar(10)) 
 		
-		select top 1 @Enabled = Enabled, @UserControled = UserControled, @ControlRate = isnull(ControlRate, 30), @PeriodGap = isnull(PeriodGap, 100), @PowerControl = PowerControl
-			from [9lottery].[dbo].tab_Game_Control where TypeID = @TypeID order by UpdateTime desc
+		select top 1 @Enabled = ControlEnabled, @UserControled = ControledUserID, @ControlRate = isnull(ControlRate, 30), @PeriodGap = isnull(ControlPeriodGap, 100), 
+			@PowerControl = ControlPower from [9lottery].[dbo].tab_GameType where TypeID = @TypeID order by TypeID
 		if @PowerControl > 2
 			set @PowerControl = 2
 		else if @PowerControl < 0
@@ -118,6 +119,7 @@ BEGIN
 		print '-----------------------------------end------------------------------------------------'
 	end
 END
+
 
 
 
