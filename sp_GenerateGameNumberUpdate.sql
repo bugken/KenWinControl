@@ -72,7 +72,7 @@ BEGIN
 	fetch next from CursorResult into @Result
 	while @@FETCH_STATUS = 0
 	begin
-		select @Index = CHARINDEX(@Result, @GameAllType)
+		select @Index = charindex(@Result, @GameAllType)
 		if @Index < 20 --数字
 			set @MultiRate = 8
 		else if @Index = 21 --violet
@@ -110,7 +110,7 @@ BEGIN
 	create table #LotteryResult(TypeID int, IssueNumber varchar(50), SelectTypeNum varchar(20), SelectTypeColor varchar(20), AllTotalBonus bigint, WinRate decimal(10, 3))
 	insert into #LotteryResult(TypeID, IssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, WinRate) 
 		select TypeID, @InCurrentIssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, 0.0 from [9lottery].dbo.tab_Game_Result
-	--算出12种结果对应的派彩(0 violet) (5 violet)
+	--算出12种结果对应的派彩(0 violet) (0 red) (5 violet) (5 green)
 	UPDATE #LotteryResult SET #LotteryResult.AllTotalBonus =+ isnull(t2.TotalBonus,0) FROM #LotteryResult t1
 		inner join #LotteryTotalBonus t2 ON t1.TypeID = t2.TypeID and (t1.SelectTypeNum = t2.SelectType or t2.SelectType = t1.SelectTypeColor)
 	--加入大小下注的派彩
@@ -134,7 +134,7 @@ BEGIN
 	declare @TargetControlRate decimal(4,2) = (@InControlRate+0.0)/100
 	--print '目标赢率@TargetControlRate:' + cast(@TargetControlRate as varchar(20))
 	update #LotteryResultFinal set WinRate = (isnull(@BonusAlready, 0)+AllTotalBonus)/@AllBet
-	delete from #UserControledBonus where SelectType in ('red', 'green', 'violet') --个人颜色下注不处理，如果去掉颜色，可选结果就减半，调控力度不够
+	--delete from #UserControledBonus where SelectType in ('red', 'green', 'violet') --个人颜色下注不处理，如果去掉颜色，可选结果就减半，调控力度不够
 	select TypeID, SelectType, IssueNumber, TotalBonus from #UserControledBonus
 	select * from #LotteryResultFinal order by TypeID, WinRate desc
 	
@@ -179,12 +179,32 @@ BEGIN
 	select top 1 @UserControlType = SelectType from #UserControledBonus order by TotalBonus desc
 	if @UserControlType is not null and @UserControlType <> ''
 	begin
-		--print '去除单杀中奖结果数字@UserControlType:' + isnull(cast(@UserControlType as varchar(20)),0)
-		delete from #LotteryResultFinal where SelectTypeNum = @UserControlType
+		--print '去除单杀中奖结果类型@UserControlType:' + isnull(cast(@UserControlType as varchar(20)),0)
+		--区分颜色和数字
 		set @IsUserControl = 1 --单杀使能
-		set @StepCounts = 9
-		if @PushUp = 0 and @InPowerControl = 1 --强下拉
-			set @StopPos = 9 
+		if @UserControlType in ('0','1','2','3','4','5','6','7','8','9')
+		begin
+			delete from #LotteryResultFinal where SelectTypeNum = @UserControlType
+			set @StepCounts = 9
+			if @PushUp = 0 and @InPowerControl = 1 --强下拉
+				set @StopPos = 9 
+		end
+		else if @UserControlType in ('red','green','violet')
+		begin  
+			delete from #LotteryResultFinal where charindex(@UserControlType, SelectTypeColor) > 0
+			if @UserControlType = '@violet'
+			begin
+				set @StepCounts = 8
+				if @PushUp = 0 and @InPowerControl = 1 --强下拉
+					set @StopPos = 8
+			end
+			else
+			begin 
+				set @StepCounts = 5
+				if @PushUp = 0 and @InPowerControl = 1 --强下拉
+					set @StopPos = 5
+			end
+		end
 	end
 
 	declare CursorUpdate cursor for select IssueNumber, SelectTypeNum, SelectTypeColor, WinRate 
