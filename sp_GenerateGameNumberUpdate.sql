@@ -1,7 +1,7 @@
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/07/2020 22:02:16 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/13/2020 13:49:12 ******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_GenerateGameNumberUpdate]') AND type in (N'P', N'PC'))
 DROP PROCEDURE [dbo].[sp_GenerateGameNumberUpdate]
 GO
@@ -9,12 +9,13 @@ GO
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/07/2020 22:02:16 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/13/2020 13:49:12 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
 
 
 
@@ -189,7 +190,7 @@ BEGIN
 			if @PushUp = 0 and @InPowerControl = 1 --强下拉
 				set @StopPos = 9 
 		end
-		else if @UserControlType in ('red','green','violet')
+		else if @UserControlType in ('red','green','violet', 'big', 'small')
 		begin  
 			delete from #LotteryResultFinal where charindex(@UserControlType, SelectTypeColor) > 0
 			if @UserControlType = '@violet'
@@ -359,6 +360,7 @@ BEGIN
 	drop table #UserControledBonus
 	drop table #LotteryResultFinal
 END
+
 
 
 
