@@ -39,6 +39,7 @@ BEGIN
 	declare @PeriodGap int = 0
 	declare @PowerControl int = 0
 	declare @Enabled int = 0
+	declare @TypeIDFromTable int = 0
 	--循环处理开奖
 	declare @CurrentTime datetime = getdate()
 	declare @CurrentTimeNextMin datetime = dateadd(minute,1,getdate())
@@ -55,13 +56,13 @@ BEGIN
 	select @Counts = count(*) from [9lottery].[dbo].tab_Games where State=0 and StartTime<=@CurrentTime
 	--select * from [9lottery].[dbo].tab_Games where State=0 and StartTime<=@CurrentTime
 	print '当前期数@Counts:' + cast(@Counts as varchar(30))
-	print '当前时间@CurrentTime:' + cast(@CurrentTime as varchar(30))
 	while @LoopCounts < @Counts 
 	begin
 		print '-----------------------------------begin------------------------------------------------'
-		--获取开奖期号
 		set @LoopCounts = @LoopCounts + 1
-		select @CurrentIssueNumber = IssueNumber, @IntervalM = IntervalM, @OptState = OptState,@IssueStartTime = StartTime from  
+		
+		--获取开奖期号
+		select @CurrentIssueNumber = IssueNumber, @IntervalM = IntervalM, @OptState = OptState,@IssueStartTime = StartTime, @TypeIDFromTable = TypeID from  
 				(select row_number() over(order by StartTime desc, TypeID asc) as rowid, * from [9lottery].[dbo].tab_Games 
 					where State=0 and StartTime<=@CurrentTime) as t 
 			where rowid=@LoopCounts 
@@ -78,6 +79,22 @@ BEGIN
 			print '上期开奖没有置1,期号@CurrentIssueNumber' + @CurrentIssueNumber
 			continue
 		end
+		
+		--获取控制信息
+		select top 1 @Enabled = ControlEnabled, @UserControled = ControledUserID, @ControlRate = isnull(ControlRate, 30), @PeriodGap = isnull(ControlPeriodGap, 100), 
+			@PowerControl = ControlPower from [9lottery].[dbo].tab_GameType where TypeID = @TypeIDFromTable order by TypeID
+		if @PowerControl > 2
+			set @PowerControl = 2
+		else if @PowerControl < 0
+			set @PowerControl = 0
+		if @ControlRate <= 0
+			set @ControlRate = 30
+		print '受控用户@UserControled:' + cast(@UserControled as varchar(10))
+		print '控制指数@ControlRate:' + cast(@ControlRate as varchar(10))
+		print '选取期数区间@PeriodGap:' + cast(@PeriodGap as varchar(10))
+		print '强弱控制@PowerControl:' + cast(@PowerControl as varchar(10))
+		print '是否是能@Enabled:' + cast(@Enabled as varchar(10))
+		
 		--计算@LastIssueNumber @BeginIssueNumber
 		set @LastIssueNumber = cast((cast(@CurrentIssueNumber as bigint)-1) as varchar(30))
 		declare @VarDay int = cast(substring(@CurrentIssueNumber, 0, 9) as int)
@@ -111,19 +128,6 @@ BEGIN
 		print 'Game类型@TypeID:' + cast(@TypeID as varchar(2)) 
 		print '是否预设@OptState:' + cast(@OptState as varchar(10)) 
 		
-		select top 1 @Enabled = ControlEnabled, @UserControled = ControledUserID, @ControlRate = isnull(ControlRate, 30), @PeriodGap = isnull(ControlPeriodGap, 100), 
-			@PowerControl = ControlPower from [9lottery].[dbo].tab_GameType where TypeID = @TypeID order by TypeID
-		if @PowerControl > 2
-			set @PowerControl = 2
-		else if @PowerControl < 0
-			set @PowerControl = 0
-		if @ControlRate <= 0
-			set @ControlRate = 30
-		print '受控用户@UserControled:' + cast(@UserControled as varchar(10))
-		print '控制指数@ControlRate:' + cast(@ControlRate as varchar(10))
-		print '选取期数区间@PeriodGap:' + cast(@PeriodGap as varchar(10))
-		print '强弱控制@PowerControl:' + cast(@PowerControl as varchar(10))
-
 		--调用存储过程处理开奖
 		if @Enabled = 1 --判断单个游戏是否开启
 		begin
@@ -134,8 +138,6 @@ BEGIN
 		print '-----------------------------------end------------------------------------------------'
 	end
 END
-
-
 
 
 
