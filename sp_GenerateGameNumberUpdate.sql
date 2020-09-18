@@ -1,7 +1,7 @@
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/13/2020 13:49:12 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/18/2020 19:26:36 ******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_GenerateGameNumberUpdate]') AND type in (N'P', N'PC'))
 DROP PROCEDURE [dbo].[sp_GenerateGameNumberUpdate]
 GO
@@ -9,12 +9,16 @@ GO
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/13/2020 13:49:12 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/18/2020 19:26:36 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
+
+
+
 
 
 
@@ -34,16 +38,20 @@ BEGIN
 	--控制开关未开启或者已经预设,不进行控制
 	if (select ISNULL(GameUpdateNumberOpen,0) from [9lottery].dbo.tab_GameNumberSet) = 0 or @InOptState = 1
 	begin
-		--print '控制开关未开启或该期已经预设'
+		print '控制开关未开启或该期已经预设'
 		return
 	end
 	
 	--投注人数不得少于5，否则不调控
 	declare @UserCounts int = 0
 	select @UserCounts = count(UserCounts) from 
-			(select count(distinct UserID) UserCounts from [9lottery].[dbo].tab_GameOrder where IssueNumber = @InCurrentIssueNumber group by UserID) as t
+			(select count(distinct UserID) UserCounts from [9lottery].[dbo].tab_GameOrder where IssueNumber = @InCurrentIssueNumber and TypeID = @InTypeID group by UserID) as t
 	if @UserCounts <= 5
-		return 
+	begin
+		--print '下注人数小于5个人'
+		--return
+		print '' 
+	end
 	
 	--计算区间投注金额 派彩金额
 	declare @BonusAlready decimal(20, 2) = 0.0 --派彩金额
@@ -54,10 +62,10 @@ BEGIN
 	select @AllBetUntilLast = sum(RealAmount) from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and IssueNumber >= @InBeginIssueNumber and IssueNumber <= @InLastIssueNumber
 	select @BonusAlready = sum(ProfitAmount - RealAmount) from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and IssueNumber >= @InBeginIssueNumber and IssueNumber <= @InLastIssueNumber
 	set @WinRateAsOfLast = isnull(@BonusAlready / @AllBetUntilLast, 0)
-	--print '投注金额@AllBet:' + isnull(cast(@AllBet as varchar(20)),0)
-	--print '截止上期投注金额@AllBetUntilLast:' + isnull(cast(@AllBetUntilLast as varchar(20)),0)
-	--print '已派彩金额@BonusAlready:' + isnull(cast(@BonusAlready as varchar(20)),0)
-	--print '截止上期赢率@WinRateAsOfLast:' + isnull(cast(@WinRateAsOfLast as varchar(20)),0)
+	print '投注金额@AllBet:' + isnull(cast(@AllBet as varchar(20)),0)
+	print '截止上期投注金额@AllBetUntilLast:' + isnull(cast(@AllBetUntilLast as varchar(20)),0)
+	print '已派彩金额@BonusAlready:' + isnull(cast(@BonusAlready as varchar(20)),0)
+	print '截止上期赢率@WinRateAsOfLast:' + isnull(cast(@WinRateAsOfLast as varchar(20)),0)
 	
 	--计算每种结果的输赢金额
 	declare @GameAllType varchar(50) = '0,1,2,3,4,5,6,7,8,9,violet,red,green,big,small'
@@ -100,7 +108,7 @@ BEGIN
 	select @BetCounts = count(*) from #LotteryTotalBonus
 	if @BetCounts = 0
 	begin
-		--print '玩家没有下注'
+		print '玩家没有下注'
 		drop table #LotteryTotalBonus
 		drop table #UserControledBonus
 		return
@@ -110,20 +118,23 @@ BEGIN
 	--获取彩票所有可能出现的结果
 	create table #LotteryResult(TypeID int, IssueNumber varchar(50), SelectTypeNum varchar(20), SelectTypeColor varchar(20), AllTotalBonus bigint, WinRate decimal(10, 3))
 	insert into #LotteryResult(TypeID, IssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, WinRate) 
-		select TypeID, @InCurrentIssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, 0.0 from [9lottery].dbo.tab_Game_Result
-	--算出12种结果对应的派彩(0 violet) (0 red) (5 violet) (5 green)
-	UPDATE #LotteryResult SET #LotteryResult.AllTotalBonus =+ isnull(t2.TotalBonus,0) FROM #LotteryResult t1
-		inner join #LotteryTotalBonus t2 ON t1.TypeID = t2.TypeID and (t1.SelectTypeNum = t2.SelectType or t2.SelectType = t1.SelectTypeColor)
+		select TypeID, @InCurrentIssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, 0.0 from [9lottery].dbo.tab_Game_Result where TypeID = @InTypeID
+	--算出11种结果对应的派彩(10 violet)
+	update #LotteryResult set #LotteryResult.AllTotalBonus += isnull(t2.TotalBonus,0) from #LotteryResult t1
+		inner join #LotteryTotalBonus t2 on t1.TypeID = t2.TypeID and (t1.SelectTypeNum = t2.SelectType or t2.SelectType = t1.SelectTypeColor)
 	--加入大小下注的派彩
-	UPDATE #LotteryResult SET #LotteryResult.AllTotalBonus =+ isnull(t2.TotalBonus,0) FROM #LotteryResult t1  
-		inner join #LotteryTotalBonus t2 ON t1.TypeID = t2.TypeID and t2.SelectType='big' and t1.SelectTypeNum in ('5','6','7','8','9')
-	UPDATE #LotteryResult SET #LotteryResult.AllTotalBonus =+ isnull(t2.TotalBonus,0) FROM #LotteryResult t1  
-		inner join #LotteryTotalBonus t2 ON t1.TypeID = t2.TypeID and t2.SelectType='small' and t1.SelectTypeNum in ('0','1','2','3','4')
-	
-	--select * from #LotteryResult order by TypeID, WinRate desc
+	update #LotteryResult set #LotteryResult.AllTotalBonus += isnull(t2.TotalBonus,0) from #LotteryResult t1  
+		inner join #LotteryTotalBonus t2 on t1.TypeID = t2.TypeID and t2.SelectType='big' and t1.SelectTypeNum in ('5','6','7','8','9')
+	update #LotteryResult set #LotteryResult.AllTotalBonus += isnull(t2.TotalBonus,0) from #LotteryResult t1  
+		inner join #LotteryTotalBonus t2 on t1.TypeID = t2.TypeID and t2.SelectType='small' and t1.SelectTypeNum in ('0','1','2','3','4')
+	--加上violet下注的派彩并删除violet记录
+	update #LotteryResult set #LotteryResult.AllTotalBonus += isnull(t2.TotalBonus,0) from #LotteryResult t1  
+		inner join #LotteryTotalBonus t2 on t1.TypeID = t2.TypeID and t2.SelectType='violet' and t1.SelectTypeNum in ('0','5')
+	delete from #LotteryResult where SelectTypeColor = 'violet' and SelectTypeNum = '10'
+
 	--更改结果的颜色
-	UPDATE #LotteryResult SET SelectTypeColor = (case SelectTypeNum when '0' then 'red,violet' when '5' then 'green,violet' else SelectTypeColor end)
-	--select * from #LotteryResult order by TypeID, WinRate desc
+	update #LotteryResult SET SelectTypeColor = (case SelectTypeNum when '0' then 'red,violet' when '5' then 'green,violet' else SelectTypeColor end)
+	select * from #LotteryResult order by TypeID, AllTotalBonus desc
 	--合并出10种结果
 	create table #LotteryResultFinal(TypeID int, IssueNumber varchar(50), SelectTypeNum varchar(20), SelectTypeColor varchar(20), AllTotalBonus bigint, WinRate decimal(10, 3))
 	insert into #LotteryResultFinal(TypeID, IssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, WinRate) 
@@ -133,10 +144,9 @@ BEGIN
 	
 	--计算WinRate
 	declare @TargetControlRate decimal(4,2) = (@InControlRate+0.0)/100
-	--print '目标赢率@TargetControlRate:' + cast(@TargetControlRate as varchar(20))
+	print '目标赢率@TargetControlRate:' + cast(@TargetControlRate as varchar(20))
 	update #LotteryResultFinal set WinRate = (isnull(@BonusAlready, 0)+AllTotalBonus)/@AllBet
-	--delete from #UserControledBonus where SelectType in ('red', 'green', 'violet') --个人颜色下注不处理，如果去掉颜色，可选结果就减半，调控力度不够
-	select TypeID, SelectType, IssueNumber, TotalBonus from #UserControledBonus
+	--select TypeID, SelectType, IssueNumber, TotalBonus from #UserControledBonus
 	select * from #LotteryResultFinal order by TypeID, WinRate desc
 	
 	--更新游戏表并写入日志
@@ -171,16 +181,16 @@ BEGIN
 		set @StopPos = 1
 	if @PushUp = 0 and @InPowerControl = 1 --强下拉
 		set @StopPos = 10
-	--print '强弱拉停止位置@StopPos:' + isnull(cast(@StopPos as varchar(20)),0)
+	print '强弱拉停止位置@StopPos:' + isnull(cast(@StopPos as varchar(20)),0)
 
 	select @BeforePrenium = Premium, @BeforeSelectTypeNum = Number, @BeforeSelectTypeColor = Colour from [9lottery].dbo.tab_Games where TypeID = @InTypeID and IssueNumber = @InCurrentIssueNumber
-	--print '更改前随机数:' + @BeforePrenium + ',更改前中奖数字:' + @BeforeSelectTypeNum + ',更改前中奖颜色:' + @BeforeSelectTypeColor
+	print '更改前随机数:' + @BeforePrenium + ',更改前中奖数字:' + @BeforeSelectTypeNum + ',更改前中奖颜色:' + @BeforeSelectTypeColor
 	
 	--去除单杀中的中奖结果
 	select top 1 @UserControlType = SelectType from #UserControledBonus order by TotalBonus desc
 	if @UserControlType is not null and @UserControlType <> ''
 	begin
-		--print '去除单杀中奖结果类型@UserControlType:' + isnull(cast(@UserControlType as varchar(20)),0)
+		print '去除单杀中奖结果类型@UserControlType:' + isnull(cast(@UserControlType as varchar(20)),0)
 		--区分颜色和数字
 		set @IsUserControl = 1 --单杀使能
 		if @UserControlType in ('0','1','2','3','4','5','6','7','8','9')
@@ -249,8 +259,8 @@ BEGIN
 						set @FinalTypeNum = @SelectTypeNum
 						set @FinalTypeColor = @SelectTypeColor
 					end
-					--print '弱拉，上拉@WinRate:' + isnull(cast(@WinRate as varchar(20)),0)
-					--print '弱拉，上拉@WinRateAsOfLast:' + isnull(cast(@WinRateAsOfLast as varchar(20)),0)
+					print '弱拉，上拉@WinRate:' + isnull(cast(@WinRate as varchar(20)),0)
+					print '弱拉，上拉@WinRateAsOfLast:' + isnull(cast(@WinRateAsOfLast as varchar(20)),0)
 					if @WinRate > @WinRateAsOfLast
 					begin 
 						set @FinalTypeNum = @SelectTypeNum
@@ -259,12 +269,12 @@ BEGIN
 					end
 					if @BingoCounts = 3 or @Loops = @StepCounts --遍历到第三个大的值或结束
 					begin
-						--print '弱拉，上拉@BingoCounts:' + isnull(cast(@BingoCounts as varchar(20)),0) 
-						--print '弱拉，上拉@StepCounts:' + isnull(cast(@StepCounts as varchar(20)),0)
+						print '弱拉，上拉@BingoCounts:' + isnull(cast(@BingoCounts as varchar(20)),0) 
+						print '弱拉，上拉@StepCounts:' + isnull(cast(@StepCounts as varchar(20)),0)
 						set @LogTypeNum = @FinalTypeNum
 						set @LogTypeColor = @FinalTypeColor
-						--print '弱拉，上拉@LogTypeNum:' + isnull(cast(@LogTypeNum as varchar(20)),0) 
-						--print '弱拉，上拉@LogTypeColor:' + isnull(cast(@LogTypeColor as varchar(20)),0)
+						print '弱拉，上拉@LogTypeNum:' + isnull(cast(@LogTypeNum as varchar(20)),0) 
+						print '弱拉，上拉@LogTypeColor:' + isnull(cast(@LogTypeColor as varchar(20)),0)
 						if @IsUserControl = 1 
 							set @LogControlType = 5 --单杀,弱拉,上拉
 						else 
@@ -276,21 +286,21 @@ BEGIN
 				end
 				else	--下拉找小值
 				begin
-					--print '弱拉，下拉@WinRate:' + isnull(cast(@WinRate as varchar(20)),0)
-					--print '弱拉，下拉@WinRateAsOfLast:' + isnull(cast(@WinRateAsOfLast as varchar(20)),0)
+					print '弱拉，下拉@WinRate:' + isnull(cast(@WinRate as varchar(20)),0)
+					print '弱拉，下拉@WinRateAsOfLast:' + isnull(cast(@WinRateAsOfLast as varchar(20)),0)
 					if @WinRate < @WinRateAsOfLast and @IsFound = 0  
 					begin 
 						set @FirstLowWinRatePos = @Loops
 						set @IsFound = 1
-						--print '弱拉，下拉@FirstLowWinRatePos:' + isnull(cast(@FirstLowWinRatePos as varchar(20)),0) 
+						print '弱拉，下拉@FirstLowWinRatePos:' + isnull(cast(@FirstLowWinRatePos as varchar(20)),0) 
 						if @FirstLowWinRatePos >= @StepCounts - 2
 						begin
-							--print '弱拉，下拉@FirstLowWinRatePos:' + isnull(cast(@FirstLowWinRatePos as varchar(20)),0) 
-							--print '弱拉，下拉@StepCounts:' + isnull(cast(@StepCounts as varchar(20)),0) 
+							print '弱拉，下拉@FirstLowWinRatePos:' + isnull(cast(@FirstLowWinRatePos as varchar(20)),0) 
+							print '弱拉，下拉@StepCounts:' + isnull(cast(@StepCounts as varchar(20)),0) 
 							set @LogTypeNum = @SelectTypeNum
 							set @LogTypeColor = @SelectTypeColor
-							--print '弱拉，下拉@LogTypeNum:' + isnull(cast(@LogTypeNum as varchar(20)),0) 
-							--print '弱拉，下拉@LogTypeColor:' + isnull(cast(@LogTypeColor as varchar(20)),0) 
+							print '弱拉，下拉@LogTypeNum:' + isnull(cast(@LogTypeNum as varchar(20)),0) 
+							print '弱拉，下拉@LogTypeColor:' + isnull(cast(@LogTypeColor as varchar(20)),0) 
 							if @IsUserControl = 1 
 								set @LogControlType = 7 --单杀,弱拉,下拉
 							else 
@@ -304,11 +314,11 @@ BEGIN
 					begin
 						set @LogTypeNum = @SelectTypeNum
 						set @LogTypeColor = @SelectTypeColor
-						--print '1弱拉，下拉@FirstLowWinRatePos:' + isnull(cast(@FirstLowWinRatePos as varchar(20)),0) 
-						--print '1弱拉，下拉@StopPos:' + isnull(cast(@StopPos as varchar(20)),0) 
-						--print '1弱拉，下拉@StepCounts:' + isnull(cast(@StepCounts as varchar(20)),0) 
-						--print '1弱拉，下拉@LogTypeNum:' + isnull(cast(@LogTypeNum as varchar(20)),0) 
-						--print '1弱拉，下拉@LogTypeColor:' + isnull(cast(@LogTypeColor as varchar(20)),0)
+						print '1弱拉，下拉@FirstLowWinRatePos:' + isnull(cast(@FirstLowWinRatePos as varchar(20)),0) 
+						print '1弱拉，下拉@StopPos:' + isnull(cast(@StopPos as varchar(20)),0) 
+						print '1弱拉，下拉@StepCounts:' + isnull(cast(@StepCounts as varchar(20)),0) 
+						print '1弱拉，下拉@LogTypeNum:' + isnull(cast(@LogTypeNum as varchar(20)),0) 
+						print '1弱拉，下拉@LogTypeColor:' + isnull(cast(@LogTypeColor as varchar(20)),0)
 						if @IsUserControl = 1 
 							set @LogControlType = 7 --单杀,弱拉,下拉
 						else 
@@ -325,7 +335,7 @@ BEGIN
 			--保持用户赢率在设定值
 			if @Loops = @StepCounts
 			begin
-				--print '控制杀率到固定值@StepCounts:' + isnull(cast(@StepCounts as varchar(20)),0)
+				print '控制杀率到固定值@StepCounts:' + isnull(cast(@StepCounts as varchar(20)),0)
 				set @LogTypeNum = @SelectTypeNum
 				set @LogTypeColor = @SelectTypeColor
 				set @LogControlType = 9 --保持用户赢率为定值
@@ -333,8 +343,8 @@ BEGIN
 			end
 			if @WinRate <= @TargetControlRate
 			begin
-				--print '1控制杀率到固定值@WinRate:' + isnull(cast(@WinRate as varchar(20)),0)
-				--print '1控制杀率到固定值@TargetControlRate:' + isnull(cast(@TargetControlRate as varchar(20)),0)
+				print '1控制杀率到固定值@WinRate:' + isnull(cast(@WinRate as varchar(20)),0)
+				print '1控制杀率到固定值@TargetControlRate:' + isnull(cast(@TargetControlRate as varchar(20)),0)
 				set @LogTypeNum = @SelectTypeNum
 				set @LogTypeColor = @SelectTypeColor
 				set @LogControlType = 9 --保持用户赢率为定值
@@ -344,7 +354,7 @@ BEGIN
 			continue
 		end
 	UpdateAndInsertLog:
-		--print 'UpdateAndInsertLog' 
+		print 'UpdateAndInsertLog' 
 		set @RandNumVar = substring(@BeforePrenium, 0, 5) + @LogTypeNum
 		update [9lottery].dbo.tab_Games set Premium = @RandNumVar, Number = @LogTypeNum, Colour = @LogTypeColor
 			where TypeID = @InTypeID and IssueNumber = @IssueNumber
@@ -360,6 +370,10 @@ BEGIN
 	drop table #UserControledBonus
 	drop table #LotteryResultFinal
 END
+
+
+
+
 
 
 
