@@ -173,7 +173,6 @@ BEGIN
 		set @StopPos = 1
 	if @PushUp = 0 and @InPowerControl = 1 --强下拉
 		set @StopPos = 10
-	print '强弱拉停止位置@StopPos:' + isnull(cast(@StopPos as varchar(20)),0)
 
 	select @BeforePrenium = Premium, @BeforeSelectTypeNum = Number, @BeforeSelectTypeColor = Colour from [9lottery].dbo.tab_Games where TypeID = @InTypeID and IssueNumber = @InCurrentIssueNumber
 	print '更改前随机数:' + @BeforePrenium + ',更改前中奖数字:' + @BeforeSelectTypeNum + ',更改前中奖颜色:' + @BeforeSelectTypeColor
@@ -195,7 +194,7 @@ BEGIN
 		else if @UserControlType in ('red','green','violet')
 		begin  
 			delete from #LotteryResult where charindex(@UserControlType, SelectTypeColor) > 0
-			if @UserControlType = '@violet'
+			if @UserControlType = 'violet'
 			begin
 				set @StepCounts = 8
 				if @PushUp = 0 and @InPowerControl = 1 --强下拉
@@ -219,7 +218,10 @@ BEGIN
 				set @StopPos = 5
 		end
 	end
+	print '强弱拉停止位置@StopPos:' + isnull(cast(@StopPos as varchar(20)),0)
+	print '遍历次数@StepCounts:' + isnull(cast(@StepCounts as varchar(20)),0)
 
+	select * from #LotteryResult order by WinRate desc
 	declare CursorUpdate cursor for select IssueNumber, SelectTypeNum, SelectTypeColor, WinRate 
 			from #LotteryResult where TypeID = @InTypeID ORDER BY WinRate desc
 	open CursorUpdate
@@ -256,14 +258,14 @@ BEGIN
 			begin
 				if @PushUp = 1	--上拉找大值
 				begin
-					if @Loops = 1 --@WinRate都比@WinRateAsOfLast小
+					if @Loops = 1 --@WinRate都比@@TargetControlRate小
 					begin
 						set @FinalTypeNum = @SelectTypeNum
 						set @FinalTypeColor = @SelectTypeColor
 					end
 					print '弱拉，上拉@WinRate:' + isnull(cast(@WinRate as varchar(20)),0)
-					print '弱拉，上拉@WinRateAsOfLast:' + isnull(cast(@WinRateAsOfLast as varchar(20)),0)
-					if @WinRate > @WinRateAsOfLast
+					print '弱拉，上拉@TargetControlRate:' + isnull(cast(@TargetControlRate as varchar(20)),0)
+					if @WinRate > @TargetControlRate
 					begin 
 						set @FinalTypeNum = @SelectTypeNum
 						set @FinalTypeColor = @SelectTypeColor
@@ -289,8 +291,8 @@ BEGIN
 				else	--下拉找小值
 				begin
 					print '弱拉，下拉@WinRate:' + isnull(cast(@WinRate as varchar(20)),0)
-					print '弱拉，下拉@WinRateAsOfLast:' + isnull(cast(@WinRateAsOfLast as varchar(20)),0)
-					if @WinRate < @WinRateAsOfLast and @IsFound = 0  
+					print '弱拉，下拉@TargetControlRate:' + isnull(cast(@TargetControlRate as varchar(20)),0)
+					if @WinRate < @TargetControlRate and @IsFound = 0  
 					begin 
 						set @FirstLowWinRatePos = @Loops
 						set @IsFound = 1
