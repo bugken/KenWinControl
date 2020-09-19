@@ -131,10 +131,8 @@ BEGIN
 	update #LotteryResult set #LotteryResult.AllTotalBonus += isnull(t2.TotalBonus,0) from #LotteryResult t1  
 		inner join #LotteryTotalBonus t2 on t1.TypeID = t2.TypeID and t2.SelectType='violet' and t1.SelectTypeNum in ('0','5')
 	delete from #LotteryResult where SelectTypeColor = 'violet' and SelectTypeNum = '10'
-
 	--更改结果的颜色
 	update #LotteryResult SET SelectTypeColor = (case SelectTypeNum when '0' then 'red,violet' when '5' then 'green,violet' else SelectTypeColor end)
-	select * from #LotteryResult order by TypeID, AllTotalBonus desc
 	
 	--计算WinRate
 	declare @TargetControlRate decimal(4,2) = (@InControlRate+0.0)/100
@@ -194,7 +192,7 @@ BEGIN
 			if @PushUp = 0 and @InPowerControl = 1 --强下拉
 				set @StopPos = 9 
 		end
-		else if @UserControlType in ('red','green','violet', 'big', 'small')
+		else if @UserControlType in ('red','green','violet')
 		begin  
 			delete from #LotteryResult where charindex(@UserControlType, SelectTypeColor) > 0
 			if @UserControlType = '@violet'
@@ -209,6 +207,16 @@ BEGIN
 				if @PushUp = 0 and @InPowerControl = 1 --强下拉
 					set @StopPos = 5
 			end
+		end
+		else if @UserControlType in ('big', 'small')
+		begin
+			if @UserControlType = 'big'
+				delete from #LotteryResult where SelectTypeNum in ('5', '6', '7', '8', '9')
+			else
+				delete from #LotteryResult where SelectTypeNum in ('0', '1', '2', '3', '4')
+			set @StepCounts = 5
+			if @PushUp = 0 and @InPowerControl = 1 --强下拉
+				set @StopPos = 5
 		end
 	end
 
