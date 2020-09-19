@@ -135,19 +135,13 @@ BEGIN
 	--更改结果的颜色
 	update #LotteryResult SET SelectTypeColor = (case SelectTypeNum when '0' then 'red,violet' when '5' then 'green,violet' else SelectTypeColor end)
 	select * from #LotteryResult order by TypeID, AllTotalBonus desc
-	--合并出10种结果
-	create table #LotteryResultFinal(TypeID int, IssueNumber varchar(50), SelectTypeNum varchar(20), SelectTypeColor varchar(20), AllTotalBonus bigint, WinRate decimal(10, 3))
-	insert into #LotteryResultFinal(TypeID, IssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, WinRate) 
-		select TypeID, IssueNumber, SelectTypeNum, SelectTypeColor, sum(AllTotalBonus), 0.0 from #LotteryResult 
-			group by TypeID, IssueNumber, SelectTypeNum, SelectTypeColor
-	drop table #LotteryResult
 	
 	--计算WinRate
 	declare @TargetControlRate decimal(4,2) = (@InControlRate+0.0)/100
 	print '目标赢率@TargetControlRate:' + cast(@TargetControlRate as varchar(20))
-	update #LotteryResultFinal set WinRate = (isnull(@BonusAlready, 0)+AllTotalBonus)/@AllBet
-	--select TypeID, SelectType, IssueNumber, TotalBonus from #UserControledBonus
-	select * from #LotteryResultFinal order by TypeID, WinRate desc
+	update #LotteryResult set WinRate = (isnull(@BonusAlready, 0)+AllTotalBonus)/@AllBet
+	select TypeID, SelectType, IssueNumber, TotalBonus from #UserControledBonus
+	select * from #LotteryResult order by TypeID, WinRate desc
 	
 	--更新游戏表并写入日志
 	declare @RandNumVar varchar(20) = ''
@@ -195,14 +189,14 @@ BEGIN
 		set @IsUserControl = 1 --单杀使能
 		if @UserControlType in ('0','1','2','3','4','5','6','7','8','9')
 		begin
-			delete from #LotteryResultFinal where SelectTypeNum = @UserControlType
+			delete from #LotteryResult where SelectTypeNum = @UserControlType
 			set @StepCounts = 9
 			if @PushUp = 0 and @InPowerControl = 1 --强下拉
 				set @StopPos = 9 
 		end
 		else if @UserControlType in ('red','green','violet', 'big', 'small')
 		begin  
-			delete from #LotteryResultFinal where charindex(@UserControlType, SelectTypeColor) > 0
+			delete from #LotteryResult where charindex(@UserControlType, SelectTypeColor) > 0
 			if @UserControlType = '@violet'
 			begin
 				set @StepCounts = 8
@@ -219,7 +213,7 @@ BEGIN
 	end
 
 	declare CursorUpdate cursor for select IssueNumber, SelectTypeNum, SelectTypeColor, WinRate 
-			from #LotteryResultFinal where TypeID = @InTypeID ORDER BY WinRate desc
+			from #LotteryResult where TypeID = @InTypeID ORDER BY WinRate desc
 	open CursorUpdate
 	fetch next from CursorUpdate into @IssueNumber, @SelectTypeNum, @SelectTypeColor, @WinRate
 	while @@FETCH_STATUS = 0
@@ -368,7 +362,7 @@ BEGIN
 	
 	drop table #LotteryTotalBonus
 	drop table #UserControledBonus
-	drop table #LotteryResultFinal
+	drop table #LotteryResult
 END
 
 
