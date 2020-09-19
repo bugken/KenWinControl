@@ -114,7 +114,6 @@ BEGIN
 		return
 	end
 	select TypeID, SelectType, IssueNumber, TotalBonus from #LotteryTotalBonus
-	select TypeID, SelectType, IssueNumber, TotalBonus from #UserControledBonus
 	
 	--获取彩票所有可能出现的结果
 	create table #LotteryResult(TypeID int, IssueNumber varchar(50), SelectTypeNum varchar(20), SelectTypeColor varchar(20), AllTotalBonus bigint, WinRate decimal(10, 3))
@@ -135,33 +134,42 @@ BEGIN
 	--更改结果的颜色
 	update #LotteryResult SET SelectTypeColor = (case SelectTypeNum when '0' then 'red,violet' when '5' then 'green,violet' else SelectTypeColor end)
 	
-	--获取彩票所有可能出现的结果-用于单杀用户
-	create table #LotteryResultUserControled(TypeID int, IssueNumber varchar(50), SelectTypeNum varchar(20), SelectTypeColor varchar(20), AllTotalBonus bigint, WinRate decimal(10, 3))
-	insert into #LotteryResultUserControled(TypeID, IssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, WinRate) 
-		select TypeID, @InCurrentIssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, 0.0 from [9lottery].dbo.tab_Game_Result where TypeID = @InTypeID
-	--算出11种结果对应的派彩(10 violet)
-	update #LotteryResultUserControled set #LotteryResultUserControled.AllTotalBonus += isnull(t2.TotalBonus,0) from #LotteryResultUserControled t1
-		inner join #UserControledBonus t2 on t1.TypeID = t2.TypeID and (t1.SelectTypeNum = t2.SelectType or t2.SelectType = t1.SelectTypeColor)
-	--加入大小下注的派彩
-	update #LotteryResultUserControled set #LotteryResultUserControled.AllTotalBonus += isnull(t2.TotalBonus,0) from #LotteryResultUserControled t1  
-		inner join #UserControledBonus t2 on t1.TypeID = t2.TypeID and t2.SelectType='big' and t1.SelectTypeNum in ('5','6','7','8','9')
-	update #LotteryResultUserControled set #LotteryResultUserControled.AllTotalBonus += isnull(t2.TotalBonus,0) from #LotteryResultUserControled t1  
-		inner join #UserControledBonus t2 on t1.TypeID = t2.TypeID and t2.SelectType='small' and t1.SelectTypeNum in ('0','1','2','3','4')
-	--加上violet #UserControledBonus violet记录
-	update #LotteryResultUserControled set #LotteryResultUserControled.AllTotalBonus += isnull(t2.TotalBonus,0) from #LotteryResultUserControled t1  
-		inner join #UserControledBonus t2 on t1.TypeID = t2.TypeID and t2.SelectType='violet' and t1.SelectTypeNum in ('0','5')
-	delete from #LotteryResultUserControled where SelectTypeColor = 'violet' and SelectTypeNum = '10'
-	--更改结果的颜色
-	update #LotteryResultUserControled SET SelectTypeColor = (case SelectTypeNum when '0' then 'red,violet' when '5' then 'green,violet' else SelectTypeColor end)
+	--处理单杀玩家结果,颜色大小数字相互合并,需要增加一个类型区分red violet和green violet,此处code比较ugly
+	create table #UserControledBonusFinal(TypeID int, IssueNumber varchar(30), SelectType varchar(20), TotalBonus bigint)
+	insert into #UserControledBonusFinal(TypeID, IssueNumber, SelectType, TotalBonus) 
+		select @InTypeID, @InCurrentIssueNumber, SelectType, 0.0 from [9lottery].dbo.tab_Game_All_SelectType where SelectType <> 'violet'
+	insert into #UserControledBonusFinal(TypeID, IssueNumber, SelectType, TotalBonus)values(@InTypeID, @InCurrentIssueNumber, 'greenviolet', 0.0)
+	insert into #UserControledBonusFinal(TypeID, IssueNumber, SelectType, TotalBonus)values(@InTypeID, @InCurrentIssueNumber, 'redviolet', 0.0)
+	--下注数据先加入表中
+	update #UserControledBonusFinal set #UserControledBonusFinal.TotalBonus += isnull(t2.TotalBonus,0) from #UserControledBonusFinal t1  
+		inner join #UserControledBonus t2 on t1.SelectType=t2.SelectType
+	--数字派彩+颜色派彩 颜色派彩+数字派彩
+	update #UserControledBonusFinal set #UserControledBonusFinal.TotalBonus += isnull(t2.TotalBonus,0) from #UserControledBonusFinal t1  
+		inner join #UserControledBonus t2 on (t1.SelectType in ('0','2','4','6','8') and t2.SelectType='red')
+			or (t1.SelectType in ('1','3','5','7','9') and t2.SelectType='green')
+			or (t1.SelectType in ('0','5') and t2.SelectType='violet')
+			or (t1.SelectType='green' and t2.SelectType in ('1','3','4','7','8'))
+			or (t1.SelectType='red' and t2.SelectType in ('0','2','4','6','8'))
+			or (t1.SelectType='violet' and t2.SelectType in ('0','5'))
+	--数字派彩+颜色派彩 大小派彩+数字派彩 
+	update #UserControledBonusFinal set #UserControledBonusFinal.TotalBonus += isnull(t2.TotalBonus,0) from #UserControledBonusFinal t1  
+		inner join #UserControledBonus t2 on (t1.SelectType in ('5','6','7','8','9') and t2.SelectType='big')
+		or (t1.SelectType in ('0','1','2','3','4') and t2.SelectType='small')
+		or (t1.SelectType='big' and t2.SelectType in ('5','6','7','8','9'))
+		or (t1.SelectType='small'  and t2.SelectType in ('0','1','2','3','4'))		
+	--紫色单独处理
+	update #UserControledBonusFinal set #UserControledBonusFinal.TotalBonus += isnull(t2.TotalBonus,0) from #UserControledBonusFinal t1  
+		inner join #UserControledBonus t2 on (t1.SelectType='greenviolet' and (t2.SelectType='green' or t2.SelectType='violet' or t2.SelectType='5'))
+			or (t1.SelectType='redviolet' and (t2.SelectType='red' or t2.SelectType='violet' or t2.SelectType='0'))
+	--删除临时表
+	drop table #UserControledBonus
 	
 	--计算WinRate
 	declare @TargetControlRate decimal(4,2) = (@InControlRate+0.0)/100
 	print '目标赢率@TargetControlRate:' + cast(@TargetControlRate as varchar(20))
 	update #LotteryResult set WinRate = (isnull(@BonusAlready, 0)+AllTotalBonus)/@AllBet
-	update #LotteryResultUserControled set WinRate = (isnull(@BonusAlready, 0)+AllTotalBonus)/@AllBet
-	
-	select * from #LotteryResult order by WinRate desc
-	select * from #LotteryResultUserControled order by WinRate desc
+	select * from #UserControledBonusFinal order by TotalBonus desc
+	select * from #LotteryResult order by TypeID, WinRate desc
 	
 	--更新游戏表并写入日志
 	declare @RandNumVar varchar(20) = ''
@@ -185,8 +193,7 @@ BEGIN
 	declare @StopPos int = 10 --强弱拉遍历停止位置
 	declare @StepCounts int = 10 --遍历总数
 	declare @IsUserControl bit = 0 --是否单控
-	declare @UserControlTypeNum varchar(20) = '' --受控的数字类型
-	declare @UserControlTypeColor varchar(20) = '' --受控的颜色类型
+	declare @UserControlType varchar(10) = '' --受控的类型
 	declare @LogControlType int = 0 --Log类型 1:单杀,强拉,上拉 2:单杀,强拉,下拉 3:未单杀,强拉,上拉 4:未单杀,强拉,下拉 5:单杀,弱拉,上拉
 									--6:未单杀,弱拉,上拉 7:单杀,弱拉,下拉 8:未单杀,弱拉,下拉 9:保持用户赢率为定值	
 	
@@ -201,15 +208,43 @@ BEGIN
 	print '更改前随机数:' + @BeforePrenium + ',更改前中奖数字:' + @BeforeSelectTypeNum + ',更改前中奖颜色:' + @BeforeSelectTypeColor
 	
 	--去除单杀中的中奖结果
-	select top 1 @UserControlTypeNum = SelectTypeNum, @UserControlTypeColor = SelectTypeColor from #LotteryResultUserControled order by WinRate desc
-	if @UserControlTypeNum <> '' and @UserControlTypeColor <> ''
+	select top 1 @UserControlType = SelectType from #UserControledBonusFinal order by TotalBonus desc
+	if @UserControlType is not null and @UserControlType <> ''
 	begin
-		print '去除单杀中奖结果类型@UserControlTypeNum:' + @UserControlTypeNum + ',@UserControlTypeColor:' + @UserControlTypeColor
+		print '去除单杀中奖结果类型@UserControlType:' + isnull(cast(@UserControlType as varchar(20)),0)
+		--区分颜色和数字
 		set @IsUserControl = 1 --单杀使能
-		delete from #LotteryResult where SelectTypeNum = @UserControlTypeNum and SelectTypeColor = @UserControlTypeColor
-		set @StepCounts = 9
-		if @PushUp = 0 and @InPowerControl = 1 --强下拉
-			set @StopPos = 9 
+		if @UserControlType in ('0','1','2','3','4','5','6','7','8','9')
+		begin
+			delete from #LotteryResult where SelectTypeNum = @UserControlType
+			set @StepCounts = 9
+			if @PushUp = 0 and @InPowerControl = 1 --强下拉
+				set @StopPos = 9 
+		end
+		else if @UserControlType in ('red','green')
+		begin  
+			delete from #LotteryResult where charindex(@UserControlType, SelectTypeColor) > 0
+			set @StepCounts = 5
+			if @PushUp = 0 and @InPowerControl = 1 --强下拉
+				set @StopPos = 5
+		end
+		else if @UserControlType in ('big', 'small')
+		begin
+			if @UserControlType = 'big'
+				delete from #LotteryResult where SelectTypeNum in ('5', '6', '7', '8', '9')
+			else
+				delete from #LotteryResult where SelectTypeNum in ('0', '1', '2', '3', '4')
+			set @StepCounts = 5
+			if @PushUp = 0 and @InPowerControl = 1 --强下拉
+				set @StopPos = 5
+		end
+		else
+		begin
+			delete from #LotteryResult where SelectTypeColor = 'violet'
+			set @StepCounts = 8
+			if @PushUp = 0 and @InPowerControl = 1 --强下拉
+				set @StopPos = 8
+		end
 	end
 	print '强弱拉停止位置@StopPos:' + isnull(cast(@StopPos as varchar(20)),0)
 	print '遍历次数@StepCounts:' + isnull(cast(@StepCounts as varchar(20)),0)
@@ -364,9 +399,8 @@ BEGIN
 	deallocate CursorUpdate
 	
 	drop table #LotteryTotalBonus
-	drop table #UserControledBonus
+	drop table #UserControledBonusFinal
 	drop table #LotteryResult
-	drop table #LotteryResultUserControled
 END
 
 
