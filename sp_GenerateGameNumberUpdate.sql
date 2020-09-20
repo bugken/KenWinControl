@@ -136,9 +136,13 @@ BEGIN
 	--更改结果的颜色
 	update #LotteryResult SET SelectTypeColor = (case SelectTypeNum when '0' then 'red,violet' when '5' then 'green,violet' else SelectTypeColor end)
 
+	/*
+		计算整体派彩的思路:彩票最终会生成10种结果,将所有下注的派彩整合到这个10个结果,然后按照赢率排序
+		计算单杀用户赢得最多派彩的思路:其与整体派彩思路相反,玩家下注已知,在玩家下注基础上,把下注对应的结果产生的派彩都加到下注上,这样就可以选出哪个下注赢钱最多,把赢钱最多的下注杀掉
+		计算单杀用户思路和计算整体派彩思路不同，如果按照整体派彩思路一样,那么会有这种情况:0下注300 5下注400 小下注200,然后5被杀,但实际上应该杀0,0这个结果上的派彩是300+200=500
+	*/
+	
 	--处理单控数据,选出一个派彩最高的下注
-	--select TypeID, SelectType, IssueNumber, TotalBonus from #UserControledBonus
-	--处理存在情况1->0:300 5:400 小:200 2->0:300 5:500 小:400
 	declare @CursorSelectType varchar(20) = ''
 	declare @BingoSelectType varchar(20) = ''
 	declare @BingoTotalBonus bigint = 0
@@ -228,13 +232,13 @@ BEGIN
 				where SelectType in ('big', '5', '6', '7', '8', '9') order by TotalBonus
 		end
 		else if @CursorSelectType = 'red'
-		begin 
+		begin --这里有待完善:@SumBonus应该算('0', '2', '4', '6', '8')与'red'组合中最大的一个,目前这个写法只会多杀,不会少杀
 			select @SumBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('red', '0', '2', '4', '6', '8')
 			select top 1 @MaxSelectTypeCurr = SelectType, @MaxTotalBonusCurr = TotalBonus from #UserControledBonus 
 				where SelectType in ('red', '0', '2', '4', '6', '8') order by TotalBonus
 		end
 		else if @CursorSelectType = 'green'
-		begin 
+		begin --这里有待完善:@SumBonus应该算('1', '3', '5', '7', '9')与'green'组合中最大的一个,目前这个写法只会多杀,不会少杀
 			select @SumBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('green', '1', '3', '5', '7', '9')
 			select top 1 @MaxSelectTypeCurr = SelectType, @MaxTotalBonusCurr = TotalBonus from #UserControledBonus 
 				where SelectType in ('green', '1', '3', '5', '7', '9') order by TotalBonus desc
