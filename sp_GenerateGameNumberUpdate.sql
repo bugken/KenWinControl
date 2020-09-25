@@ -114,11 +114,12 @@ BEGIN
 		return
 	end
 	select TypeID, SelectType, IssueNumber, TotalBonus from #LotteryTotalBonus
+	select * from #UserControledBonus
 	
 	--获取彩票所有可能出现的结果
 	create table #LotteryResult(TypeID int, IssueNumber varchar(50), SelectTypeNum varchar(20), SelectTypeColor varchar(20), AllTotalBonus bigint, WinRate decimal(10, 3))
 	insert into #LotteryResult(TypeID, IssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, WinRate) 
-		select @InTypeID, @InCurrentIssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, 0.0 from [9lottery].dbo.tab_Game_Result where TypeID = @InTypeID
+		select @InTypeID, @InCurrentIssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, 0.0 from [9lottery].dbo.tab_Game_Result
 	--算出11种结果对应的派彩(10 violet)
 	update #LotteryResult set #LotteryResult.AllTotalBonus += isnull(t2.TotalBonus,0) from #LotteryResult t1
 		inner join #LotteryTotalBonus t2 on t1.SelectTypeNum = t2.SelectType --or t1.SelectTypeColor = t2.SelectType
@@ -270,8 +271,10 @@ BEGIN
 				set @SumBonus = @GreenVioletBonus
 				if @MaxBonusGreenViolet > @MaxBonusGreenViolet
 					set @MaxSelectTypeCurr = '0'
-				else 
+				else if @MaxBonusGreenViolet < @MaxBonusGreenViolet
 					set @MaxSelectTypeCurr = '5'
+				else
+					set @MaxSelectTypeCurr = 'violet'
 			end
 			set @CursorSelectType = @MaxSelectTypeCurr
 		end

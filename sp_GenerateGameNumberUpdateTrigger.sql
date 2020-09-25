@@ -138,7 +138,7 @@ BEGIN
 		end
 		
 		declare @EndTime datetime = getdate()
-		declare @Miliseconds int = datediff(ms, @EndTime, @StartTime)
+		declare @Miliseconds int = datediff(ms, @StartTime, @EndTime)
 		print '------------------------end time eclaps:' + cast(@Miliseconds as varchar(20)) + '-------------------------------------'
 	end
 END
