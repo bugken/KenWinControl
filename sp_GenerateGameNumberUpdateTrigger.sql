@@ -27,8 +27,10 @@ GO
 
 
 CREATE PROCEDURE [dbo].[sp_GenerateGameNumberUpdateTrigger]
+	@InTypeID int = 1
 AS
 BEGIN
+	--declare @InTypeID int = 1
 	--控制总开关是否开启
 	if (select ISNULL(GameUpdateNumberOpen,0) from [9lottery].dbo.tab_GameNumberSet) = 0
 		return
@@ -53,7 +55,7 @@ BEGIN
 	declare @IssueStartTime datetime = getdate() --游戏开始时间
 	declare @MinutesElapse int = datediff(minute, convert(datetime,convert(varchar(10),getdate(),120)), @CurrentTimeNextMin)--距离凌晨的分钟数
 	
-	select @Counts = count(*) from [9lottery].[dbo].tab_Games where State=0 and StartTime<=@CurrentTime
+	select @Counts = count(*) from [9lottery].[dbo].tab_Games where State=0 and StartTime<=@CurrentTime and TypeID = @InTypeID
 	--select * from [9lottery].[dbo].tab_Games where State=0 and StartTime<=@CurrentTime
 	print '当前期数@Counts:' + cast(@Counts as varchar(30))
 	while @LoopCounts < @Counts 
@@ -65,7 +67,7 @@ BEGIN
 		--获取开奖期号
 		select @CurrentIssueNumber = IssueNumber, @IntervalM = IntervalM, @OptState = OptState,@IssueStartTime = StartTime, @TypeIDFromTable = TypeID from  
 				(select row_number() over(order by StartTime desc, TypeID asc) as rowid, * from [9lottery].[dbo].tab_Games 
-					where State=0 and StartTime<=@CurrentTime) as t 
+					where State=0 and StartTime<=@CurrentTime and TypeID = @InTypeID) as t 
 			where rowid=@LoopCounts 
 		if @MinutesElapse = 0--考虑凌晨情况
 			set @MinutesElapse = 1
