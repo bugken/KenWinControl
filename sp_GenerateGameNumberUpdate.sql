@@ -519,8 +519,11 @@ BEGIN
 	UpdateAndInsertLog:
 		print 'UpdateAndInsertLog' 
 		set @RandNumVar = substring(@BeforePrenium, 0, 5) + @LogTypeNum
-		update [9lottery].dbo.tab_Games set Premium = @RandNumVar, Number = @LogTypeNum, Colour = @LogTypeColor
-			where TypeID = @InTypeID and IssueNumber = @IssueNumber
+		if substring(CONVERT(varchar,GETDATE(),120), 18, 2)>='56'--必须在4秒之内完成 
+		begin
+			update [9lottery].dbo.tab_Games set Premium = @RandNumVar, Number = @LogTypeNum, Colour = @LogTypeColor
+				where TypeID = @InTypeID and IssueNumber = @IssueNumber
+		end
 		insert into [9lottery].dbo.tab_Game_Control_Log(TypeID, IssueNumber, OldPremium, OldNumber, OldColour, NewPremium, NewNumber, NewColour, ControlType, UpdateTime)
 			values(@InTypeID, @IssueNumber, @BeforePrenium, @BeforeSelectTypeNum, @BeforeSelectTypeColor, @RandNumVar, @LogTypeNum, @LogTypeColor, @LogControlType, getdate())
 		break

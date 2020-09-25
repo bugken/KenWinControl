@@ -58,6 +58,7 @@ BEGIN
 	print '当前期数@Counts:' + cast(@Counts as varchar(30))
 	while @LoopCounts < @Counts 
 	begin
+		declare @StartTime datetime = getdate()
 		print '-----------------------------------begin------------------------------------------------'
 		set @LoopCounts = @LoopCounts + 1
 		
@@ -135,7 +136,10 @@ BEGIN
 			execute sp_GenerateGameNumberUpdate @UserControled, @ControlRate, @PowerControl, 
 						@TypeID, @OptState, @BeginIssueNumber, @CurrentIssueNumber, @LastIssueNumber
 		end
-		print '-----------------------------------end------------------------------------------------'
+		
+		declare @EndTime datetime = getdate()
+		declare @Miliseconds int = datediff(ms, @EndTime, @StartTime)
+		print '------------------------end time eclaps:' + cast(@Miliseconds as varchar(20)) + '-------------------------------------'
 	end
 END
 
