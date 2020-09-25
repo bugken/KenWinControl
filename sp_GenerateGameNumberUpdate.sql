@@ -48,9 +48,8 @@ BEGIN
 			(select count(distinct UserID) UserCounts from [9lottery].[dbo].tab_GameOrder where IssueNumber = @InCurrentIssueNumber and TypeID = @InTypeID group by UserID) as t
 	if @UserCounts <= 5
 	begin
-		--print '下注人数小于5个人'
-		--return
-		print '' 
+		print '下注人数小于5个人'
+		return
 	end
 	
 	--计算区间投注金额 派彩金额
