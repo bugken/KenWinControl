@@ -1,7 +1,7 @@
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/18/2020 19:26:36 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/28/2020 17:05:09 ******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_GenerateGameNumberUpdate]') AND type in (N'P', N'PC'))
 DROP PROCEDURE [dbo].[sp_GenerateGameNumberUpdate]
 GO
@@ -9,13 +9,12 @@ GO
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/18/2020 19:26:36 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/28/2020 17:05:09 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
-
 
 
 
@@ -116,7 +115,7 @@ BEGIN
 	select * from #UserControledBonus
 	
 	--获取彩票所有可能出现的结果
-	create table #LotteryResult(TypeID int, IssueNumber varchar(50), SelectTypeNum varchar(20), SelectTypeColor varchar(20), AllTotalBonus bigint, WinRate decimal(10, 8))
+	create table #LotteryResult(TypeID int, IssueNumber varchar(50), SelectTypeNum varchar(20), SelectTypeColor varchar(20), AllTotalBonus bigint, WinRate decimal(10, 7))
 	insert into #LotteryResult(TypeID, IssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, WinRate) 
 		select @InTypeID, @InCurrentIssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, 0.0 from [9lottery].dbo.tab_Game_Result
 	--算出11种结果对应的派彩(10 violet)
@@ -521,7 +520,10 @@ BEGIN
 	UpdateAndInsertLog:
 		print 'UpdateAndInsertLog' 
 		set @RandNumVar = substring(@BeforePrenium, 0, 5) + @LogTypeNum
-		if substring(CONVERT(varchar,GETDATE(),120), 18, 2)>='56'--必须在4秒之内完成 
+		declare @IsOpen int = 1
+		select @IsOpen = State from [9lottery].dbo.tab_Games where TypeID = @InTypeID and IssueNumber = @IssueNumber
+		declare @Second varchar(4) = substring(CONVERT(varchar,GETDATE(),120), 18, 2)
+		if @Second>='53' and @Second<'57' and @IsOpen=0   --53结算开奖,57秒开奖结束 
 		begin
 			update [9lottery].dbo.tab_Games set Premium = @RandNumVar, Number = @LogTypeNum, Colour = @LogTypeColor
 				where TypeID = @InTypeID and IssueNumber = @IssueNumber
@@ -538,8 +540,6 @@ BEGIN
 	drop table #UserControledBonus
 	drop table #LotteryResult
 END
-
-
 
 
 
