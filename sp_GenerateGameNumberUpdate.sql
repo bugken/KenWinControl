@@ -1,7 +1,7 @@
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/29/2020 17:37:14 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/30/2020 18:50:50 ******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_GenerateGameNumberUpdate]') AND type in (N'P', N'PC'))
 DROP PROCEDURE [dbo].[sp_GenerateGameNumberUpdate]
 GO
@@ -9,12 +9,13 @@ GO
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/29/2020 17:37:14 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/30/2020 18:50:50 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
 
 
 
@@ -83,11 +84,11 @@ BEGIN
 	begin
 		select @Index = charindex(@Result, @GameAllType)
 		if @Index < 20 --数字
-			set @MultiRate = 8
+			set @MultiRate = 9
 		else if @Index = 21 --violet
 			set @MultiRate = 4.5
 		else if @Index >= 28 --red:28 green:32 big:38 small:42
-			set @MultiRate = 1
+			set @MultiRate = 2
 		insert into #LotteryTotalBonus(TypeID, IssueNumber, SelectType, TotalBonus) 
 			select TypeID, IssueNumber, SelectType, sum(RealAmount) * @MultiRate TotalBonus 
 				from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and @Result = SelectType and @InCurrentIssueNumber = IssueNumber 
@@ -525,7 +526,7 @@ BEGIN
 		declare @IsOpen int = 1
 		select @IsOpen = State from [9lottery].dbo.tab_Games where TypeID = @InTypeID and IssueNumber = @IssueNumber
 		declare @Second varchar(4) = substring(CONVERT(varchar,GETDATE(),120), 18, 2)
-		if @Second>='52' and @Second<'56' and @IsOpen=0   --53结算开奖,57秒开奖结束 
+		if @Second>='50' and @Second<'55' and @IsOpen=0   --53结算开奖,57秒开奖结束 
 		begin
 			update [9lottery].dbo.tab_Games set Premium = @RandNumVar, Number = @LogTypeNum, Colour = @LogTypeColor
 				where TypeID = @InTypeID and IssueNumber = @IssueNumber
@@ -542,6 +543,7 @@ BEGIN
 	drop table #UserControledBonus
 	drop table #LotteryResult
 END
+
 
 
 
