@@ -1,0 +1,7 @@
+#M项目忽略文件以及文件夹
+WinControl/Debug/
+WinControl/ipch/
+WinControl/WinControl/Debug/
+
+
+
