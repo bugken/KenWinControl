@@ -94,10 +94,13 @@ BEGIN
 				from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and @Result = SelectType and @InCurrentIssueNumber = IssueNumber 
 					group by IssueNumber, TypeID, SelectType
 		--单人下注信息计算
-		insert into #UserControledBonus(TypeID, IssueNumber, SelectType, TotalBonus) 
-			select TypeID, IssueNumber, SelectType, sum(RealAmount) * @MultiRate TotalBonus 
-				from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and @Result = SelectType and @InCurrentIssueNumber = IssueNumber and UserID = @InUserControled
-					group by IssueNumber, TypeID, SelectType
+		if @InUserControled <> 0
+		begin 
+			insert into #UserControledBonus(TypeID, IssueNumber, SelectType, TotalBonus) 
+				select TypeID, IssueNumber, SelectType, sum(RealAmount) * @MultiRate TotalBonus 
+					from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and @Result = SelectType and @InCurrentIssueNumber = IssueNumber and UserID = @InUserControled
+						group by IssueNumber, TypeID, SelectType
+		end
 
 		fetch next from CursorResult into @Result
 	end				
@@ -145,159 +148,162 @@ BEGIN
 	*/
 	
 	--处理单控数据,选出一个派彩最高的下注
-	declare @CursorSelectType varchar(20) = ''
-	declare @BingoSelectType varchar(20) = ''
-	declare @BingoTotalBonus bigint = 0
-	declare @MaxSelectTypeLast varchar(20) = ''
-	declare @MaxTotalBonusLast bigint = 0
-	declare @MaxSelectTypeCurr varchar(20) = ''
-	declare @MaxTotalBonusCurr bigint = 0
-	declare @SumBonus bigint = 0
-	declare CursorTargetType cursor for select SelectType from #UserControledBonus
-	open CursorTargetType
-	fetch next from CursorTargetType into @CursorSelectType
-	while @@FETCH_STATUS = 0
-	begin	
-		set @SumBonus = 0
-		set @MaxSelectTypeCurr = ''
-		set @MaxTotalBonusCurr = 0
-		if @CursorSelectType = '0'
-		begin
-			select @SumBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('0', 'red', 'violet', 'small')
-			select top 1 @MaxSelectTypeCurr = SelectType, @MaxTotalBonusCurr = TotalBonus from #UserControledBonus 
-				where SelectType in ('0', 'red', 'violet', 'small') order by TotalBonus
-		end
-		else if @CursorSelectType = '1'
-		begin 
-			select @SumBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('1', 'green', 'small')
-			select @MaxSelectTypeCurr = SelectType, @MaxTotalBonusCurr = TotalBonus from #UserControledBonus 
-				where SelectType in ('1', 'green', 'small') order by TotalBonus
-		end
-		else if @CursorSelectType = '2'
-		begin 
-			select @SumBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('2', 'red', 'small')
-			select top 1 @MaxSelectTypeCurr = SelectType, @MaxTotalBonusCurr = TotalBonus from #UserControledBonus 
-				where SelectType in ('2', 'red', 'small') order by TotalBonus
-		end
-		else if @CursorSelectType = '3'
-		begin 
-			select @SumBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('3', 'green', 'small')
-			select top 1 @MaxSelectTypeCurr = SelectType, @MaxTotalBonusCurr = TotalBonus from #UserControledBonus 
-				where SelectType in ('3', 'green', 'small') order by TotalBonus
-		end
-		else if @CursorSelectType = '4'
-		begin 
-			select @SumBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('4', 'red', 'small')
-			select top 1 @MaxSelectTypeCurr = SelectType, @MaxTotalBonusCurr = TotalBonus from #UserControledBonus 
-				where SelectType in ('4', 'red', 'small') order by TotalBonus
-		end
-		else if @CursorSelectType = '5'
-		begin
-			select @SumBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('5', 'green', 'violet', 'big')	
-			select top 1 @MaxSelectTypeCurr = SelectType, @MaxTotalBonusCurr = TotalBonus from #UserControledBonus 
-				where SelectType in ('5', 'green', 'violet', 'big') order by TotalBonus
-		end
-		else if @CursorSelectType = '6'
-		begin 
-			select @SumBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('6', 'red', 'big')
-			select top 1 @MaxSelectTypeCurr = SelectType, @MaxTotalBonusCurr = TotalBonus from #UserControledBonus 
-				where SelectType in ('6', 'red', 'big')	order by TotalBonus
-		end
-		else if @CursorSelectType = '7'
-		begin
-			select @SumBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('7', 'green', 'big')
-			select top 1 @MaxSelectTypeCurr = SelectType, @MaxTotalBonusCurr = TotalBonus from #UserControledBonus 
-				where SelectType in ('7', 'green', 'big') order by TotalBonus		
-		end
-		else if @CursorSelectType = '8'
-		begin 
-			select @SumBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('8', 'red', 'big')
-			select top 1 @MaxSelectTypeCurr = SelectType, @MaxTotalBonusCurr = TotalBonus from #UserControledBonus 
-				where SelectType in ('8', 'red', 'big') order by TotalBonus	
-		end
-		else if @CursorSelectType = '9'
-		begin
-			select @SumBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('9', 'green', 'big')
-			select top 1 @MaxSelectTypeCurr = SelectType, @MaxTotalBonusCurr = TotalBonus from #UserControledBonus 
-				where SelectType in ('9', 'green', 'big') order by TotalBonus		
-		end
-		else if @CursorSelectType = 'small'
-		begin
-			select @SumBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('small', '0', '1', '2', '3', '4')
-			select top 1 @MaxSelectTypeCurr = SelectType, @MaxTotalBonusCurr = TotalBonus from #UserControledBonus 
-				where SelectType in ('small', '0', '1', '2', '3', '4') order by TotalBonus
-		end
-		else if @CursorSelectType = 'big'
-		begin
-			select @SumBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('big', '5', '6', '7', '8', '9')
-			select top 1 @MaxSelectTypeCurr = SelectType, @MaxTotalBonusCurr = TotalBonus from #UserControledBonus 
-				where SelectType in ('big', '5', '6', '7', '8', '9') order by TotalBonus
-		end
-		else if @CursorSelectType = 'red'
-		begin --这里有待完善:@SumBonus应该算('0', '2', '4', '6', '8')与'red'组合中最大的一个,目前这个写法只会多杀,不会少杀
-			select @SumBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('red', '0', '2', '4', '6', '8')
-			select top 1 @MaxSelectTypeCurr = SelectType, @MaxTotalBonusCurr = TotalBonus from #UserControledBonus 
-				where SelectType in ('red', '0', '2', '4', '6', '8') order by TotalBonus
-		end
-		else if @CursorSelectType = 'green'
-		begin --这里有待完善:@SumBonus应该算('1', '3', '5', '7', '9')与'green'组合中最大的一个,目前这个写法只会多杀,不会少杀
-			select @SumBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('green', '1', '3', '5', '7', '9')
-			select top 1 @MaxSelectTypeCurr = SelectType, @MaxTotalBonusCurr = TotalBonus from #UserControledBonus 
-				where SelectType in ('green', '1', '3', '5', '7', '9') order by TotalBonus desc
-		end
-		else if @CursorSelectType = 'violet'--紫色分红紫和绿紫
-		begin
-			declare @RedVioletBonus bigint = 0
-			declare @GreenVioletBonus bigint = 0
-			declare @MaxBonusRedViolet bigint = 0
-			declare @MaxBonusGreenViolet bigint = 0
-			select @RedVioletBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('violet', '0', 'red')
-			select top 1 @MaxBonusRedViolet=TotalBonus from #UserControledBonus where SelectType in ('violet', '0', 'red') order by TotalBonus
-			select @GreenVioletBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('violet', '5', 'green')
-			select top 1 @MaxBonusGreenViolet=TotalBonus from #UserControledBonus where SelectType in ('violet', '5', 'green') order by TotalBonus
-			if @RedVioletBonus > @GreenVioletBonus
-			begin
-				set @SumBonus = @RedVioletBonus
-				set @MaxSelectTypeCurr = '0'
-				set @MaxTotalBonusCurr = @MaxBonusRedViolet
-			end
-			else if @RedVioletBonus < @GreenVioletBonus
-			begin
-				set @SumBonus = @GreenVioletBonus
-				set @MaxSelectTypeCurr = '5'
-				set @MaxTotalBonusCurr = @MaxBonusGreenViolet
-			end
-			else if @RedVioletBonus = @GreenVioletBonus
-			begin
-				set @SumBonus = @GreenVioletBonus
-				if @MaxBonusGreenViolet > @MaxBonusGreenViolet
-					set @MaxSelectTypeCurr = '0'
-				else if @MaxBonusGreenViolet < @MaxBonusGreenViolet
-					set @MaxSelectTypeCurr = '5'
-				else
-					set @MaxSelectTypeCurr = 'violet'
-			end
-			set @CursorSelectType = @MaxSelectTypeCurr
-		end
-		--选取最大值
-		if @SumBonus > @BingoTotalBonus
-		begin
-			set @BingoTotalBonus = @SumBonus
-			set @BingoSelectType = @CursorSelectType
-			set @MaxSelectTypeLast = @MaxSelectTypeCurr
-			set @MaxTotalBonusLast = @MaxTotalBonusCurr
-		end
-		else if @SumBonus = @BingoTotalBonus--相等的情况还要选出下注派彩最多的那个Type
-		begin
-			if @MaxTotalBonusCurr > @MaxTotalBonusLast
-				set @BingoSelectType = @MaxSelectTypeCurr
-		end
-
+	if @InUserControled <> 0
+	begin
+		declare @CursorSelectType varchar(20) = ''
+		declare @BingoSelectType varchar(20) = ''
+		declare @BingoTotalBonus bigint = 0
+		declare @MaxSelectTypeLast varchar(20) = ''
+		declare @MaxTotalBonusLast bigint = 0
+		declare @MaxSelectTypeCurr varchar(20) = ''
+		declare @MaxTotalBonusCurr bigint = 0
+		declare @SumBonus bigint = 0
+		declare CursorTargetType cursor for select SelectType from #UserControledBonus
+		open CursorTargetType
 		fetch next from CursorTargetType into @CursorSelectType
-	end				
-	close CursorTargetType
-	deallocate CursorTargetType
-	print '目标单杀类型@BingoSelectType:' + @BingoSelectType
+		while @@FETCH_STATUS = 0
+		begin	
+			set @SumBonus = 0
+			set @MaxSelectTypeCurr = ''
+			set @MaxTotalBonusCurr = 0
+			if @CursorSelectType = '0'
+			begin
+				select @SumBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('0', 'red', 'violet', 'small')
+				select top 1 @MaxSelectTypeCurr = SelectType, @MaxTotalBonusCurr = TotalBonus from #UserControledBonus 
+					where SelectType in ('0', 'red', 'violet', 'small') order by TotalBonus
+			end
+			else if @CursorSelectType = '1'
+			begin 
+				select @SumBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('1', 'green', 'small')
+				select @MaxSelectTypeCurr = SelectType, @MaxTotalBonusCurr = TotalBonus from #UserControledBonus 
+					where SelectType in ('1', 'green', 'small') order by TotalBonus
+			end
+			else if @CursorSelectType = '2'
+			begin 
+				select @SumBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('2', 'red', 'small')
+				select top 1 @MaxSelectTypeCurr = SelectType, @MaxTotalBonusCurr = TotalBonus from #UserControledBonus 
+					where SelectType in ('2', 'red', 'small') order by TotalBonus
+			end
+			else if @CursorSelectType = '3'
+			begin 
+				select @SumBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('3', 'green', 'small')
+				select top 1 @MaxSelectTypeCurr = SelectType, @MaxTotalBonusCurr = TotalBonus from #UserControledBonus 
+					where SelectType in ('3', 'green', 'small') order by TotalBonus
+			end
+			else if @CursorSelectType = '4'
+			begin 
+				select @SumBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('4', 'red', 'small')
+				select top 1 @MaxSelectTypeCurr = SelectType, @MaxTotalBonusCurr = TotalBonus from #UserControledBonus 
+					where SelectType in ('4', 'red', 'small') order by TotalBonus
+			end
+			else if @CursorSelectType = '5'
+			begin
+				select @SumBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('5', 'green', 'violet', 'big')	
+				select top 1 @MaxSelectTypeCurr = SelectType, @MaxTotalBonusCurr = TotalBonus from #UserControledBonus 
+					where SelectType in ('5', 'green', 'violet', 'big') order by TotalBonus
+			end
+			else if @CursorSelectType = '6'
+			begin 
+				select @SumBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('6', 'red', 'big')
+				select top 1 @MaxSelectTypeCurr = SelectType, @MaxTotalBonusCurr = TotalBonus from #UserControledBonus 
+					where SelectType in ('6', 'red', 'big')	order by TotalBonus
+			end
+			else if @CursorSelectType = '7'
+			begin
+				select @SumBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('7', 'green', 'big')
+				select top 1 @MaxSelectTypeCurr = SelectType, @MaxTotalBonusCurr = TotalBonus from #UserControledBonus 
+					where SelectType in ('7', 'green', 'big') order by TotalBonus		
+			end
+			else if @CursorSelectType = '8'
+			begin 
+				select @SumBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('8', 'red', 'big')
+				select top 1 @MaxSelectTypeCurr = SelectType, @MaxTotalBonusCurr = TotalBonus from #UserControledBonus 
+					where SelectType in ('8', 'red', 'big') order by TotalBonus	
+			end
+			else if @CursorSelectType = '9'
+			begin
+				select @SumBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('9', 'green', 'big')
+				select top 1 @MaxSelectTypeCurr = SelectType, @MaxTotalBonusCurr = TotalBonus from #UserControledBonus 
+					where SelectType in ('9', 'green', 'big') order by TotalBonus		
+			end
+			else if @CursorSelectType = 'small'
+			begin
+				select @SumBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('small', '0', '1', '2', '3', '4')
+				select top 1 @MaxSelectTypeCurr = SelectType, @MaxTotalBonusCurr = TotalBonus from #UserControledBonus 
+					where SelectType in ('small', '0', '1', '2', '3', '4') order by TotalBonus
+			end
+			else if @CursorSelectType = 'big'
+			begin
+				select @SumBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('big', '5', '6', '7', '8', '9')
+				select top 1 @MaxSelectTypeCurr = SelectType, @MaxTotalBonusCurr = TotalBonus from #UserControledBonus 
+					where SelectType in ('big', '5', '6', '7', '8', '9') order by TotalBonus
+			end
+			else if @CursorSelectType = 'red'
+			begin --这里有待完善:@SumBonus应该算('0', '2', '4', '6', '8')与'red'组合中最大的一个,目前这个写法只会多杀,不会少杀
+				select @SumBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('red', '0', '2', '4', '6', '8')
+				select top 1 @MaxSelectTypeCurr = SelectType, @MaxTotalBonusCurr = TotalBonus from #UserControledBonus 
+					where SelectType in ('red', '0', '2', '4', '6', '8') order by TotalBonus
+			end
+			else if @CursorSelectType = 'green'
+			begin --这里有待完善:@SumBonus应该算('1', '3', '5', '7', '9')与'green'组合中最大的一个,目前这个写法只会多杀,不会少杀
+				select @SumBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('green', '1', '3', '5', '7', '9')
+				select top 1 @MaxSelectTypeCurr = SelectType, @MaxTotalBonusCurr = TotalBonus from #UserControledBonus 
+					where SelectType in ('green', '1', '3', '5', '7', '9') order by TotalBonus desc
+			end
+			else if @CursorSelectType = 'violet'--紫色分红紫和绿紫
+			begin
+				declare @RedVioletBonus bigint = 0
+				declare @GreenVioletBonus bigint = 0
+				declare @MaxBonusRedViolet bigint = 0
+				declare @MaxBonusGreenViolet bigint = 0
+				select @RedVioletBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('violet', '0', 'red')
+				select top 1 @MaxBonusRedViolet=TotalBonus from #UserControledBonus where SelectType in ('violet', '0', 'red') order by TotalBonus
+				select @GreenVioletBonus += sum(TotalBonus) from #UserControledBonus where SelectType in ('violet', '5', 'green')
+				select top 1 @MaxBonusGreenViolet=TotalBonus from #UserControledBonus where SelectType in ('violet', '5', 'green') order by TotalBonus
+				if @RedVioletBonus > @GreenVioletBonus
+				begin
+					set @SumBonus = @RedVioletBonus
+					set @MaxSelectTypeCurr = '0'
+					set @MaxTotalBonusCurr = @MaxBonusRedViolet
+				end
+				else if @RedVioletBonus < @GreenVioletBonus
+				begin
+					set @SumBonus = @GreenVioletBonus
+					set @MaxSelectTypeCurr = '5'
+					set @MaxTotalBonusCurr = @MaxBonusGreenViolet
+				end
+				else if @RedVioletBonus = @GreenVioletBonus
+				begin
+					set @SumBonus = @GreenVioletBonus
+					if @MaxBonusGreenViolet > @MaxBonusGreenViolet
+						set @MaxSelectTypeCurr = '0'
+					else if @MaxBonusGreenViolet < @MaxBonusGreenViolet
+						set @MaxSelectTypeCurr = '5'
+					else
+						set @MaxSelectTypeCurr = 'violet'
+				end
+				set @CursorSelectType = @MaxSelectTypeCurr
+			end
+			--选取最大值
+			if @SumBonus > @BingoTotalBonus
+			begin
+				set @BingoTotalBonus = @SumBonus
+				set @BingoSelectType = @CursorSelectType
+				set @MaxSelectTypeLast = @MaxSelectTypeCurr
+				set @MaxTotalBonusLast = @MaxTotalBonusCurr
+			end
+			else if @SumBonus = @BingoTotalBonus--相等的情况还要选出下注派彩最多的那个Type
+			begin
+				if @MaxTotalBonusCurr > @MaxTotalBonusLast
+					set @BingoSelectType = @MaxSelectTypeCurr
+			end
+
+			fetch next from CursorTargetType into @CursorSelectType
+		end				
+		close CursorTargetType
+		deallocate CursorTargetType
+		print '目标单杀类型@BingoSelectType:' + @BingoSelectType
+	end
 	
 	--计算WinRate
 	declare @TargetControlRate decimal(4,2) = (@InControlRate+0.0)/100
