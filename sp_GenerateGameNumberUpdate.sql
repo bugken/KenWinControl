@@ -348,7 +348,7 @@ BEGIN
 	print '更改前随机数:' + @BeforePrenium + ',更改前中奖数字:' + @BeforeSelectTypeNum + ',更改前中奖颜色:' + @BeforeSelectTypeColor
 	
 	--去除单杀中的中奖结果
-	if @BingoSelectType <> ''
+	if @BingoSelectType <> '' and @InUserControled <> 0
 	begin
 		print '去除单杀中奖结果类型@@BingoSelectType:' + @BingoSelectType
 		--区分颜色和数字
