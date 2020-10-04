@@ -79,6 +79,8 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Common.h" />
+    <ClInclude Include="ContrlDB.h" />
     <ClInclude Include="ODBCQuery.h" />
     <ClInclude Include="ServerPublic.h" />
     <ClInclude Include="sqlncli.h" />
@@ -87,6 +89,7 @@
     <ClInclude Include="win_linux.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ContrlDB.cpp" />
     <ClCompile Include="ODBCQuery.cpp" />
     <ClCompile Include="ServerPublic.cpp" />
     <ClCompile Include="stdafx.cpp">

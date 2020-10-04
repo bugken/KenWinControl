@@ -36,6 +36,12 @@
     <ClInclude Include="win_linux.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="ContrlDB.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Common.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -48,6 +54,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="ServerPublic.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ContrlDB.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
