@@ -68,44 +68,31 @@ BEGIN
 	print '已派彩金额@BonusAlready:' + isnull(cast(@BonusAlready as varchar(20)),0)
 	print '截止上期赢率@WinRateAsOfLast:' + isnull(cast(@WinRateAsOfLast as varchar(20)),0)
 	
-	--计算每种结果的输赢金额
-	declare @GameAllType varchar(50) = '0,1,2,3,4,5,6,7,8,9,violet,red,green,big,small'
-	declare @Result varchar(10) = ''
-	declare @Index int = 0
-	declare @MultiRate decimal(2, 1) = 1.0
-	declare @TotalBonus int = 0
 	--#LotteryTotalBonus记录输赢的临时表
-	create table #LotteryTotalBonus(TypeID int, IssueNumber varchar(30), SelectType varchar(20), TotalBonus bigint)
-	create table #UserControledBonus(TypeID int, IssueNumber varchar(30), SelectType varchar(20), TotalBonus bigint)
-	declare CursorResult cursor for select SelectType from [9lottery].dbo.tab_Game_All_SelectType ORDER BY SelectType
-	open CursorResult
-	fetch next from CursorResult into @Result
-	while @@FETCH_STATUS = 0
-	begin
-		select @Index = charindex(@Result, @GameAllType)
-		if @Index < 20 --数字
-			set @MultiRate = 9
-		else if @Index = 21 --violet
-			set @MultiRate = 5.5
-		else if @Index >= 28 --red:28 green:32 big:38 small:42
-			set @MultiRate = 2
-		insert into #LotteryTotalBonus(TypeID, IssueNumber, SelectType, TotalBonus) 
-			select TypeID, IssueNumber, SelectType, sum(RealAmount) * @MultiRate TotalBonus 
-				from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and @Result = SelectType and @InCurrentIssueNumber = IssueNumber 
-					group by IssueNumber, TypeID, SelectType
-		--单人下注信息计算
-		if @InUserControled <> 0
-		begin 
-			insert into #UserControledBonus(TypeID, IssueNumber, SelectType, TotalBonus) 
-				select TypeID, IssueNumber, SelectType, sum(RealAmount) * @MultiRate TotalBonus 
-					from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and @Result = SelectType and @InCurrentIssueNumber = IssueNumber and UserID = @InUserControled
-						group by IssueNumber, TypeID, SelectType
-		end
-
-		fetch next from CursorResult into @Result
-	end				
-	close CursorResult
-	deallocate CursorResult
+	create table #LotteryTotalBonus(TypeID int, IssueNumber varchar(30), SelectType varchar(20), TotalBonus bigint, MultiRate decimal(2, 1))
+	create table #UserControledBonus(TypeID int, IssueNumber varchar(30), SelectType varchar(20), TotalBonus bigint, MultiRate decimal(2, 1))
+	insert into #LotteryTotalBonus(TypeID, IssueNumber, SelectType, TotalBonus, MultiRate)
+		select @InTypeID, @InCurrentIssueNumber, SelectType, sum(RealAmount),
+				case when SelectType in ('0','1','2','3','4','5','6','7','8','9') then 9
+					 when SelectType in ('red','green','big','small') then 2
+					 when SelectType = 'violet' then 5.5
+				end
+			from [9lottery].dbo.tab_GameOrder where IssueNumber=@InCurrentIssueNumber and TypeID=@InTypeID group by IssueNumber, SelectType
+	update #LotteryTotalBonus set TotalBonus *= MultiRate
+	--单人下注信息计算
+	if @InUserControled <> 0
+	begin 
+		insert into #UserControledBonus(TypeID, IssueNumber, SelectType, TotalBonus, MultiRate)
+			select @InTypeID, @InCurrentIssueNumber, SelectType, sum(RealAmount),
+					case when SelectType in ('0','1','2','3','4','5','6','7','8','9') then 9
+						 when SelectType in ('red','green','big','small') then 2
+						 when SelectType = 'violet' then 5.5
+					end 
+				from [9lottery].dbo.tab_GameOrder 
+					where IssueNumber=@InCurrentIssueNumber and TypeID=@InTypeID and UserID = @InUserControled
+						group by IssueNumber, SelectType
+		update #UserControledBonus set TotalBonus *= MultiRate
+	end
 	
 	--玩家没有下注，直接返回
 	declare @BetCounts int = 0
@@ -146,7 +133,6 @@ BEGIN
 		计算单杀用户赢得最多派彩的思路:其与整体派彩思路相反,玩家下注已知,在玩家下注基础上,把下注对应的结果产生的派彩都加到下注上,这样就可以选出哪个下注赢钱最多,把赢钱最多的下注杀掉
 		计算单杀用户思路和计算整体派彩思路不同，如果按照整体派彩思路一样,那么会有这种情况:0下注300 5下注400 小下注200,然后5被杀,但实际上应该杀0,0这个结果上的派彩是300+200=500
 	*/
-	
 	--处理单控数据,选出一个派彩最高的下注
 	if @InUserControled <> 0
 	begin
@@ -390,7 +376,7 @@ BEGIN
 	print '强弱拉停止位置@StopPos:' + isnull(cast(@StopPos as varchar(20)),0)
 	print '遍历次数@StepCounts:' + isnull(cast(@StepCounts as varchar(20)),0)
 
-	select * from #LotteryResult order by WinRate desc
+	--select * from #LotteryResult order by WinRate desc
 	declare CursorUpdate cursor for select IssueNumber, SelectTypeNum, SelectTypeColor, WinRate 
 			from #LotteryResult where TypeID = @InTypeID ORDER BY WinRate desc
 	open CursorUpdate
@@ -532,7 +518,7 @@ BEGIN
 		declare @IsOpen int = 1
 		select @IsOpen = State from [9lottery].dbo.tab_Games where TypeID = @InTypeID and IssueNumber = @IssueNumber
 		declare @Second varchar(4) = substring(CONVERT(varchar,GETDATE(),120), 18, 2)
-		if @Second>='50' and @Second<'55' and @IsOpen=0   --53结算开奖,57秒开奖结束 
+		if @Second>='50' and @Second<'55' and @IsOpen=0   --50杀率计算开始,56秒前计算结束,57秒开始开奖结算 
 		begin
 			update [9lottery].dbo.tab_Games set Premium = @RandNumVar, Number = @LogTypeNum, Colour = @LogTypeColor
 				where TypeID = @InTypeID and IssueNumber = @IssueNumber
