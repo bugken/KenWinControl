@@ -86,7 +86,7 @@ BEGIN
 		if @Index < 20 --数字
 			set @MultiRate = 9
 		else if @Index = 21 --violet
-			set @MultiRate = 4.5
+			set @MultiRate = 5.5
 		else if @Index >= 28 --red:28 green:32 big:38 small:42
 			set @MultiRate = 2
 		insert into #LotteryTotalBonus(TypeID, IssueNumber, SelectType, TotalBonus) 
