@@ -8,6 +8,7 @@ using namespace std;
 
 #define ISSUE_NUMBER_LEN	20                         
 #define COLOR_LEN			10   
+#define WORKERS_THREAD_NUM	4//工作线程数量
 
 class CDBLock
 {
