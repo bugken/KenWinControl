@@ -40,7 +40,19 @@ void LotteryProcessWorker()
 
 bool IsDrawLotterySecond()
 {
-	return false;
+	bool bIsDrawing = false;
+	struct tm stTempTm;
+	char cSecond[20];
+
+	time_t nowTime = time(NULL);
+	localtime_s(&stTempTm, &nowTime);
+	sprintf_s(cSecond, "%02d", stTempTm.tm_sec);
+	if (strcmp("50", cSecond) == 0)
+	{
+		bIsDrawing = true;
+	}
+
+	return bIsDrawing;
 }
 
 void LoopCheckLottery()
@@ -49,7 +61,7 @@ void LoopCheckLottery()
 	lotteryDB.DBConnect();
 	while (true)
 	{
-		printf("LoopCheckLottery every one second\n");
+		printf("LoopCheckLottery every 100 milisecond\n");
 		//检查是否是开奖的时间，每分钟的第50秒
 		if (IsDrawLotterySecond())
 		{
@@ -83,7 +95,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	}
 	for (auto &Thread : arrProcessWorkerThreads)
 	{
-		Thread.join();
+		Thread.detach();
 	}
 
 	LoopCheckLottery();
