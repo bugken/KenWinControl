@@ -12,9 +12,8 @@ public:
 	~LotteryDB(void){};
 
 	bool DBConnect();
-	bool Ex_ReadOrder(ORDER_INFO_VEC& vecOrderInfo);
-	bool Ex_GetDrawLottery(DRAWLOTTERY_INFO_QUEUE& queueDrawLotteryItems);
-	bool Ex_GetLotteryOrders(DRAWLOTTERY_INFO tagDrawLotteryInfo);
+	bool Ex_GetDrawLottery(DRAW_LOTTERY_PERIOD_QUEUE& queueDrawLotteryItems);
+	bool Ex_GetLotteryOrders(DRAW_LOTTERY_PERIOD, PLAYER_ORDERS_VEC&, PLAYER_ORDERS_VEC&);
 	bool Ex_UpdateGameResult();
 
 };

@@ -8,7 +8,6 @@
 #include <tchar.h>
 #include <time.h>
 #include "odbcquery.h"
-#include "LogFileEx.h"
 
 
 #ifndef _WIN64

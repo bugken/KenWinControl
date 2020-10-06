@@ -1,5 +1,3 @@
-// WinControl.cpp : 定义控制台应用程序的入口点。
-//
 #include "stdafx.h"
 #include "LotteryDB.h"
 #include <iostream>
@@ -8,10 +6,10 @@
 using namespace std;
 
 MUTEX LotteryMutex;
-DRAWLOTTERY_INFO_QUEUE DrawLotteryQueue;
+DRAW_LOTTERY_PERIOD_QUEUE DrawLotteryQueue;
 CONDITION_VARIABLE LotteryConditionVariable;
 
-bool LotteryOrderProcess()
+bool LotteryOrderProcess(PLAYER_ORDERS_VEC tagPlayerOrdersVec, PLAYER_ORDERS_VEC tagControlUserOrdersVec)
 {
 
 	return true;
@@ -24,7 +22,7 @@ void LotteryProcessWorker()
 	lotteryDB.DBConnect();
 	while (true)
 	{
-		DRAWLOTTERY_INFO tagDrawLotteryInfo = {0};
+		DRAW_LOTTERY_PERIOD tagDrawLotteryInfo = { 0 };
 		{
 			std::unique_lock<std::mutex> LotteryLock(LotteryMutex);
 			LotteryConditionVariable.wait(LotteryLock, []{return !DrawLotteryQueue.empty();});
@@ -33,8 +31,9 @@ void LotteryProcessWorker()
 			LotteryLock.unlock();
 		}
 
-		lotteryDB.Ex_GetLotteryOrders(tagDrawLotteryInfo);
-		LotteryOrderProcess();
+		PLAYER_ORDERS_VEC tagPlayerOrdersVec, tagControlUserOrdersVec;
+		lotteryDB.Ex_GetLotteryOrders(tagDrawLotteryInfo, tagPlayerOrdersVec, tagControlUserOrdersVec);
+		LotteryOrderProcess(tagPlayerOrdersVec, tagControlUserOrdersVec);
 		lotteryDB.Ex_UpdateGameResult();
 	}
 }
@@ -54,7 +53,7 @@ void LoopCheckLottery()
 		//检查是否是开奖的时间，每分钟的第50秒
 		if (IsDrawLotterySecond())
 		{
-			DRAWLOTTERY_INFO_QUEUE tagDrawLotteryQueue;
+			DRAW_LOTTERY_PERIOD_QUEUE tagDrawLotteryQueue;
 			if (lotteryDB.Ex_GetDrawLottery(tagDrawLotteryQueue))
 			{
 				{

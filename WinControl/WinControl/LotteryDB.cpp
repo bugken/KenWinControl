@@ -14,15 +14,15 @@ bool LotteryDB::DBConnect()
 	return ret;
 }
 
-bool LotteryDB::Ex_GetDrawLottery(DRAWLOTTERY_INFO_QUEUE& queueDrawLotteryItems)
+bool LotteryDB::Ex_GetDrawLottery(DRAW_LOTTERY_PERIOD_QUEUE& queueDrawLotteryItems)
 {
 
 	return true;
 }
 
-
-
-bool LotteryDB::Ex_GetLotteryOrders(DRAWLOTTERY_INFO tagDrawLotteryInfo)
+bool LotteryDB::Ex_GetLotteryOrders(DRAW_LOTTERY_PERIOD tagDrawLotteryInfo, 
+		PLAYER_ORDERS_VEC& tagPlayerOrdersVec, 
+		PLAYER_ORDERS_VEC& tagControlUserOrdersVec)
 {
 
 	return true;
@@ -34,6 +34,7 @@ bool LotteryDB::Ex_UpdateGameResult()
 	return true;
 }
 
+/*
 bool LotteryDB::Ex_ReadOrder(ORDER_INFO_VEC& vecOrderInfo)
 {
 	CTicker timeLapser("xp_ReadOrder");
@@ -63,3 +64,4 @@ bool LotteryDB::Ex_ReadOrder(ORDER_INFO_VEC& vecOrderInfo)
 
 	return true;
 }
+*/

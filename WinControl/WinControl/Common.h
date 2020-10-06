@@ -39,7 +39,7 @@ private:
 };
 
 //当前期号 开始计算的期号 上一期号 TypeID 单杀UserID 赢率 杀率类型
-typedef struct _DRAWLOTTERY_INFO
+typedef struct _DRAW_LOTTERY_PERIOD
 {
 	UINT32  uiTypeID;								//彩票类型
 	UINT32  uiUserControled;						//单杀UserID
@@ -48,29 +48,28 @@ typedef struct _DRAWLOTTERY_INFO
 	char	cCurrentIssueNumber[ISSUE_NUMBER_LEN];	//当前期号
 	char	cBeginIssueNumber[ISSUE_NUMBER_LEN];	//区间开始期号
 	char	cLastIssueNumber[ISSUE_NUMBER_LEN];		//上一期期号
-}DRAWLOTTERY_INFO;
-typedef std::queue<DRAWLOTTERY_INFO> DRAWLOTTERY_INFO_QUEUE;
+}DRAW_LOTTERY_PERIOD;
+typedef std::queue<DRAW_LOTTERY_PERIOD> DRAW_LOTTERY_PERIOD_QUEUE;
 
-typedef struct _ORDER_INFO
+typedef struct _PLAYER_ORDERS
 {
-	UINT32  uiUserID;
-	char	cIssueNumber[ISSUE_NUMBER_LEN];
 	UINT32  uiTypeID;
+	char	cIssueNumber[ISSUE_NUMBER_LEN];
 	char	cSelectType[COLOR_LEN];
-	float   fRealAmount;
-}ORDER_INFO;
-typedef std::vector<ORDER_INFO>  ORDER_INFO_VEC;
+	float   fTotalBonus;
+}PLAYER_ORDERS;
+typedef std::vector<PLAYER_ORDERS>  PLAYER_ORDERS_VEC;
 
 typedef struct  _LOTTERY_ORDER_INFO
 {
 
 }LOTTERY_ORDER_INFO;
 
-typedef struct _Finally_Result
+typedef struct _FINALLY_RESULT
 {
 	char	cLotteryNumber[NUMBER_LEN];
 	char	cLotteryColor[COLOR_LEN];
-}Finally_Result;
+}FINALLY_RESULT;
 
 
 
