@@ -29,6 +29,7 @@ GO
 CREATE PROCEDURE [dbo].[sp_GetDrawLotteryInfo]
 AS
 BEGIN
+
 	--控制总开关是否开启
 	if (select ISNULL(GameUpdateNumberOpen,0) from [9lottery].dbo.tab_GameNumberSet) = 0
 		return
@@ -54,7 +55,7 @@ BEGIN
 	declare @MinutesElapse int = datediff(minute, convert(datetime,convert(varchar(10),getdate(),120)), @CurrentTimeNextMin)--距离凌晨的分钟数
 	select @Counts = count(*) from [9lottery].[dbo].tab_Games where State=0 and StartTime<=@CurrentTime
 	--select * from [9lottery].[dbo].tab_Games where State=0 and StartTime<=@CurrentTime
-	print '当前期数@Counts:' + cast(@Counts as varchar(30))
+	--print '当前期数@Counts:' + cast(@Counts as varchar(30))
 	while @LoopCounts < @Counts
 	begin
 		set @LoopCounts = @LoopCounts + 1
@@ -67,13 +68,13 @@ BEGIN
 			set @MinutesElapse = 1
 		if @MinutesElapse%@IntervalM <> 0
 		begin
-			print '没有开奖'
+			--print '没有开奖'
 			continue 
 		end
 		--判断游戏开始时间，避免之前游戏开奖后State没有置1
 		if datediff(minute, @IssueStartTime, @CurrentTime) >= @IntervalM
 		begin
-			print '上期开奖没有置1,期号@CurrentIssueNumber' + @CurrentIssueNumber
+			--print '上期开奖没有置1,期号@CurrentIssueNumber' + @CurrentIssueNumber
 			continue
 		end
 		
@@ -86,11 +87,11 @@ BEGIN
 			set @PowerControl = 0
 		if @ControlRate <= 0
 			set @ControlRate = 30
-		print '受控用户@UserControled:' + cast(@UserControled as varchar(10))
-		print '控制指数@ControlRate:' + cast(@ControlRate as varchar(10))
-		print '选取期数区间@PeriodGap:' + cast(@PeriodGap as varchar(10))
-		print '强弱控制@PowerControl:' + cast(@PowerControl as varchar(10))
-		print '是否是能@Enabled:' + cast(@Enabled as varchar(10))
+		--print '受控用户@UserControled:' + cast(@UserControled as varchar(10))
+		--print '控制指数@ControlRate:' + cast(@ControlRate as varchar(10))
+		--print '选取期数区间@PeriodGap:' + cast(@PeriodGap as varchar(10))
+		--print '强弱控制@PowerControl:' + cast(@PowerControl as varchar(10))
+		--print '是否是能@Enabled:' + cast(@Enabled as varchar(10))
 		
 		--计算@LastIssueNumber @BeginIssueNumber
 		set @LastIssueNumber = cast((cast(@CurrentIssueNumber as bigint)-1) as varchar(30))
@@ -119,16 +120,16 @@ BEGIN
 			else
 				set @BeginIssueNumber = @VarTargetDate + cast(@TypeID as varchar(2)) +cast(@PeriodNums as varchar(10))
 		end
-		print '当前期数@CurrentIssueNumber:' + @CurrentIssueNumber
-		print '上一期数@LastIssueNumber:' + @LastIssueNumber
-		print '起始期数@BeginIssueNumber:' + @BeginIssueNumber 
-		print 'Game类型@TypeID:' + cast(@TypeID as varchar(2)) 
-		print '是否预设@OptState:' + cast(@OptState as varchar(10)) 
+		--print '当前期数@CurrentIssueNumber:' + @CurrentIssueNumber
+		--print '上一期数@LastIssueNumber:' + @LastIssueNumber
+		--print '起始期数@BeginIssueNumber:' + @BeginIssueNumber 
+		--print 'Game类型@TypeID:' + cast(@TypeID as varchar(2)) 
+		--print '是否预设@OptState:' + cast(@OptState as varchar(10)) 
 		
 		--调用存储过程处理开奖
 		if @Enabled = 1 --判断单个游戏是否开启
 		begin
-			select @UserControled, @ControlRate, @PowerControl, @TypeID, @OptState, @BeginIssueNumber, @CurrentIssueNumber, @LastIssueNumber
+			select @TypeID, @UserControled, @ControlRate, @PowerControl, @CurrentIssueNumber, @LastIssueNumber, @BeginIssueNumber
 		end
 	end
 END
