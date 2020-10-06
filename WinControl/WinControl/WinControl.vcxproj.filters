@@ -36,10 +36,10 @@
     <ClInclude Include="win_linux.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="ContrlDB.h">
+    <ClInclude Include="Common.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Common.h">
+    <ClInclude Include="LotteryDB.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -56,7 +56,7 @@
     <ClCompile Include="ServerPublic.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="ContrlDB.cpp">
+    <ClCompile Include="LotteryDB.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
