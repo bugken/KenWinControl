@@ -17,7 +17,7 @@ bool LotteryOrderProcess(PLAYER_ORDERS_VEC tagPlayerOrdersVec, PLAYER_ORDERS_VEC
 
 void LotteryProcessWorker()
 {
-	printf("Worker THread ID: %d\n", GetCurrentThreadId());
+	printf("worker thread id: %d\n", GetCurrentThreadId());
 	LotteryDB lotteryDB;
 	lotteryDB.DBConnect();
 	while (true)
@@ -50,6 +50,7 @@ bool IsDrawLotterySecond()
 	if (strcmp("50", cSecond) == 0)
 	{
 		bIsDrawing = true;
+		printf("...................50s...............\n");
 	}
 
 	return bIsDrawing;
@@ -61,7 +62,7 @@ void LoopCheckLottery()
 	lotteryDB.DBConnect();
 	while (true)
 	{
-		printf("LoopCheckLottery every 100 milisecond\n");
+		printf("loop check lottery every 100 miliseconds\n");
 		//检查是否是开奖的时间，每分钟的第50秒
 		if (IsDrawLotterySecond())
 		{
@@ -72,6 +73,19 @@ void LoopCheckLottery()
 					lock_guard<mutex> LotteryLock(LotteryMutex);
 					DrawLotteryQueue = tagDrawLotteryQueue;
 				}
+				//printf("DrawLotteryQueue:%d\n", DrawLotteryQueue.size());
+				//while (!DrawLotteryQueue.empty())
+				//{
+				//	DRAW_LOTTERY_PERIOD tag = DrawLotteryQueue.front();
+				//	DrawLotteryQueue.pop();
+				//	printf("uiTypeID:%d\n", tag.uiTypeID);
+				//	printf("uiUserControled:%d\n", tag.uiUserControled);
+				//	printf("uiControlRate:%d\n", tag.uiControlRate);
+				//	printf("uiPowerControl:%d\n", tag.uiPowerControl);
+				//	printf("strCurrentIssueNumber:%s\n", tag.strCurrentIssueNumber);
+				//	printf("strBeginIssueNumber:%s\n", tag.strBeginIssueNumber);
+				//	printf("strLastIssueNumber:%s\n", tag.strLastIssueNumber);
+				//}
 				LotteryConditionVariable.notify_all();
 			}
 		}
@@ -84,8 +98,8 @@ void LoopCheckLottery()
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	printf("Main Process ID: %d\n", GetCurrentProcessId());
-	printf("Main THread ID: %d\n", GetCurrentThreadId());
+	printf("main process id: %d\n", GetCurrentProcessId());
+	printf("main thread id: %d\n", GetCurrentThreadId());
 
 	//先启动工作线程再循环检查是否开奖
 	thread arrProcessWorkerThreads[4];

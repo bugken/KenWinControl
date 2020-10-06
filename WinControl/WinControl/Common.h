@@ -45,9 +45,9 @@ typedef struct _DRAW_LOTTERY_PERIOD
 	UINT32  uiUserControled;						//单杀UserID
 	UINT32  uiControlRate;							//杀率
 	UINT32  uiPowerControl;							//控杀类型
-	char	cCurrentIssueNumber[ISSUE_NUMBER_LEN];	//当前期号
-	char	cBeginIssueNumber[ISSUE_NUMBER_LEN];	//区间开始期号
-	char	cLastIssueNumber[ISSUE_NUMBER_LEN];		//上一期期号
+	char	strCurrentIssueNumber[ISSUE_NUMBER_LEN];	//当前期号
+	char	strBeginIssueNumber[ISSUE_NUMBER_LEN];	//区间开始期号
+	char	strLastIssueNumber[ISSUE_NUMBER_LEN];		//上一期期号
 }DRAW_LOTTERY_PERIOD;
 typedef std::queue<DRAW_LOTTERY_PERIOD> DRAW_LOTTERY_PERIOD_QUEUE;
 

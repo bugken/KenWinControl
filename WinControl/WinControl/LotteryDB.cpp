@@ -4,7 +4,7 @@
 bool LotteryDB::DBConnect()
 {
 	bool ret = false;
-	char pStr[100] = "DRIVER={SQL Server Native Client 10.0};SERVER=127.0.0.1;DATABASE=9lottery;UID=sa;PWD=123456;";
+	char pStr[100] = "DRIVER={SQL Server Native Client 10.0};SERVER=47.56.134.27;DATABASE=9lottery;UID=sa;PWD=Jack7361;";
 	bool IsConnect = DriverConnect(pStr);
 	if (IsConnect)
 	{
@@ -16,8 +16,37 @@ bool LotteryDB::DBConnect()
 
 bool LotteryDB::Ex_GetDrawLottery(DRAW_LOTTERY_PERIOD_QUEUE& queueDrawLotteryItems)
 {
+	CTicker timeLapser("sp_GetDrawLotteryInfo");
+	bool bResult = false;
+	DRAW_LOTTERY_PERIOD tagDrwaLotteryPeriod = { 0 };
 
-	return true;
+	ClearMoreResults();
+	InitBindParam();
+	bResult = ExecuteDirect(TEXT("{call dbo.sp_GetDrawLotteryInfo}"));
+	if (!bResult)
+	{
+		printf("sp_GetDrawLotteryInfo failed ... \n");
+		return false;
+	}
+	InitBindCol();
+	BindCol(tagDrwaLotteryPeriod.uiTypeID); 
+	BindCol(tagDrwaLotteryPeriod.uiUserControled); 
+	BindCol(tagDrwaLotteryPeriod.uiControlRate); 
+	BindCol(tagDrwaLotteryPeriod.uiPowerControl); 
+	BindCol(tagDrwaLotteryPeriod.strCurrentIssueNumber, sizeof(tagDrwaLotteryPeriod.strCurrentIssueNumber));
+	BindCol(tagDrwaLotteryPeriod.strLastIssueNumber, sizeof(tagDrwaLotteryPeriod.strLastIssueNumber));
+	BindCol(tagDrwaLotteryPeriod.strBeginIssueNumber, sizeof(tagDrwaLotteryPeriod.strBeginIssueNumber));
+	while (Fetch())
+	{
+		if ((tagDrwaLotteryPeriod.uiTypeID != 0) && (strlen(tagDrwaLotteryPeriod.strCurrentIssueNumber) > 0))
+		{
+			queueDrawLotteryItems.push(tagDrwaLotteryPeriod);
+			memset(&tagDrwaLotteryPeriod, 0, sizeof(tagDrwaLotteryPeriod));
+		}
+	}
+	ClearMoreResults();
+
+	return !queueDrawLotteryItems.empty();
 }
 
 bool LotteryDB::Ex_GetLotteryOrders(DRAW_LOTTERY_PERIOD tagDrawLotteryInfo, 
