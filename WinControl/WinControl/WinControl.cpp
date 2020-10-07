@@ -9,9 +9,9 @@ MUTEX LotteryMutex;
 DRAW_LOTTERY_PERIOD_QUEUE DrawLotteryQueue;
 CONDITION_VARIABLE LotteryConditionVariable;
 
-bool ProcessLotteryOrder(UINT64 uiAllBet, UINT64 uiAllBetAsOfLast, UINT64 uiBonusAlready,
-		float fWinRateAsOfLast, PLAYER_ORDERS_VEC tagPlayerOrdersVec, 
-		PLAYER_ORDERS_VEC tagControlUserOrdersVec, UINT32& iControlType, LOTTERY_RESULT& lotteryResult)
+
+
+bool ProcessLotteryOrder(LOTTERY_ORDER_DATA lotteryOrderData, LOTTERY_RESULT& lotteryResult)
 {
 
 	return true;
@@ -24,7 +24,7 @@ void LotteryProcessWorker()
 	lotteryDB.DBConnect();
 	while (true)
 	{
-		DRAW_LOTTERY_PERIOD tagDrawLotteryInfo = { 0 };
+		DRAW_LOTTERY_PERIOD tagDrawLotteryInfo;
 		{
 			std::unique_lock<std::mutex> LotteryLock(LotteryMutex);
 			LotteryConditionVariable.wait(LotteryLock, []{return !DrawLotteryQueue.empty();});
@@ -33,21 +33,13 @@ void LotteryProcessWorker()
 			LotteryLock.unlock();
 		}
 
-		UINT64 uiAllBet = 0;//所有下注
-		UINT64 uiAllBetAsOfLast = 0;//截止上期下注
-		UINT64 uiBonusAlready = 0;//已经发放的彩金
-		float fWinRateAsOfLast = 0;//截止上期赢率
-		UINT32 iControlType = 0;//控制类型
-		LOTTERY_RESULT tagLotteryResult = {0};
-		PLAYER_ORDERS_VEC tagPlayerOrdersVec, tagControlUserOrdersVec;
-		bool bResult = lotteryDB.Ex_GetLotteryUserOrders(tagDrawLotteryInfo, uiAllBet, uiAllBetAsOfLast, 
-				uiBonusAlready, fWinRateAsOfLast, tagPlayerOrdersVec, tagControlUserOrdersVec);
+		LOTTERY_ORDER_DATA tagLotteryOrderData;
+		LOTTERY_RESULT tagLotteryResult;
+		bool bResult = lotteryDB.Ex_GetLotteryUserOrders(tagDrawLotteryInfo, tagLotteryOrderData);
 		if (bResult)
-			bResult = ProcessLotteryOrder(uiAllBet, uiAllBetAsOfLast,uiBonusAlready, fWinRateAsOfLast, 
-				tagPlayerOrdersVec, tagControlUserOrdersVec, iControlType, tagLotteryResult);
+			bResult = ProcessLotteryOrder(tagLotteryOrderData, tagLotteryResult);
 		if (bResult)
-			lotteryDB.Ex_UpdateGameResult(tagDrawLotteryInfo.iTypeID, tagDrawLotteryInfo.strCurrentIssueNumber, 
-				iControlType, tagLotteryResult);
+			lotteryDB.Ex_UpdateGameResult(tagLotteryResult);
 	}
 }
 

@@ -13,6 +13,6 @@ public:
 
 	bool DBConnect();
 	bool Ex_GetDrawLottery(DRAW_LOTTERY_PERIOD_QUEUE& queueDrawLotteryItems);
-	bool Ex_GetLotteryUserOrders(DRAW_LOTTERY_PERIOD, UINT64&, UINT64&, UINT64&, float&, PLAYER_ORDERS_VEC&, PLAYER_ORDERS_VEC&);
-	bool Ex_UpdateGameResult(UINT32 iTypeID, char strCurrentIssueNumber[ISSUE_NUMBER_LEN], UINT32 iControlType, LOTTERY_RESULT tagLotteryResult);
+	bool Ex_GetLotteryUserOrders(DRAW_LOTTERY_PERIOD drawLotteryInfo, LOTTERY_ORDER_DATA& lotteryOrderData);
+	bool Ex_UpdateGameResult(LOTTERY_RESULT tagLotteryResult);
 };

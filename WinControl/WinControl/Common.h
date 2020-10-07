@@ -14,7 +14,7 @@ using namespace std;
 #define COLOR_LEN			20 
 #define NUMBER_LEN			10
 #define WORKERS_THREAD_NUM	4//工作线程数量
-#define LOTTERY_RESULT_NUM		10//投注最终结果个数
+#define LOTTERY_RESULT_NUM	10//投注最终结果个数
 
 #define CONDITION_VARIABLE condition_variable
 #define MUTEX mutex
@@ -49,6 +49,10 @@ typedef struct _DRAW_LOTTERY_PERIOD
 	char	strCurrentIssueNumber[ISSUE_NUMBER_LEN];	//当前期号
 	char	strBeginIssueNumber[ISSUE_NUMBER_LEN];	//区间开始期号
 	char	strLastIssueNumber[ISSUE_NUMBER_LEN];		//上一期期号
+	_DRAW_LOTTERY_PERIOD()
+	{
+		memset(this, 0, sizeof(*this));
+	}
 }DRAW_LOTTERY_PERIOD;
 typedef std::queue<DRAW_LOTTERY_PERIOD> DRAW_LOTTERY_PERIOD_QUEUE;
 
@@ -58,18 +62,38 @@ typedef struct _PLAYER_ORDERS
 	char	strIssueNumber[ISSUE_NUMBER_LEN];
 	char	strSelectType[COLOR_LEN];
 	UINT64  uiTotalBonus;
+	_PLAYER_ORDERS()
+	{
+		memset(this, 0, sizeof(*this));
+	}
 }PLAYER_ORDERS;
 typedef std::vector<PLAYER_ORDERS>  PLAYER_ORDERS_VEC;
 
-typedef struct  _LOTTERY_ORDER_INFO
+typedef struct  _LOTTERY_ORDER_DATA
 {
-
-}LOTTERY_ORDER_INFO;
+	UINT64 uiAllBet = 0;//所有下注
+	UINT64 uiAllBetAsOfLast = 0;//截止上期下注
+	UINT64 uiBonusAlready = 0;//已经发放的彩金
+	float fWinRateAsOfLast = 0;//截止上期赢率
+	PLAYER_ORDERS_VEC vecPlayerOrders;//所有玩家下注
+	PLAYER_ORDERS_VEC vecControlUserOrders;//受控玩家下注
+	_LOTTERY_ORDER_DATA()
+	{
+		memset(this, 0, sizeof(*this));
+	}
+}LOTTERY_ORDER_DATA;
 
 typedef struct _LOTTERY_RESULT
 {
+	UINT32	iTypeID;
+	char	strIssueNumber[ISSUE_NUMBER_LEN];
+	UINT32	iControlType;
 	char	strLotteryNumber[NUMBER_LEN];
 	char	strLotteryColor[COLOR_LEN];
+	_LOTTERY_RESULT()
+	{
+		memset(this, 0, sizeof(*this));
+	}
 }LOTTERY_RESULT;
 
 
