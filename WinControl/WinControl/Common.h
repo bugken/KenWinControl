@@ -11,8 +11,8 @@
 using namespace std;
 
 #define ISSUE_NUMBER_LEN	20                         
-#define COLOR_LEN			10 
-#define NUMBER_LEN			5
+#define COLOR_LEN			20 
+#define NUMBER_LEN			10
 #define WORKERS_THREAD_NUM	4//工作线程数量
 #define LOTTERY_RESULT_NUM		10//投注最终结果个数
 

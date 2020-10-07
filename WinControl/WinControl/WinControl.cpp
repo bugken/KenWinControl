@@ -11,7 +11,7 @@ CONDITION_VARIABLE LotteryConditionVariable;
 
 bool ProcessLotteryOrder(UINT64 uiAllBet, UINT64 uiAllBetAsOfLast, UINT64 uiBonusAlready,
 		float fWinRateAsOfLast, PLAYER_ORDERS_VEC tagPlayerOrdersVec, 
-		PLAYER_ORDERS_VEC tagControlUserOrdersVec, LOTTERY_RESULT& lotteryResult)
+		PLAYER_ORDERS_VEC tagControlUserOrdersVec, UINT32& iControlType, LOTTERY_RESULT& lotteryResult)
 {
 
 	return true;
@@ -37,15 +37,17 @@ void LotteryProcessWorker()
 		UINT64 uiAllBetAsOfLast = 0;//截止上期下注
 		UINT64 uiBonusAlready = 0;//已经发放的彩金
 		float fWinRateAsOfLast = 0;//截止上期赢率
+		UINT32 iControlType = 0;//控制类型
 		LOTTERY_RESULT tagLotteryResult = {0};
 		PLAYER_ORDERS_VEC tagPlayerOrdersVec, tagControlUserOrdersVec;
 		bool bResult = lotteryDB.Ex_GetLotteryUserOrders(tagDrawLotteryInfo, uiAllBet, uiAllBetAsOfLast, 
 				uiBonusAlready, fWinRateAsOfLast, tagPlayerOrdersVec, tagControlUserOrdersVec);
 		if (bResult)
 			bResult = ProcessLotteryOrder(uiAllBet, uiAllBetAsOfLast,uiBonusAlready, fWinRateAsOfLast, 
-				tagPlayerOrdersVec, tagControlUserOrdersVec, tagLotteryResult);
+				tagPlayerOrdersVec, tagControlUserOrdersVec, iControlType, tagLotteryResult);
 		if (bResult)
-			lotteryDB.Ex_UpdateGameResult(tagLotteryResult);
+			lotteryDB.Ex_UpdateGameResult(tagDrawLotteryInfo.iTypeID, tagDrawLotteryInfo.strCurrentIssueNumber, 
+				iControlType, tagLotteryResult);
 	}
 }
 

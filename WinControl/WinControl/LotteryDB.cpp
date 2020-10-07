@@ -49,10 +49,10 @@ bool LotteryDB::Ex_GetDrawLottery(DRAW_LOTTERY_PERIOD_QUEUE& queueDrawLotteryIte
 	return !queueDrawLotteryItems.empty();
 }
 
-bool LotteryDB::Ex_GetLotteryUserOrders(DRAW_LOTTERY_PERIOD tagDrawLotteryInfo,
+bool LotteryDB::Ex_GetLotteryUserOrders(DRAW_LOTTERY_PERIOD drawLotteryInfo,
 		UINT64& uiAllBet, UINT64& uiAllBetAsOfLast, UINT64& uiBonusAlready, float& fWinRateAsOfLast,
-		PLAYER_ORDERS_VEC& PlayerOrdersVec, 
-		PLAYER_ORDERS_VEC& ControlUserOrdersVec)
+		PLAYER_ORDERS_VEC& playerOrdersVec, 
+		PLAYER_ORDERS_VEC& controlUserOrdersVec)
 {
 	CTicker timeLapser("sp_GetLotteryUserOrders");
 	bool bResult = false;
@@ -60,11 +60,11 @@ bool LotteryDB::Ex_GetLotteryUserOrders(DRAW_LOTTERY_PERIOD tagDrawLotteryInfo,
 
 	ClearMoreResults();
 	InitBindParam();
-	BindParam(tagDrawLotteryInfo.iUserControled);
-	BindParam(tagDrawLotteryInfo.iTypeID);
-	BindParamVarChar(tagDrawLotteryInfo.strBeginIssueNumber, ISSUE_NUMBER_LEN);
-	BindParamVarChar(tagDrawLotteryInfo.strCurrentIssueNumber, ISSUE_NUMBER_LEN);
-	BindParamVarChar(tagDrawLotteryInfo.strLastIssueNumber, ISSUE_NUMBER_LEN);
+	BindParam(drawLotteryInfo.iUserControled);
+	BindParam(drawLotteryInfo.iTypeID);
+	BindParamVarChar(drawLotteryInfo.strBeginIssueNumber, ISSUE_NUMBER_LEN);
+	BindParamVarChar(drawLotteryInfo.strCurrentIssueNumber, ISSUE_NUMBER_LEN);
+	BindParamVarChar(drawLotteryInfo.strLastIssueNumber, ISSUE_NUMBER_LEN);
 	bResult = ExecuteDirect(TEXT("{call dbo.sp_GetLotteryUserOrders(?,?,?,?,?)}"));
 	if (!bResult)
 	{
@@ -88,7 +88,7 @@ bool LotteryDB::Ex_GetLotteryUserOrders(DRAW_LOTTERY_PERIOD tagDrawLotteryInfo,
 		BindCol(tagPlayerOrders.uiTotalBonus);
 		while (Fetch())
 		{
-			PlayerOrdersVec.push_back(tagPlayerOrders);
+			playerOrdersVec.push_back(tagPlayerOrders);
 			memset(&tagPlayerOrders, 0, sizeof(tagPlayerOrders));
 		}
 	}
@@ -102,7 +102,7 @@ bool LotteryDB::Ex_GetLotteryUserOrders(DRAW_LOTTERY_PERIOD tagDrawLotteryInfo,
 		BindCol(tagPlayerOrders.uiTotalBonus);
 		while (Fetch())
 		{
-			ControlUserOrdersVec.push_back(tagPlayerOrders);
+			controlUserOrdersVec.push_back(tagPlayerOrders);
 			memset(&tagPlayerOrders, 0, sizeof(tagPlayerOrders));
 		}
 	}
@@ -112,8 +112,25 @@ bool LotteryDB::Ex_GetLotteryUserOrders(DRAW_LOTTERY_PERIOD tagDrawLotteryInfo,
 	return true;
 }
 
-bool LotteryDB::Ex_UpdateGameResult(LOTTERY_RESULT tagLotteryResult)
+bool LotteryDB::Ex_UpdateGameResult(UINT32 iTypeID, char strCurrentIssueNumber[ISSUE_NUMBER_LEN], UINT32 iControlType, LOTTERY_RESULT lotteryResult)
 {
+	CTicker timeLapser("sp_UpdateLotteryResult");
+	bool bResult = false;
+	DRAW_LOTTERY_PERIOD tagDrwaLotteryPeriod = { 0 };
+
+	ClearMoreResults();
+	InitBindParam();
+	BindParam(iTypeID); 
+	BindParamVarChar(strCurrentIssueNumber, ISSUE_NUMBER_LEN);
+	BindParamVarChar(lotteryResult.strLotteryNumber, NUMBER_LEN);
+	BindParamVarChar(lotteryResult.strLotteryColor, COLOR_LEN);
+	BindParam(iControlType);
+	bResult = ExecuteDirect(TEXT("{call dbo.sp_UpdateLotteryResult(?,?,?,?,?)}"));
+	if (!bResult)
+	{
+		printf("sp_GetLotteryUserOrders failed ... \n");
+		return false;
+	}
 
 	return true;
 }
