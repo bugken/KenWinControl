@@ -30,7 +30,7 @@ CREATE PROCEDURE [dbo].[sp_QueryWinControl]
 AS
 BEGIN	
 	--declare @InTypeID int = 1
-	--declare @InIssueNumber varchar(50) = '2020100711298'
+	--declare @InIssueNumber varchar(50) = '2020100811176'
 	--控制信息变量
 	declare @UserControled int = 0
 	declare @ControlRate int = 0
@@ -124,13 +124,15 @@ BEGIN
 	--#LotteryTotalBonus记录输赢的临时表
 	create table #LotteryTotalBonus(TypeID int, IssueNumber varchar(30), SelectType varchar(20), TotalBonus bigint, MultiRate decimal(2, 1))
 	create table #UserControledBonus(TypeID int, IssueNumber varchar(30), SelectType varchar(20), TotalBonus bigint, MultiRate decimal(2, 1))
+	select UserId into #UserTest from tab_Users where UserType=1;
 	insert into #LotteryTotalBonus(TypeID, IssueNumber, SelectType, TotalBonus, MultiRate)
 		select @InTypeID, @InCurrentIssueNumber, SelectType, sum(RealAmount),
 				case when SelectType in ('0','1','2','3','4','5','6','7','8','9') then 9
 					 when SelectType in ('red','green','big','small') then 2
 					 when SelectType = 'violet' then 5.5
 				end
-			from [9lottery].dbo.tab_GameOrder where IssueNumber=@InCurrentIssueNumber and TypeID=@InTypeID group by IssueNumber, SelectType
+			from [9lottery].dbo.tab_GameOrder where UserID not in (Select UserID from #UserTest) and IssueNumber=@InCurrentIssueNumber 
+				and TypeID=@InTypeID group by IssueNumber, SelectType
 	--select TypeID, SelectType, IssueNumber, TotalBonus, MultiRate from #LotteryTotalBonus
 	update #LotteryTotalBonus set TotalBonus *= MultiRate
 	select TypeID, SelectType, IssueNumber, TotalBonus from #LotteryTotalBonus
@@ -155,7 +157,7 @@ BEGIN
 	--更改结果的颜色
 	update #LotteryResult SET SelectTypeColor = (case SelectTypeNum when '0' then 'red,violet' when '5' then 'green,violet' else SelectTypeColor end)
 	--计算WinRate
-	declare @TargetControlRate decimal(4,2) = (@InControlRate+0.0)/100
+	declare @TargetControlRate decimal(4,2) = (@InControlRate+0.0)/10000
 	print '目标赢率@TargetControlRate:' + cast(@TargetControlRate as varchar(20))
 	update #LotteryResult set WinRate = (isnull(@BonusAlready, 0)+AllTotalBonus)/@AllBet
 	--更新游戏表并写入日志
@@ -341,6 +343,7 @@ BEGIN
 	
 	drop table #LotteryTotalBonus
 	drop table #UserControledBonus
+	drop table #UserTest
 	drop table #LotteryResult
 		
 END
