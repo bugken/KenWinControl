@@ -297,7 +297,7 @@ BEGIN
 	end
 	
 	--计算WinRate
-	declare @TargetControlRate decimal(4,2) = (@InControlRate+0.0)/100
+	declare @TargetControlRate decimal(4,2) = (@InControlRate+0.0)/10000
 	print '目标赢率@TargetControlRate:' + cast(@TargetControlRate as varchar(20))
 	update #LotteryResult set WinRate = (isnull(@BonusAlready, 0)+AllTotalBonus)/@AllBet
 	--select * from #LotteryResult order by TypeID, WinRate desc
