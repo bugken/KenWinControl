@@ -1,7 +1,7 @@
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/30/2020 18:50:50 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 10/08/2020 19:18:01 ******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_GenerateGameNumberUpdate]') AND type in (N'P', N'PC'))
 DROP PROCEDURE [dbo].[sp_GenerateGameNumberUpdate]
 GO
@@ -9,12 +9,14 @@ GO
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 09/30/2020 18:50:50 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 10/08/2020 19:18:01 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
+
 
 
 
@@ -71,13 +73,15 @@ BEGIN
 	--#LotteryTotalBonus记录输赢的临时表
 	create table #LotteryTotalBonus(TypeID int, IssueNumber varchar(30), SelectType varchar(20), TotalBonus bigint, MultiRate decimal(2, 1))
 	create table #UserControledBonus(TypeID int, IssueNumber varchar(30), SelectType varchar(20), TotalBonus bigint, MultiRate decimal(2, 1))
+	select UserId into #UserTest from tab_Users where UserType=1;
 	insert into #LotteryTotalBonus(TypeID, IssueNumber, SelectType, TotalBonus, MultiRate)
 		select @InTypeID, @InCurrentIssueNumber, SelectType, sum(RealAmount),
 				case when SelectType in ('0','1','2','3','4','5','6','7','8','9') then 9
 					 when SelectType in ('red','green','big','small') then 2
 					 when SelectType = 'violet' then 5.5
 				end
-			from [9lottery].dbo.tab_GameOrder where IssueNumber=@InCurrentIssueNumber and TypeID=@InTypeID group by IssueNumber, SelectType
+			from [9lottery].dbo.tab_GameOrder where UserID not in (Select UserID from #UserTest) and IssueNumber=@InCurrentIssueNumber 
+				and TypeID=@InTypeID group by IssueNumber, SelectType
 	update #LotteryTotalBonus set TotalBonus *= MultiRate
 	--单人下注信息计算
 	if @InUserControled <> 0
@@ -102,6 +106,7 @@ BEGIN
 		print '玩家没有下注'
 		drop table #LotteryTotalBonus
 		drop table #UserControledBonus
+		drop table #UserTest
 		return
 	end
 	--select TypeID, SelectType, IssueNumber, TotalBonus from #LotteryTotalBonus
@@ -533,8 +538,11 @@ BEGIN
 	
 	drop table #LotteryTotalBonus
 	drop table #UserControledBonus
+	drop table #UserTest
 	drop table #LotteryResult
 END
+
+
 
 
 
