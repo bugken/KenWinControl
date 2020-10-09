@@ -1,7 +1,7 @@
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GetLotteryUserOrders]    Script Date: 10/07/2020 02:16:50 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetLotteryUserOrders]    Script Date: 10/09/2020 14:09:11 ******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_GetLotteryUserOrders]') AND type in (N'P', N'PC'))
 DROP PROCEDURE [dbo].[sp_GetLotteryUserOrders]
 GO
@@ -9,12 +9,13 @@ GO
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GetLotteryUserOrders]    Script Date: 10/07/2020 02:16:50 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetLotteryUserOrders]    Script Date: 10/09/2020 14:09:11 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
 
 
 
@@ -56,6 +57,7 @@ BEGIN
 	select @AllBetAsOfLast = sum(RealAmount) from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and IssueNumber >= @InBeginIssueNumber and IssueNumber <= @InLastIssueNumber
 	select @BonusAlready = sum(ProfitAmount - RealAmount) from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and IssueNumber >= @InBeginIssueNumber and IssueNumber <= @InLastIssueNumber
 	set @WinRateAsOfLast = isnull(@BonusAlready / @AllBetAsOfLast, 0)
+	select @AllBet, @AllBetAsOfLast, @BonusAlready, @WinRateAsOfLast
 	--print '投注金额@AllBet:' + isnull(cast(@AllBet as varchar(20)),0)
 	--print '截止上期投注金额@AllBetAsOfLast:' + isnull(cast(@AllBetAsOfLast as varchar(20)),0)
 	--print '已派彩金额@BonusAlready:' + isnull(cast(@BonusAlready as varchar(20)),0)
@@ -64,13 +66,15 @@ BEGIN
 	--#LotteryTotalBonus记录输赢的临时表
 	create table #LotteryTotalBonus(TypeID int, IssueNumber varchar(30), SelectType varchar(20), TotalBonus bigint, MultiRate decimal(2, 1))
 	create table #UserControledBonus(TypeID int, IssueNumber varchar(30), SelectType varchar(20), TotalBonus bigint, MultiRate decimal(2, 1))
+	select UserId into #UserTest from tab_Users where UserType=1;
 	insert into #LotteryTotalBonus(TypeID, IssueNumber, SelectType, TotalBonus, MultiRate)
 		select @InTypeID, @InCurrentIssueNumber, SelectType, sum(RealAmount),
 				case when SelectType in ('0','1','2','3','4','5','6','7','8','9') then 9
 					 when SelectType in ('red','green','big','small') then 2
 					 when SelectType = 'violet' then 5.5
 				end
-			from [9lottery].dbo.tab_GameOrder where IssueNumber=@InCurrentIssueNumber and TypeID=@InTypeID group by IssueNumber, SelectType
+			from [9lottery].dbo.tab_GameOrder where UserID not in (Select UserID from #UserTest) and IssueNumber=@InCurrentIssueNumber 
+				and TypeID=@InTypeID group by IssueNumber, SelectType
 	update #LotteryTotalBonus set TotalBonus *= MultiRate
 	
 	--单人下注信息计算
@@ -97,6 +101,7 @@ BEGIN
 		--print '玩家没有下注'
 		drop table #LotteryTotalBonus
 		drop table #UserControledBonus
+		drop table #UserTest
 		return
 	end
 	--select TypeID, SelectType, IssueNumber, TotalBonus from #LotteryTotalBonus
@@ -122,14 +127,18 @@ BEGIN
 	delete from #LotteryResult where SelectTypeColor = 'violet' and SelectTypeNum = '10'
 	--更改结果的颜色
 	update #LotteryResult SET SelectTypeColor = (case SelectTypeNum when '0' then 'red,violet' when '5' then 'green,violet' else SelectTypeColor end)
+	--计算赢率
+	update #LotteryResult set WinRate = (isnull(@BonusAlready, 0)+AllTotalBonus)/@AllBet 
 	
-	select @AllBet, @AllBetAsOfLast, @BonusAlready, @WinRateAsOfLast
-	select TypeID, IssueNumber, SelectType, TotalBonus from #LotteryTotalBonus
-	select TypeID, IssueNumber, SelectType, TotalBonus from #UserControledBonus
+	select TypeID, IssueNumber, SelectType, TotalBonus from #UserControledBonus order by TotalBonus desc
+	select TypeID, IssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, WinRate from #LotteryResult order by WinRate
 	
 	drop table #LotteryTotalBonus
 	drop table #UserControledBonus
+	drop table #LotteryResult
+	drop table #UserTest
 END
+
 
 
 

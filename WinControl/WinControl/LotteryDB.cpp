@@ -16,7 +16,7 @@ bool LotteryDB::DBConnect()
 
 bool LotteryDB::Ex_GetDrawLottery(DRAW_LOTTERY_PERIOD_QUEUE& queueDrawLotteryItems)
 {
-	CTicker timeLapser("sp_GetDrawLotteryInfo");
+	CTicker timeLapser("Ex_GetDrawLottery");
 	bool bResult = false;
 	DRAW_LOTTERY_PERIOD tagDrwaLotteryPeriod;
 
@@ -51,7 +51,7 @@ bool LotteryDB::Ex_GetDrawLottery(DRAW_LOTTERY_PERIOD_QUEUE& queueDrawLotteryIte
 
 bool LotteryDB::Ex_GetLotteryUserOrders(DRAW_LOTTERY_PERIOD drawLotteryInfo, LOTTERY_ORDER_DATA& lotteryOrderData)
 {
-	CTicker timeLapser("sp_GetLotteryUserOrders");
+	CTicker timeLapser("Ex_GetLotteryUserOrders");
 	bool bResult = false;
 
 	ClearMoreResults();
@@ -74,32 +74,34 @@ bool LotteryDB::Ex_GetLotteryUserOrders(DRAW_LOTTERY_PERIOD drawLotteryInfo, LOT
 	BindCol(lotteryOrderData.fWinRateAsOfLast);
 	Fetch();//if (IsFetchNoData())
 
-	PLAYER_ORDERS tagPlayerOrders;
+	CONTROLED_USER_ORDERS tagControledUserOrders;
+	ORDERS_TEN_RESULTS tagOrdersTenResults;
 	if (Fetch())
 	{
 		InitBindCol();
-		BindCol(tagPlayerOrders.iTypeID);
-		BindCol(tagPlayerOrders.strIssueNumber, sizeof(tagPlayerOrders.strIssueNumber));
-		BindCol(tagPlayerOrders.strSelectType, sizeof(tagPlayerOrders.strSelectType));
-		BindCol(tagPlayerOrders.uiTotalBonus);
+		BindCol(tagControledUserOrders.iTypeID);
+		BindCol(tagControledUserOrders.strIssueNumber, sizeof(tagControledUserOrders.strIssueNumber));
+		BindCol(tagControledUserOrders.strSelectType, sizeof(tagControledUserOrders.strSelectType));
+		BindCol(tagControledUserOrders.uiTotalBonus);
 		while (Fetch())
 		{
-			lotteryOrderData.vecPlayerOrders.push_back(tagPlayerOrders);
-			memset(&tagPlayerOrders, 0, sizeof(tagPlayerOrders));
+			lotteryOrderData.vecControlUserOrders.push_back(tagControledUserOrders);
+			memset(&tagControledUserOrders, 0, sizeof(tagControledUserOrders));
 		}
 	}
-	memset(&tagPlayerOrders, 0, sizeof(tagPlayerOrders));
 	if (Fetch())
 	{
 		InitBindCol();
-		BindCol(tagPlayerOrders.iTypeID);
-		BindCol(tagPlayerOrders.strIssueNumber, sizeof(tagPlayerOrders.strIssueNumber));
-		BindCol(tagPlayerOrders.strSelectType, sizeof(tagPlayerOrders.strSelectType));
-		BindCol(tagPlayerOrders.uiTotalBonus);
+		BindCol(tagOrdersTenResults.iTypeID);
+		BindCol(tagOrdersTenResults.strIssueNumber, sizeof(tagOrdersTenResults.strIssueNumber));
+		BindCol(tagOrdersTenResults.strSelectNumber, sizeof(tagOrdersTenResults.strSelectNumber));
+		BindCol(tagOrdersTenResults.strSelectColor, sizeof(tagOrdersTenResults.strSelectColor));
+		BindCol(tagOrdersTenResults.uiAllTotalBonus);
+		BindCol(tagOrdersTenResults.fWinRate);
 		while (Fetch())
 		{
-			lotteryOrderData.vecControlUserOrders.push_back(tagPlayerOrders);
-			memset(&tagPlayerOrders, 0, sizeof(tagPlayerOrders));
+			lotteryOrderData.vecLottery10Results.push_back(tagOrdersTenResults);
+			memset(&tagOrdersTenResults, 0, sizeof(tagOrdersTenResults));
 		}
 	}
 
@@ -110,7 +112,7 @@ bool LotteryDB::Ex_GetLotteryUserOrders(DRAW_LOTTERY_PERIOD drawLotteryInfo, LOT
 
 bool LotteryDB::Ex_UpdateGameResult(LOTTERY_RESULT lotteryResult)
 {
-	CTicker timeLapser("sp_UpdateLotteryResult");
+	CTicker timeLapser("Ex_UpdateGameResult");
 	bool bResult = false;
 
 	ClearMoreResults();
