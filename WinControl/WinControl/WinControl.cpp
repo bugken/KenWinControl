@@ -353,7 +353,11 @@ void LoopCheckLottery()
 			{
 				{
 					lock_guard<mutex> LotteryLock(LotteryMutex);
-					DrawLotteryQueue = tagDrawLotteryQueue;
+					while (!tagDrawLotteryQueue.empty())
+					{
+						DrawLotteryQueue.push(tagDrawLotteryQueue.front());
+						tagDrawLotteryQueue.pop();
+					}
 				}
 				//printf("DrawLotteryQueue:%d\n", DrawLotteryQueue.size());
 				//while (!DrawLotteryQueue.empty())
