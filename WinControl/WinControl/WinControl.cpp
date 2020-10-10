@@ -190,6 +190,7 @@ bool GetControlUserMostBonusBet(CONTROLED_USER_ORDERS_VEC vecControlUserOrders, 
 
 bool DeleteUserControlType(ORDERS_TEN_RESULTS_VEC& lottery10Results, const char* strControlUserMostBonusBet)
 {
+	CTicker timeLapser("DeleteUserControlType");
 	//if中嵌套循环，效率稍高，编译器可对循环优化
 	if (strControlUserMostBonusBet == "0" || strControlUserMostBonusBet == "1" || strControlUserMostBonusBet == "2"\
 		|| strControlUserMostBonusBet == "3" || strControlUserMostBonusBet == "4" || strControlUserMostBonusBet == "5"\
@@ -262,9 +263,10 @@ bool DeleteUserControlType(ORDERS_TEN_RESULTS_VEC& lottery10Results, const char*
 	return true;
 }
 
-bool GetLotteryFinalResult(ORDERS_TEN_RESULTS_VEC lottery10Results, bool bUserControled, UINT32 iControlRate,
-	UINT32 iPowerControl, LOTTERY_RESULT& lotteryResult)
+bool GetLotteryFinalResult(ORDERS_TEN_RESULTS_VEC lottery10Results, float fWinRateAsOfLast, 
+		bool bUserControled, UINT32 iControlRate, UINT32 iPowerControl, LOTTERY_RESULT& lotteryResult)
 {
+	CTicker timeLapser("GetLotteryFinalResult");
 
 	return true;
 }
@@ -313,8 +315,9 @@ void LotteryProcessWorker()
 		if (bResult)
 			bResult = ProcessLotteryOrder(tagLotteryOrderData, bUserControled);
 		if (bResult)
-			bResult = GetLotteryFinalResult(tagLotteryOrderData.vecLottery10Results, bUserControled,
-					tagDrawLotteryInfo.iControlRate, tagDrawLotteryInfo.iPowerControl, tagLotteryResult);
+			bResult = GetLotteryFinalResult(tagLotteryOrderData.vecLottery10Results, 
+				tagLotteryOrderData.fWinRateAsOfLast,bUserControled, tagDrawLotteryInfo.iControlRate,
+				tagDrawLotteryInfo.iPowerControl, tagLotteryResult);
 		if (bResult)
 			lotteryDB.Ex_UpdateGameResult(tagLotteryResult);
 	}
