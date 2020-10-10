@@ -4,12 +4,10 @@
 //½µÐòÅÅÐòº¯Êý
 bool DescSort(const ORDERS_TEN_RESULTS& V1, const ORDERS_TEN_RESULTS& V2)
 {
-	//return V1.uiAllTotalBonus >= V2.uiAllTotalBonus;
-	return true;
+	return V1.uiAllTotalBonus >= V2.uiAllTotalBonus;
 }
 //ÉýÐòÅÅÐòº¯Êý
 bool AscSort(const ORDERS_TEN_RESULTS& V1, const ORDERS_TEN_RESULTS& V2)
 {
-	//return V1.uiAllTotalBonus < V2.uiAllTotalBonus;
-	return false;
+	return V1.uiAllTotalBonus < V2.uiAllTotalBonus;
 }
