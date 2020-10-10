@@ -263,11 +263,106 @@ bool DeleteUserControlType(ORDERS_TEN_RESULTS_VEC& lottery10Results, const char*
 	return true;
 }
 
-bool GetLotteryFinalResult(ORDERS_TEN_RESULTS_VEC lottery10Results, float fWinRateAsOfLast, 
+void SetLotteryResult(const ORDERS_TEN_RESULTS Result, LOTTERY_RESULT& lotteryResult)
+{
+	lotteryResult.iTypeID = Result.iTypeID;
+	strcpy_s(lotteryResult.strIssueNumber, Result.strIssueNumber);
+	strcpy_s(lotteryResult.strLotteryNumber, Result.strSelectNumber);
+	strcpy_s(lotteryResult.strLotteryColor, Result.strSelectColor);
+}
+/*
+控制类型
+1:单杀,强拉,上拉	2:单杀,强拉,下拉	3:未单杀,强拉,上拉 
+4:未单杀,强拉,下拉	5:单杀,弱拉,上拉	6:未单杀,弱拉,上拉 
+7:单杀,弱拉,下拉	8:未单杀,弱拉,下拉	9:保持用户赢率为定值
+控制力度
+0:赢率控制在ControlRate附近 1:强拉回 2:弱拉回
+*/
+bool GetLotteryFinalResult(ORDERS_TEN_RESULTS_VEC lottery10ResultsVec, float fWinRateAsOfLast, 
 		bool bUserControled, UINT32 iControlRate, UINT32 iPowerControl, LOTTERY_RESULT& lotteryResult)
 {
 	CTicker timeLapser("GetLotteryFinalResult");
-	sort(lottery10Results.begin(), lottery10Results.end(), DescSort);
+	UINT32 iSteps = 0;
+	UINT32 iVecSize = lottery10ResultsVec.size();
+	float fTargetWinRate = (float)(iControlRate * 1.0 / 10000);
+	sort(lottery10ResultsVec.begin(), lottery10ResultsVec.end(), DescSort);
+
+	if (CONTROL_POWER_STRONG == iPowerControl)//强拉
+	{
+		if (fWinRateAsOfLast <= fTargetWinRate)
+		{//强制上拉取第一个元素
+			SetLotteryResult(lottery10ResultsVec.front(), lotteryResult);
+			bUserControled ? lotteryResult.iControlType = CONTROL_TYPE_USER_STRONG_UP:
+				lotteryResult.iControlType = CONTROL_TYPE_NONE_USER_STRONG_UP;
+		}
+		else
+		{//强制下拉取最后一个元素
+			SetLotteryResult(lottery10ResultsVec.back(), lotteryResult);
+			bUserControled ? lotteryResult.iControlType = CONTROL_TYPE_USER_STRONG_DOWN 
+				: lotteryResult.iControlType = CONTROL_TYPE_NONE_USER_STRONG_DOWN;
+		}
+	}
+	else if (CONTROL_POWER_WEAK == iPowerControl)//弱拉
+	{
+		if (fWinRateAsOfLast <= fTargetWinRate)//弱上拉
+		{
+			UINT32 iBingoCounts = 0;
+			//弱上拉先取第一个值，存在所有赢率都比目标赢率小的情况
+			SetLotteryResult(lottery10ResultsVec.front(), lotteryResult);
+			bUserControled ? lotteryResult.iControlType = CONTROL_TYPE_USER_WEAK_UP
+				: lotteryResult.iControlType = CONTROL_TYPE_NONE_USER_WEAK_UP;
+			for (auto result : lottery10ResultsVec)
+			{
+				if (result.fWinRate > fTargetWinRate)
+				{
+					iBingoCounts++;
+					SetLotteryResult(result, lotteryResult);
+				}
+				//遍历到第三个大的值或结束为止
+				if ((3 == iBingoCounts) || (++iSteps == iVecSize))
+					break;
+			}
+		}
+		else//弱下拉
+		{
+			bool bIsFound = false;//是否继续找小值的位置
+			bUserControled ? lotteryResult.iControlType = CONTROL_TYPE_USER_WEAK_DOWN
+				: lotteryResult.iControlType = CONTROL_TYPE_NONE_USER_WEAK_DOWN;
+			for (auto result : lottery10ResultsVec)
+			{
+				++iSteps;
+				if (!bIsFound && (result.fWinRate < fTargetWinRate))
+				{
+					bIsFound = true;
+					if (iSteps >= iVecSize - 2)
+					{
+						SetLotteryResult(result, lotteryResult);
+						break;
+					}
+				}
+				//1.找到最小值,遍历到倒数第三个 2.没有找到最小值,遍历到最后一个
+				if ((bIsFound && (iSteps == iVecSize - 2)) ||
+					(!bIsFound && iSteps == iVecSize))
+				{
+					SetLotteryResult(result, lotteryResult);
+					break;
+				}
+			}
+		}
+	}
+	else if (CONTROL_POWER_FIX_WIN_RATE == iPowerControl)//保持赢率在设定值
+	{
+		lotteryResult.iControlType = CONTROL_TYPE_FIX_WIN_RATE;
+		for (auto result : lottery10ResultsVec)
+		{
+			if ((++iSteps == iVecSize) || (result.fWinRate <= fTargetWinRate))
+			{
+				SetLotteryResult(result, lotteryResult);
+				break;
+			}
+		}
+	}
+
 	return true;
 }
 

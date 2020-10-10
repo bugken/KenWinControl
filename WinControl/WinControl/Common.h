@@ -22,6 +22,29 @@ using namespace std;
 #define WIN_RATE_SIZE 2
 #define WIN_RATE_SMALL_BIG 2
 
+/*
+控制类型
+1:单杀,强拉,上拉	2:单杀,强拉,下拉	3:未单杀,强拉,上拉
+4:未单杀,强拉,下拉	5:单杀,弱拉,上拉	6:未单杀,弱拉,上拉
+7:单杀,弱拉,下拉	8:未单杀,弱拉,下拉	9:保持用户赢率为定值
+*/
+#define CONTROL_TYPE_USER_STRONG_UP			1
+#define CONTROL_TYPE_USER_STRONG_DOWN		2
+#define CONTROL_TYPE_NONE_USER_STRONG_UP	3
+#define CONTROL_TYPE_NONE_USER_STRONG_DOWN	4
+#define CONTROL_TYPE_USER_WEAK_UP			5
+#define CONTROL_TYPE_NONE_USER_WEAK_UP		6
+#define CONTROL_TYPE_USER_WEAK_DOWN			7
+#define CONTROL_TYPE_NONE_USER_WEAK_DOWN	8
+#define CONTROL_TYPE_FIX_WIN_RATE			9
+/*
+控制力度
+0:赢率控制在ControlRate附近 1:强拉回 2:弱拉回
+*/
+#define CONTROL_POWER_FIX_WIN_RATE	0
+#define CONTROL_POWER_STRONG		1
+#define CONTROL_POWER_WEAK			2
+
 #define FOR_CONTENT_BEGIN() for (auto order : vecControlUserOrders){
 #define FOR_CONTENT_END()	}
 
