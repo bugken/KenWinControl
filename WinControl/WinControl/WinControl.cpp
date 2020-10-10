@@ -267,7 +267,7 @@ bool GetLotteryFinalResult(ORDERS_TEN_RESULTS_VEC lottery10Results, float fWinRa
 		bool bUserControled, UINT32 iControlRate, UINT32 iPowerControl, LOTTERY_RESULT& lotteryResult)
 {
 	CTicker timeLapser("GetLotteryFinalResult");
-
+	sort(lottery10Results.begin(), lottery10Results.end(), DescSort);
 	return true;
 }
 

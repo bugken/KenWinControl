@@ -51,7 +51,7 @@ using namespace std;
 
 #define CONDITION_VARIABLE condition_variable
 #define MUTEX mutex
-
+//计时类
 class CTicker
 {
 public:
@@ -71,7 +71,6 @@ private:
 	unsigned int mBeginTick;
 	string mName;
 };
-
 //当前期号 开始计算的期号 上一期号 TypeID 单杀UserID 赢率 杀率类型
 typedef struct _DRAW_LOTTERY_PERIOD
 {
@@ -100,6 +99,9 @@ typedef struct _ORDERS_TEN_RESULTS
 	_ORDERS_TEN_RESULTS()
 	{
 		memset(this, 0, sizeof(*this));
+	}
+	bool operator < (const _ORDERS_TEN_RESULTS &that)const {
+		return fWinRate < that.fWinRate;
 	}
 }ORDERS_TEN_RESULTS;
 typedef std::vector<ORDERS_TEN_RESULTS>  ORDERS_TEN_RESULTS_VEC;
@@ -145,7 +147,9 @@ typedef struct _LOTTERY_RESULT
 	}
 }LOTTERY_RESULT;
 
-
-
+//降序排序函数
+bool DescSort(const ORDERS_TEN_RESULTS& V1, const ORDERS_TEN_RESULTS& V2);
+//升序排序函数
+bool AscSort(const ORDERS_TEN_RESULTS& V1, const ORDERS_TEN_RESULTS& V2);
 
 

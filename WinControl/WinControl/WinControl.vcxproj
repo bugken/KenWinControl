@@ -89,6 +89,7 @@
     <ClInclude Include="win_linux.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Common.cpp" />
     <ClCompile Include="LotteryDB.cpp" />
     <ClCompile Include="ODBCQuery.cpp" />
     <ClCompile Include="ServerPublic.cpp" />
