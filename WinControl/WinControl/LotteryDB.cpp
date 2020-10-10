@@ -79,19 +79,6 @@ bool LotteryDB::Ex_GetLotteryUserOrders(DRAW_LOTTERY_PERIOD drawLotteryInfo, LOT
 	if (Fetch())
 	{
 		InitBindCol();
-		BindCol(tagControledUserOrders.iTypeID);
-		BindCol(tagControledUserOrders.strIssueNumber, sizeof(tagControledUserOrders.strIssueNumber));
-		BindCol(tagControledUserOrders.strSelectType, sizeof(tagControledUserOrders.strSelectType));
-		BindCol(tagControledUserOrders.uiTotalBonus);
-		while (Fetch())
-		{
-			lotteryOrderData.vecControlUserOrders.push_back(tagControledUserOrders);
-			memset(&tagControledUserOrders, 0, sizeof(tagControledUserOrders));
-		}
-	}
-	if (Fetch())
-	{
-		InitBindCol();
 		BindCol(tagOrdersTenResults.iTypeID);
 		BindCol(tagOrdersTenResults.strIssueNumber, sizeof(tagOrdersTenResults.strIssueNumber));
 		BindCol(tagOrdersTenResults.strSelectNumber, sizeof(tagOrdersTenResults.strSelectNumber));
@@ -102,6 +89,22 @@ bool LotteryDB::Ex_GetLotteryUserOrders(DRAW_LOTTERY_PERIOD drawLotteryInfo, LOT
 		{
 			lotteryOrderData.vecLottery10Results.push_back(tagOrdersTenResults);
 			memset(&tagOrdersTenResults, 0, sizeof(tagOrdersTenResults));
+		}
+	}
+	if (drawLotteryInfo.iUserControled > 0)
+	{
+		if (Fetch())
+		{
+			InitBindCol();
+			BindCol(tagControledUserOrders.iTypeID);
+			BindCol(tagControledUserOrders.strIssueNumber, sizeof(tagControledUserOrders.strIssueNumber));
+			BindCol(tagControledUserOrders.strSelectType, sizeof(tagControledUserOrders.strSelectType));
+			BindCol(tagControledUserOrders.uiTotalBonus);
+			while (Fetch())
+			{
+				lotteryOrderData.vecControlUserOrders.push_back(tagControledUserOrders);
+				memset(&tagControledUserOrders, 0, sizeof(tagControledUserOrders));
+			}
 		}
 	}
 

@@ -130,8 +130,8 @@ BEGIN
 	--计算赢率
 	update #LotteryResult set WinRate = (isnull(@BonusAlready, 0)+AllTotalBonus)/@AllBet 
 	
-	select TypeID, IssueNumber, SelectType, TotalBonus from #UserControledBonus order by TotalBonus desc
 	select TypeID, IssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, WinRate from #LotteryResult order by WinRate
+	select TypeID, IssueNumber, SelectType, TotalBonus from #UserControledBonus order by TotalBonus desc
 	
 	drop table #LotteryTotalBonus
 	drop table #UserControledBonus
