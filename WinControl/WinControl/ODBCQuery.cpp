@@ -1,14 +1,10 @@
-//#ifdef _DEBUG
-//#include <io.h>
-//#include <stdio.h>
-//#endif
-
 #include "stdafx.h"
-#include "ServerPublic.h"
+#include <winsock2.h>
+#include <windows.h>
+#include <assert.h>
 #include <tchar.h>
 #include <time.h>
 #include "odbcquery.h"
-
 
 #ifndef _WIN64
 //#pragma comment(lib,"odbc32.lib")
