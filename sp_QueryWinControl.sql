@@ -135,7 +135,7 @@ BEGIN
 				and TypeID=@InTypeID group by IssueNumber, SelectType
 	--select TypeID, SelectType, IssueNumber, TotalBonus, MultiRate from #LotteryTotalBonus
 	update #LotteryTotalBonus set TotalBonus *= MultiRate
-	select TypeID, SelectType, IssueNumber, TotalBonus from #LotteryTotalBonus
+	--select TypeID, SelectType, IssueNumber, TotalBonus from #LotteryTotalBonus
 	--获取彩票所有可能出现的结果
 	create table #LotteryResult(TypeID int, IssueNumber varchar(50), SelectTypeNum varchar(20), SelectTypeColor varchar(20), AllTotalBonus bigint, WinRate decimal(10, 7))
 	insert into #LotteryResult(TypeID, IssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, WinRate) 
@@ -164,7 +164,7 @@ BEGIN
 	declare @RandNumVar varchar(20) = ''
 	declare @Loops int = 0
 	declare @IssueNumber varchar(50) = ''
-	declare @WinRate decimal(10, 3) = 0.0
+	declare @WinRate decimal(10, 7) = 0.0
 	declare @SelectTypeNum varchar(20) = ''
 	declare @SelectTypeColor varchar(20) = ''
 	declare @FinalTypeNum varchar(20) = ''
@@ -287,7 +287,7 @@ BEGIN
 						else
 							set @StopPos = @StepCounts -2
 					end
-					if @Loops = @StopPos or @Loops = @StepCounts 
+					if (@IsFound=1 and @Loops=@StopPos) or (@IsFound=0 and @Loops=@StepCounts) 
 					begin
 						set @LogTypeNum = @SelectTypeNum
 						set @LogTypeColor = @SelectTypeColor

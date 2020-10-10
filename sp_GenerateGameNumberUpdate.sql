@@ -1,7 +1,7 @@
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 10/08/2020 19:18:01 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 10/11/2020 00:58:27 ******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_GenerateGameNumberUpdate]') AND type in (N'P', N'PC'))
 DROP PROCEDURE [dbo].[sp_GenerateGameNumberUpdate]
 GO
@@ -9,12 +9,13 @@ GO
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 10/08/2020 19:18:01 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GenerateGameNumberUpdate]    Script Date: 10/11/2020 00:58:27 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
 
 
 
@@ -60,7 +61,7 @@ BEGIN
 	declare @BonusAlready decimal(20, 2) = 0.0 --派彩金额
 	declare @AllBet decimal(20, 2) = 0.0 --投注金额
 	declare @AllBetUntilLast decimal(20, 2) = 0.0 --截止上期投注金额
-	declare @WinRateAsOfLast decimal(20, 2) = 0.0 --截止上期玩家赢率
+	declare @WinRateAsOfLast decimal(20, 7) = 0.0 --截止上期玩家赢率
 	select @AllBet = sum(RealAmount) from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and IssueNumber >= @InBeginIssueNumber and IssueNumber <= @InCurrentIssueNumber
 	select @AllBetUntilLast = sum(RealAmount) from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and IssueNumber >= @InBeginIssueNumber and IssueNumber <= @InLastIssueNumber
 	select @BonusAlready = sum(ProfitAmount - RealAmount) from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and IssueNumber >= @InBeginIssueNumber and IssueNumber <= @InLastIssueNumber
@@ -306,7 +307,7 @@ BEGIN
 	declare @RandNumVar varchar(20) = ''
 	declare @Loops int = 0
 	declare @IssueNumber varchar(50) = ''
-	declare @WinRate decimal(10, 3) = 0.0
+	declare @WinRate decimal(10, 7) = 0.0
 	declare @SelectTypeNum varchar(20) = ''
 	declare @SelectTypeColor varchar(20) = ''
 	declare @FinalTypeNum varchar(20) = ''
@@ -474,7 +475,7 @@ BEGIN
 						else
 							set @StopPos = @StepCounts -2
 					end
-					if @Loops = @StopPos or @Loops = @StepCounts 
+					if (@IsFound=1 and @Loops=@StopPos) or (@IsFound=0 and @Loops=@StepCounts)  
 					begin
 						set @LogTypeNum = @SelectTypeNum
 						set @LogTypeColor = @SelectTypeColor
@@ -541,6 +542,7 @@ BEGIN
 	drop table #UserTest
 	drop table #LotteryResult
 END
+
 
 
 
