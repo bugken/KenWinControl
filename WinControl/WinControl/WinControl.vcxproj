@@ -80,6 +80,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h" />
+    <ClInclude Include="LogFile.h" />
     <ClInclude Include="LotteryDB.h" />
     <ClInclude Include="ODBCQuery.h" />
     <ClInclude Include="sqlncli.h" />
@@ -89,6 +90,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common.cpp" />
+    <ClCompile Include="LogFile.cpp" />
     <ClCompile Include="LotteryDB.cpp" />
     <ClCompile Include="ODBCQuery.cpp" />
     <ClCompile Include="stdafx.cpp">

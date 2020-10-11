@@ -74,6 +74,8 @@ using namespace std;
 
 #define CONDITION_VARIABLE condition_variable
 #define MUTEX mutex
+#define LockGuard lock_guard<mutex> 
+
 //计时类
 class CTicker
 {
@@ -88,12 +90,24 @@ public:
 		unsigned int endTick = ::GetTickCount();
 		//执行存储过程时间超过100毫秒，记录告警。超过500，记录错误日志
 		unsigned int usedms = endTick - mBeginTick;
-		printf("%s, The [%s] execution last %u milliseconds \n", __FUNCTION__, mName.c_str(), usedms);
+		printf("%s %d, The %s execution last %u milliseconds \n", __FUNCTION__, __LINE__, mName.c_str(), usedms);
 	}
 private:
 	unsigned int mBeginTick;
 	string mName;
 };
+//当前时间
+typedef struct _CurrentTime
+{
+	unsigned int      ulYear;           /*0000-9999*/
+	unsigned int      ulMonth;          /*00-12*/
+	unsigned int      ulDay;            /*01-31*/
+	unsigned int      ulHour;           /*00-23*/
+	unsigned int      ulMinute;         /*00-59*/
+	unsigned int      ulSecond;         /*00-59*/
+	unsigned int      ulMSecond;        /*000-999*/
+}CurrentTime;
+
 //当前期号 开始计算的期号 上一期号 TypeID 单杀UserID 赢率 杀率类型
 typedef struct _DRAW_LOTTERY_PERIOD
 {
@@ -174,5 +188,5 @@ typedef struct _LOTTERY_RESULT
 bool DescSort(const ORDERS_TEN_RESULTS& V1, const ORDERS_TEN_RESULTS& V2);
 //升序排序函数
 bool AscSort(const ORDERS_TEN_RESULTS& V1, const ORDERS_TEN_RESULTS& V2);
-
-
+//创建文件路径
+void CreatePath(char szLogPath[MAX_PATH]);
