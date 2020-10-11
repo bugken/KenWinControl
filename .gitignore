@@ -1,10 +1,10 @@
 #M项目忽略文件以及文件夹
-WinControl/Debug/
-WinControl/ipch/
-WinControl/WinControl/Debug/
-WinControl/WinControl.opensdf
-WinControl/WinControl.sdf
-WinControl/WinControl.v12.suo
+WinControlCpp/Debug/
+WinControlCpp/ipch/
+WinControlCpp/WinControl/Debug/
+WinControlCpp/WinControl.opensdf
+WinControlCpp/WinControl.sdf
+WinControlCpp/WinControl.v12.suo
 
 
 
