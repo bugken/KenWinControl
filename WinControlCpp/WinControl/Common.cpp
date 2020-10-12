@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "Common.h"
-#include <direct.h>//for mkdir function
 
 //½µÐòÅÅÐòº¯Êý
 bool DescSort(const ORDERS_TEN_RESULTS& V1, const ORDERS_TEN_RESULTS& V2)
@@ -54,4 +53,15 @@ void CreatePath(char szLogPath[MAX_PATH])
 		*(pTemp1 + 1) = chTemp;
 		pTemp = pTemp1 + 1;
 	}
+}
+
+bool GetCurrentWorkDir(char* pPath, UINT32 iSize)
+{
+	bool ret = true;
+	if (getcwd(pPath, iSize) == NULL)
+	{
+		ret = false;
+	}
+		
+	return ret;
 }

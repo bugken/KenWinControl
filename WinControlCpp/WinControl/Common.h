@@ -7,8 +7,17 @@
 #include <queue>
 #include <mutex>
 #include <condition_variable>
+#include <direct.h>
 
 using namespace std;
+
+#ifdef WIN32
+#define getcwd _getcwd // stupid MSFT "deprecation" warning
+#define snprintf _snprintf_s
+#define strncpy strncpy_s
+#elif
+#include <unistd.h>
+#endif
 
 #define ISSUE_NUMBER_LEN	20                         
 #define COLOR_LEN			20 
@@ -16,11 +25,14 @@ using namespace std;
 #define BUFF64				64
 #define WORKERS_THREAD_NUM	4//工作线程数量
 #define LOTTERY_RESULT_NUM	10//投注最终结果个数
+#define LOG_FILE_NAME_LEN	50
 
 #define WIN_RATE_NUMBER 9
 #define WIN_RATE_VIOLET 5.5
 #define WIN_RATE_SIZE 2
 #define WIN_RATE_SMALL_BIG 2
+
+#define GAME_TYPE_MAX 4
 
 /*
 控制类型
@@ -71,6 +83,10 @@ using namespace std;
 							{ \
 								IF_CONTENT()\
 							}
+
+//日志文件
+#define ERR_LOG(...)	if(pLogFile) pLogFile->ErrorLog(__VA_ARGS__);
+#define INFO_LOG(...)	if(pLogFile) pLogFile->InfoLog(__VA_ARGS__);
 
 #define CONDITION_VARIABLE condition_variable
 #define MUTEX mutex
@@ -190,3 +206,5 @@ bool DescSort(const ORDERS_TEN_RESULTS& V1, const ORDERS_TEN_RESULTS& V2);
 bool AscSort(const ORDERS_TEN_RESULTS& V1, const ORDERS_TEN_RESULTS& V2);
 //创建文件路径
 void CreatePath(char szLogPath[MAX_PATH]);
+//获取当前工作目录
+bool GetCurrentWorkDir(char* pPath, UINT32 iSize);

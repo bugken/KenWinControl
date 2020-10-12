@@ -1,5 +1,7 @@
 #include "stdafx.h"
 #include "LotteryDB.h"
+#include "LogFile.h"
+#include "Common.h"
 #include <iostream>
 #include <thread>
 
@@ -387,11 +389,26 @@ bool ProcessLotteryOrder(LOTTERY_ORDER_DATA& lotteryOrderData, bool& bUserContro
 	return true;
 }
 
+void SetLogConf(CLogFile* pLogFile, const char* pLogName)
+{
+	char szWorkDir[MAX_PATH] = { 0 };
+	char szLogBackupDir[MAX_PATH] = { 0 };
+	GetCurrentWorkDir(szWorkDir, MAX_PATH);
+	UINT32 iRet = snprintf(szLogBackupDir, sizeof(szLogBackupDir) - 1, "%s\\LogBackupDir", szWorkDir);
+	szLogBackupDir[iRet] = '\0';
+	pLogFile->SetLogNameByDay(pLogName);
+	pLogFile->SetLogPath(szWorkDir);
+	pLogFile->SetBakLogPath(szLogBackupDir);
+}
+
 void LotteryProcessWorker()
 {
-	printf("worker thread id: %d\n", GetCurrentThreadId());
 	LotteryDB lotteryDB;
 	lotteryDB.DBConnect();
+	CLogFile logFile;
+	CLogFile* pLogFile = &logFile;//使用指针，传值效率高
+	SetLogConf(pLogFile, "LotteryProcessType");
+
 	while (true)
 	{
 		DRAW_LOTTERY_PERIOD tagDrawLotteryInfo;
@@ -402,6 +419,12 @@ void LotteryProcessWorker()
 			DrawLotteryQueue.pop();
 			LotteryLock.unlock();
 		}
+
+		char szLogName[LOG_FILE_NAME_LEN] = { 0 };
+		UINT32 iRet = snprintf(szLogName, sizeof(szLogName) - 1, "LotteryProcessType%d", tagDrawLotteryInfo.iTypeID);
+		szLogName[iRet] = '\0';
+		pLogFile->SetLogNameByDay(szLogName);
+		INFO_LOG("%s %d lottery worker process begin\n");
 
 		LOTTERY_ORDER_DATA tagLotteryOrderData;
 		LOTTERY_RESULT tagLotteryResult;
@@ -415,6 +438,7 @@ void LotteryProcessWorker()
 				tagDrawLotteryInfo.iPowerControl, tagLotteryResult);
 		if (bResult)
 			lotteryDB.Ex_UpdateGameResult(tagLotteryResult);
+		INFO_LOG("%s %d lottery worker process end\n");
 	}
 }
 
@@ -430,22 +454,55 @@ bool IsDrawLotterySecond()
 	if (strcmp("50", cSecond) == 0)
 	{
 		bIsDrawing = true;
-		printf("...................50s...............\n");
 	}
 
 	return bIsDrawing;
+}
+
+bool IsZeroOfDay()
+{
+	bool bIsZeroOfDay = false;
+	struct tm stTempTm;
+	char cHour[20];
+
+	time_t nowTime = time(NULL);
+	localtime_s(&stTempTm, &nowTime);
+	sprintf_s(cHour, "%02d", stTempTm.tm_hour);
+	if (strcmp("00", cHour) == 0)
+	{
+		bIsZeroOfDay = true;
+	}
+
+	return bIsZeroOfDay;
+}
+
+void ProcessLogFileOnZeroOfDay(CLogFile* pLogFile)
+{
+	INFO_LOG("%s %d backup log files\n", __FUNCTION__, __LINE__);
+	char szTargetFile[LOG_FILE_NAME_LEN] = { 0 };
+	strncpy(szTargetFile, "CheckLotteryDrawing", sizeof(szTargetFile) - 1);
+	pLogFile->BackupFile(szTargetFile, szTargetFile);
+	for (UINT32 iTypeID = 1; iTypeID <= GAME_TYPE_MAX; iTypeID++)
+	{
+		snprintf(szTargetFile, sizeof(szTargetFile) - 1, "LotteryProcessType%d", iTypeID);
+		pLogFile->BackupFile(szTargetFile, szTargetFile);
+	}
 }
 
 void LoopCheckLottery()
 {
 	LotteryDB lotteryDB;
 	lotteryDB.DBConnect();
+	CLogFile logFile;
+	CLogFile* pLogFile = &logFile;//使用指针，传值效率高
+	SetLogConf(pLogFile, "CheckLotteryDrawing");
+
 	while (true)
 	{
-		printf("loop check lottery every 100 miliseconds\n");
 		//检查是否是开奖的时间，每分钟的第50秒
 		if (IsDrawLotterySecond())
 		{
+			INFO_LOG("begin new round check drawing lottery\n");
 			DRAW_LOTTERY_PERIOD_QUEUE tagDrawLotteryQueue;
 			if (lotteryDB.Ex_GetDrawLottery(tagDrawLotteryQueue))
 			{
@@ -471,10 +528,15 @@ void LoopCheckLottery()
 				//	printf("strLastIssueNumber:%s\n", tag.strLastIssueNumber);
 				//}
 				LotteryConditionVariable.notify_all();
+				INFO_LOG("end new round check drawing lottery\n");
 			}
 		}
 		else
 		{
+			if (IsZeroOfDay())
+			{
+				ProcessLogFileOnZeroOfDay(pLogFile);//放在这里不会影响获取开奖信息
+			}
 			Sleep(100);
 		}
 	}
@@ -484,7 +546,6 @@ int _tmain(int argc, _TCHAR* argv[])
 {
 	printf("main process id: %d\n", GetCurrentProcessId());
 	printf("main thread id: %d\n", GetCurrentThreadId());
-
 	//先启动工作线程再循环检查是否开奖
 	thread arrProcessWorkerThreads[4];
 	for (int i = 0; i < WORKERS_THREAD_NUM; i++)

@@ -11,6 +11,7 @@ public:
 	void SetLogPath(const char *pLogPath);
 	void SetBakLogPath(const char *pBakLogPath);
 	void SetLogName(const char* pLogName);
+	void SetLogNameByDay(const char* pLogName);
 
 	void ErrorLog(const char* msg, ...);
 	void InfoLog(const char* msg, ...);

@@ -18,10 +18,6 @@
 #include <sys/time.h>
 #endif
 
-#ifdef WIN32
-#define snprintf _snprintf
-#endif
-
 CLogFile::CLogFile()
 {
 	memset(m_szLogPath, 0, sizeof(m_szLogPath));
@@ -93,8 +89,27 @@ void CLogFile::SetLogName(const char* pLogName)
 	memset(m_szErrLogName, 0, sizeof(m_szErrLogName));
 	memset(m_szInfoLogName, 0, sizeof(m_szInfoLogName));
 	strncpy(m_szLogName, pLogName, sizeof(m_szLogName) - 1);
-	snprintf(m_szErrLogName, sizeof(m_szErrLogName) - 1, "%s_err.log", m_szLogName);
-	snprintf(m_szInfoLogName, sizeof(m_szInfoLogName) - 1, "%s_info.log", m_szLogName);
+	snprintf(m_szErrLogName, sizeof(m_szErrLogName) - 1, "%sError.log", m_szLogName);
+	snprintf(m_szInfoLogName, sizeof(m_szInfoLogName) - 1, "%sInfo.log", m_szLogName);
+}
+
+void CLogFile::SetLogNameByDay(const char* pLogName)
+{
+	if (!pLogName)
+		return;
+
+	char m_szLogFileName[LOG_FILE_NAME_LEN];
+	memset(m_szLogFileName, 0, sizeof(m_szLogFileName));
+	SetCurrentTime();
+	int nRet = snprintf(m_szLogFileName, sizeof(m_szLogFileName) - 1, "%04u-%02u-%02u/%s",
+		m_currentTime.ulYear, m_currentTime.ulMonth, m_currentTime.ulDay, pLogName);
+	if (nRet <= 0)
+	{
+		SetLogName(pLogName);
+		return;
+	}
+	m_szLogFileName[nRet] = '\0';
+	SetLogName(m_szLogFileName);
 }
 
 void CLogFile::SetCurrentTime()
@@ -124,10 +139,14 @@ void CLogFile::SetCurrentTime()
 
 void CLogFile::BackupFile(const char* pSrcFile, const char* pDstFile)
 {
-	if (access(pSrcFile, 0) != -1)
+	char szSrcFile[MAX_PATH] = { 0 };
+	char szDstFile[MAX_PATH] = { 0 };
+	snprintf(szSrcFile, sizeof(szSrcFile) - 1, "%s\\%s", m_szLogPath, pSrcFile);
+	snprintf(szDstFile, sizeof(szDstFile) - 1, "%s\\%s", m_szBakLogPath, pDstFile);
+	if (access(szSrcFile, 0) != -1)
 	{
 		char szBakLogPath[MAX_PATH] = { 0 };
-		strncpy(szBakLogPath, pDstFile, MAX_PATH - 1);
+		strncpy(szBakLogPath, szDstFile, MAX_PATH - 1);
 		char* pEnd = strrchr(szBakLogPath, '/');
 		if (pEnd)
 		{
@@ -138,9 +157,9 @@ void CLogFile::BackupFile(const char* pSrcFile, const char* pDstFile)
 			CreatePath(szBakLogPath);
 		}
 
-		unlink(pDstFile);
-		rename(pSrcFile, pDstFile);
-		unlink(pSrcFile);
+		unlink(szDstFile);
+		rename(szSrcFile, szDstFile);
+		unlink(szSrcFile);
 	}
 }
 
