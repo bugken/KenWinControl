@@ -18,6 +18,8 @@
 #include <sys/time.h>
 #endif
 
+INTIALIZE_SINGLEOBJ(CLogFile);
+
 CLogFile::CLogFile()
 {
 	memset(m_szLogPath, 0, sizeof(m_szLogPath));
@@ -55,7 +57,7 @@ void CLogFile::SetLogPath(const char *pLogPath)
 	}
 
 	char szPath[MAX_PATH] = { 0 };
-	snprintf(szPath, sizeof(szPath) - 1, "%sbaklogs", m_szLogPath);
+	snprintf(szPath, sizeof(szPath) - 1, "%s\\LogBackupDir", m_szLogPath);
 	SetBakLogPath(szPath);
 }
 
@@ -89,8 +91,8 @@ void CLogFile::SetLogName(const char* pLogName)
 	memset(m_szErrLogName, 0, sizeof(m_szErrLogName));
 	memset(m_szInfoLogName, 0, sizeof(m_szInfoLogName));
 	strncpy(m_szLogName, pLogName, sizeof(m_szLogName) - 1);
-	snprintf(m_szErrLogName, sizeof(m_szErrLogName) - 1, "%sError.log", m_szLogName);
-	snprintf(m_szInfoLogName, sizeof(m_szInfoLogName) - 1, "%sInfo.log", m_szLogName);
+	snprintf(m_szErrLogName, sizeof(m_szErrLogName) - 1, "%s_Error.log", m_szLogName);
+	snprintf(m_szInfoLogName, sizeof(m_szInfoLogName) - 1, "%s_Info.log", m_szLogName);
 }
 
 void CLogFile::SetLogNameByDay(const char* pLogName)
@@ -101,7 +103,7 @@ void CLogFile::SetLogNameByDay(const char* pLogName)
 	char m_szLogFileName[LOG_FILE_NAME_LEN];
 	memset(m_szLogFileName, 0, sizeof(m_szLogFileName));
 	SetCurrentTime();
-	int nRet = snprintf(m_szLogFileName, sizeof(m_szLogFileName) - 1, "%04u-%02u-%02u/%s",
+	int nRet = snprintf(m_szLogFileName, sizeof(m_szLogFileName) - 1, "%04u-%02u-%02u_%s",
 		m_currentTime.ulYear, m_currentTime.ulMonth, m_currentTime.ulDay, pLogName);
 	if (nRet <= 0)
 	{
@@ -137,6 +139,17 @@ void CLogFile::SetCurrentTime()
 	m_currentTime.ulSecond = tmpTime->tm_sec;
 }
 
+void CLogFile::AddDayOnFileName(const char* pFileName, char* pDayOnFileName, const char* pLogType)
+{
+	char m_szLogToFileName[LOG_FILE_NAME_LEN];
+	memset(m_szLogToFileName, 0, sizeof(m_szLogToFileName));
+
+	//SetCurrentTime();//上面已经调用了更新时间的函数
+	snprintf(m_szLogToFileName, sizeof(m_szLogToFileName) - 1, "%04u-%02u-%02u_%s_%s.log",
+		m_currentTime.ulYear, m_currentTime.ulMonth, m_currentTime.ulDay, pFileName, pLogType);
+	memcpy(pDayOnFileName, m_szLogToFileName, sizeof(m_szLogToFileName) - 1);
+}
+
 void CLogFile::BackupFile(const char* pSrcFile, const char* pDstFile)
 {
 	char szSrcFile[MAX_PATH] = { 0 };
@@ -163,7 +176,6 @@ void CLogFile::BackupFile(const char* pSrcFile, const char* pDstFile)
 	}
 }
 
-
 void CLogFile::ErrorLog(const char* msg, ...)
 {
 	SetCurrentTime();
@@ -171,6 +183,18 @@ void CLogFile::ErrorLog(const char* msg, ...)
 
 	va_start(args, msg);
 	WriteToLogFile(m_szErrLogName, msg, args);
+	va_end(args);
+}
+
+void CLogFile::ErrorLogToFile(const char* pFileName, const char* msg, ...)
+{
+	char szDayOnFileName[LOG_FILE_NAME_LEN] = { 0 };
+	SetCurrentTime();
+	AddDayOnFileName(pFileName, szDayOnFileName, "_Error");
+
+	va_list args;
+	va_start(args, msg);
+	WriteToLogFile(szDayOnFileName, msg, args);
 	va_end(args);
 }
 
@@ -185,6 +209,18 @@ void CLogFile::InfoLog(const char* msg, ...)
 	va_list args;
 	va_start(args, msg);
 	WriteToLogFile(m_szInfoLogName, msg, args);
+	va_end(args);
+}
+
+void CLogFile::InfoLogToFile(const char* pFileName, const char* msg, ...)
+{
+	char szDayOnFileName[LOG_FILE_NAME_LEN] = { 0 };
+	SetCurrentTime();
+	AddDayOnFileName(pFileName, szDayOnFileName, "_Info");
+	
+	va_list args;
+	va_start(args, msg);
+	WriteToLogFile(szDayOnFileName, msg, args);
 	va_end(args);
 }
 

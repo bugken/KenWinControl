@@ -7,6 +7,9 @@
 
 using namespace std;
 
+CLogFile logFile;
+CLogFile* pLogFile = &logFile;//使用指针，传值效率高
+
 MUTEX LotteryMutex;
 DRAW_LOTTERY_PERIOD_QUEUE DrawLotteryQueue;
 CONDITION_VARIABLE LotteryConditionVariable;
@@ -389,26 +392,21 @@ bool ProcessLotteryOrder(LOTTERY_ORDER_DATA& lotteryOrderData, bool& bUserContro
 	return true;
 }
 
-void SetLogConf(CLogFile* pLogFile, const char* pLogName)
+void SetLogConf()
 {
 	char szWorkDir[MAX_PATH] = { 0 };
 	char szLogBackupDir[MAX_PATH] = { 0 };
 	GetCurrentWorkDir(szWorkDir, MAX_PATH);
 	UINT32 iRet = snprintf(szLogBackupDir, sizeof(szLogBackupDir) - 1, "%s\\LogBackupDir", szWorkDir);
 	szLogBackupDir[iRet] = '\0';
-	pLogFile->SetLogNameByDay(pLogName);
-	pLogFile->SetLogPath(szWorkDir);
-	pLogFile->SetBakLogPath(szLogBackupDir);
+	GetLogFileHandle().SetLogPath(szWorkDir);
+	GetLogFileHandle().SetBakLogPath(szLogBackupDir);
 }
 
 void LotteryProcessWorker()
 {
 	LotteryDB lotteryDB;
 	lotteryDB.DBConnect();
-	CLogFile logFile;
-	CLogFile* pLogFile = &logFile;//使用指针，传值效率高
-	SetLogConf(pLogFile, "LotteryProcessType");
-
 	while (true)
 	{
 		DRAW_LOTTERY_PERIOD tagDrawLotteryInfo;
@@ -476,16 +474,16 @@ bool IsZeroOfDay()
 	return bIsZeroOfDay;
 }
 
-void ProcessLogFileOnZeroOfDay(CLogFile* pLogFile)
+void ProcessLogFileOnZeroOfDay()
 {
 	INFO_LOG("%s %d backup log files\n", __FUNCTION__, __LINE__);
 	char szTargetFile[LOG_FILE_NAME_LEN] = { 0 };
 	strncpy(szTargetFile, "CheckLotteryDrawing", sizeof(szTargetFile) - 1);
-	pLogFile->BackupFile(szTargetFile, szTargetFile);
+	GetLogFileHandle().BackupFile(szTargetFile, szTargetFile);
 	for (UINT32 iTypeID = 1; iTypeID <= GAME_TYPE_MAX; iTypeID++)
 	{
 		snprintf(szTargetFile, sizeof(szTargetFile) - 1, "LotteryProcessType%d", iTypeID);
-		pLogFile->BackupFile(szTargetFile, szTargetFile);
+		GetLogFileHandle().BackupFile(szTargetFile, szTargetFile);
 	}
 }
 
@@ -493,9 +491,7 @@ void LoopCheckLottery()
 {
 	LotteryDB lotteryDB;
 	lotteryDB.DBConnect();
-	CLogFile logFile;
-	CLogFile* pLogFile = &logFile;//使用指针，传值效率高
-	SetLogConf(pLogFile, "CheckLotteryDrawing");
+	SetLogConf();
 
 	while (true)
 	{
@@ -535,7 +531,7 @@ void LoopCheckLottery()
 		{
 			if (IsZeroOfDay())
 			{
-				ProcessLogFileOnZeroOfDay(pLogFile);//放在这里不会影响获取开奖信息
+				ProcessLogFileOnZeroOfDay();//放在这里不会影响获取开奖信息
 			}
 			Sleep(100);
 		}

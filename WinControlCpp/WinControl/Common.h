@@ -25,7 +25,7 @@ using namespace std;
 #define BUFF64				64
 #define WORKERS_THREAD_NUM	4//工作线程数量
 #define LOTTERY_RESULT_NUM	10//投注最终结果个数
-#define LOG_FILE_NAME_LEN	50
+#define LOG_FILE_NAME_LEN	100
 
 #define WIN_RATE_NUMBER 9
 #define WIN_RATE_VIOLET 5.5
@@ -85,8 +85,10 @@ using namespace std;
 							}
 
 //日志文件
-#define ERR_LOG(...)	if(pLogFile) pLogFile->ErrorLog(__VA_ARGS__);
+#define ERROR_LOG(...)	if(pLogFile) pLogFile->ErrorLog(__VA_ARGS__);
 #define INFO_LOG(...)	if(pLogFile) pLogFile->InfoLog(__VA_ARGS__);
+#define ERROR_LOG_TO_FILE(szFileName, ...)	if(pLogFile) pLogFile->ErrorLogToFile(szFileName, __VA_ARGS__);
+#define INFO_LOG_TO_FILE(szFileName, ...)	if(pLogFile) pLogFile->InfoLogToFile(szFileName, __VA_ARGS__);
 
 #define CONDITION_VARIABLE condition_variable
 #define MUTEX mutex

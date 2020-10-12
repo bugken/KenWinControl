@@ -83,6 +83,7 @@
     <ClInclude Include="LogFile.h" />
     <ClInclude Include="LotteryDB.h" />
     <ClInclude Include="ODBCQuery.h" />
+    <ClInclude Include="SingleObject.h" />
     <ClInclude Include="sqlncli.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />

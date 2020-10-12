@@ -1,8 +1,9 @@
 #pragma once
 #include "stdafx.h"
 #include "Common.h"
+#include "SingleObject.h"
 
-class CLogFile
+class CLogFile : public CSingleObject<CLogFile>
 {
 public:
 	CLogFile();
@@ -14,7 +15,9 @@ public:
 	void SetLogNameByDay(const char* pLogName);
 
 	void ErrorLog(const char* msg, ...);
+	void ErrorLogToFile(const char* pFileName, const char* msg, ...);
 	void InfoLog(const char* msg, ...);
+	void InfoLogToFile(const char* pFileName, const char* msg, ...);
 	void WriteLogFile(int nPriority, const char* msg, ...);//更具优先级写入日志
 	void LogToFile(const char* pszLogFile, const char* msg, ...);
 	void LogToFileByDay(const char* pszLogFile, const char* msg, ...);
@@ -24,9 +27,10 @@ public:
 	void ReloadCfg();
 
 private:
-	void  SetCurrentTime();
-	void  WriteToLogFile(const char* szFileName, const char* msg, va_list& args, char* pStrAdd = NULL);
-	void  WriteLog(FILE* pFile, const char *msg, va_list& args, char* pAddStr = NULL);
+	void SetCurrentTime();
+	void AddDayOnFileName(const char* pFileName, char* pDayOnFileName, const char* pLogType);
+	void WriteToLogFile(const char* szFileName, const char* msg, va_list& args, char* pStrAdd = NULL);
+	void WriteLog(FILE* pFile, const char *msg, va_list& args, char* pAddStr = NULL);
 
 private:
 	char m_szLogPath[MAX_PATH];  
@@ -38,3 +42,5 @@ private:
 	CurrentTime m_currentTime;
 	MUTEX	m_Mutex;
 };
+
+#define GetLogFileHandle()  CLogFile::Instance()
