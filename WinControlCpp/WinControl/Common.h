@@ -1,19 +1,32 @@
 #pragma  once
 
 #include "stdafx.h"
-#include <windows.h>
 #include <vector>
 #include <string>
 #include <queue>
 #include <mutex>
+#include <map>
 #include <condition_variable>
 #include <direct.h>
+#include "win_linux.h"
 
 using namespace std;
 
 #ifdef WIN32
+#include <io.h>
+#include <direct.h>
+#else
+#ifndef MAX_PATH
+#define MAX_PATH 260
+#endif
+#include <unistd.h>
+#include <sys/time.h>
+#endif
+
+#ifdef WIN32
 #define getcwd _getcwd // stupid MSFT "deprecation" warning
 #define snprintf _snprintf_s
+#define sprintf	sprintf_s
 #define strncpy strncpy_s
 #elif
 #include <unistd.h>
@@ -94,26 +107,6 @@ using namespace std;
 #define MUTEX mutex
 #define LockGuard lock_guard<mutex> 
 
-//计时类
-class CTicker
-{
-public:
-	CTicker(string name)
-	{
-		mName = name;
-		mBeginTick = ::GetTickCount();
-	}
-	~CTicker()
-	{
-		unsigned int endTick = ::GetTickCount();
-		//执行存储过程时间超过100毫秒，记录告警。超过500，记录错误日志
-		unsigned int usedms = endTick - mBeginTick;
-		printf("%s %d, The %s execution last %u milliseconds \n", __FUNCTION__, __LINE__, mName.c_str(), usedms);
-	}
-private:
-	unsigned int mBeginTick;
-	string mName;
-};
 //当前时间
 typedef struct _CurrentTime
 {
@@ -210,3 +203,5 @@ bool AscSort(const ORDERS_TEN_RESULTS& V1, const ORDERS_TEN_RESULTS& V2);
 void CreatePath(char szLogPath[MAX_PATH]);
 //获取当前工作目录
 bool GetCurrentWorkDir(char* pPath, UINT32 iSize);
+//获取当前时间
+void QueryCurrentTime(CurrentTime* stCurrentTime);

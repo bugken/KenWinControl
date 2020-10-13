@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "LotteryDB.h"
-#include "Common.h"
 #include "LogFile.h"
+#include "LotteryStatistic.h"
 
 bool LotteryDB::DBConnect()
 {

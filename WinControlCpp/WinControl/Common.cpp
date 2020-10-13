@@ -65,3 +65,27 @@ bool GetCurrentWorkDir(char* pPath, UINT32 iSize)
 		
 	return ret;
 }
+void QueryCurrentTime(CurrentTime* pCurrentTime)
+{
+	struct tm *tmpTime = NULL;
+	struct timeval tmNow;
+
+#ifndef WIN32
+	gettimeofday(&tmNow, NULL);
+#else
+	SYSTEMTIME sysTime;
+	GetLocalTime(&sysTime);
+	tmNow.tv_sec = (long)time(NULL);
+	tmNow.tv_usec = sysTime.wMilliseconds * 1000;
+#endif
+	time_t tNow = tmNow.tv_sec;
+	pCurrentTime->ulMSecond = tmNow.tv_usec / 1000;
+
+	localtime_s(tmpTime, &tNow);
+	pCurrentTime->ulYear = tmpTime->tm_year + 1900;
+	pCurrentTime->ulMonth = tmpTime->tm_mon + 1;
+	pCurrentTime->ulDay = tmpTime->tm_mday;
+	pCurrentTime->ulHour = tmpTime->tm_hour;
+	pCurrentTime->ulMinute = tmpTime->tm_min;
+	pCurrentTime->ulSecond = tmpTime->tm_sec;
+}

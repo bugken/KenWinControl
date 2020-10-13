@@ -1,22 +1,5 @@
 #include "stdafx.h"
-#include <winsock2.h>
-#include <windows.h>
 #include "LogFile.h"
-#include "win_linux.h"
-
-#ifndef WIN32
-#include <unistd.h>
-#else
-#include <io.h>
-#include <direct.h>
-#endif
-
-#ifndef  WIN32
-#ifndef MAX_PATH
-#define MAX_PATH 260
-#endif
-#include <sys/time.h>
-#endif
 
 INTIALIZE_SINGLEOBJ(CLogFile);
 
@@ -141,7 +124,7 @@ void CLogFile::SetCurrentTime()
 #endif
 	time_t tNow = tmNow.tv_sec;
 	m_currentTime.ulMSecond = tmNow.tv_usec / 1000;
-	tmpTime = localtime(&tNow);
+	localtime_s(tmpTime, &tNow);
 
 	m_currentTime.ulYear = tmpTime->tm_year + 1900;
 	m_currentTime.ulMonth = tmpTime->tm_mon + 1;
@@ -168,7 +151,7 @@ void CLogFile::BackupFile(const char* pSrcFile, const char* pDstFile)
 	char szDstFile[MAX_PATH] = { 0 };
 	snprintf(szSrcFile, sizeof(szSrcFile) - 1, "%s\\%s", m_szLogPath, pSrcFile);
 	snprintf(szDstFile, sizeof(szDstFile) - 1, "%s\\%s", m_szBakLogPath, pDstFile);
-	if (access(szSrcFile, 0) != -1)
+	if (_access(szSrcFile, 0) != -1)
 	{
 		char szBakLogPath[MAX_PATH] = { 0 };
 		strncpy(szBakLogPath, szDstFile, MAX_PATH - 1);
@@ -177,14 +160,14 @@ void CLogFile::BackupFile(const char* pSrcFile, const char* pDstFile)
 		{
 			*pEnd = 0;
 		}
-		if (access(szBakLogPath, 0) != 0)
+		if (_access(szBakLogPath, 0) != 0)
 		{
 			CreatePath(szBakLogPath);
 		}
 
-		unlink(szDstFile);
+		_unlink(szDstFile);
 		rename(szSrcFile, szDstFile);
-		unlink(szSrcFile);
+		_unlink(szSrcFile);
 	}
 }
 
@@ -242,7 +225,8 @@ void CLogFile::WriteToLogFile(const char* pFileName, const char* msg, va_list& a
 	char szLogFile[MAX_PATH];
 	sprintf(szLogFile, "%s%s", m_szLogPath, pFileName);
 
-	FILE *pFile = fopen(szLogFile, "a+");
+	FILE *pFile = NULL;
+	fopen_s(&pFile, szLogFile, "a+");
 	if (NULL == pFile)
 	{
 		char szTempLogFile[MAX_PATH];
@@ -253,11 +237,11 @@ void CLogFile::WriteToLogFile(const char* pFileName, const char* msg, va_list& a
 			return;
 		}
 		*pTemp = 0;
-		if (access(szTempLogFile, 0) != 0)
+		if (_access(szTempLogFile, 0) != 0)
 		{
 			CreatePath(szTempLogFile);
 		}
-		pFile = fopen(szLogFile, "a+");
+		fopen_s(&pFile, szLogFile, "a+");
 	}
 	if (pFile)
 	{
@@ -298,7 +282,8 @@ void CLogFile::WriteLogFile(int nPriority, const char* msg, ...)
 	char szLogFile[MAX_PATH];
 	snprintf(szLogFile, sizeof(szLogFile) - 1, "%s%s", m_szLogPath, m_szLogName);
 	szLogFile[sizeof(szLogFile) - 1] = 0;
-	FILE *pFile = fopen(szLogFile, "a+");
+	FILE* pFile = NULL;
+	fopen_s(&pFile, szLogFile, "a+");
 	if (NULL == pFile)
 	{
 		char szTempLogFile[MAX_PATH];
@@ -309,11 +294,11 @@ void CLogFile::WriteLogFile(int nPriority, const char* msg, ...)
 			return;
 		}
 		*pTemp = 0;
-		if (access(szTempLogFile, 0) != 0)
+		if (_access(szTempLogFile, 0) != 0)
 		{
 			CreatePath(szTempLogFile);
 		}
-		pFile = fopen(szLogFile, "a+");
+		fopen_s(&pFile, szLogFile, "a+");
 	}
 	if (pFile)
 	{

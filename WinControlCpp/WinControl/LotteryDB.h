@@ -1,9 +1,8 @@
 #pragma once
 
 #include "stdafx.h"
-#include <windows.h>
-#include "ODBCQuery.h"
 #include "Common.h"
+#include "ODBCQuery.h"
 
 class LotteryDB : public CODBCQuery
 {

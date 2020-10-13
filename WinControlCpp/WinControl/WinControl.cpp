@@ -1,7 +1,8 @@
 #include "stdafx.h"
+#include "Common.h"
 #include "LotteryDB.h"
 #include "LogFile.h"
-#include "Common.h"
+#include "LotteryStatistic.h"
 #include <iostream>
 #include <thread>
 
