@@ -1,6 +1,7 @@
 #pragma once
 #include "stdafx.h"
 #include "Common.h"
+#include "LogFile.h"
 
 using namespace std;
 
@@ -52,6 +53,7 @@ public:
 private:
 	map<string, TExecInfo> mAllStats;
 	MUTEX mMutex;
+	static CLogFile* pLogfile;
 };
 
 extern CLotteryStatistic gLotteryStatistic;

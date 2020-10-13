@@ -98,6 +98,7 @@ using namespace std;
 							}
 
 //日志文件
+//NOTE:需要每个类中保存一个pLogFile的静态变量，这个宏才会有效
 #define ERROR_LOG(...)	if(pLogFile) pLogFile->ErrorLog(__VA_ARGS__);
 #define INFO_LOG(...)	if(pLogFile) pLogFile->InfoLog(__VA_ARGS__);
 #define ERROR_LOG_TO_FILE(szFileName, ...)	if(pLogFile) pLogFile->ErrorLogToFile(szFileName, __VA_ARGS__);

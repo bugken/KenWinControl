@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Common.h"
+#include "LogFile.h"
 
 //½µÐòÅÅÐòº¯Êý
 bool DescSort(const ORDERS_TEN_RESULTS& V1, const ORDERS_TEN_RESULTS& V2)

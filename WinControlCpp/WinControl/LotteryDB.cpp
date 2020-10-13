@@ -10,7 +10,8 @@ bool LotteryDB::DBConnect()
 	bool IsConnect = DriverConnect(pStr);
 	if (IsConnect)
 	{
-		GetLogFileHandle().ErrorLog("thread(%d) connect lottery db succes\n", GetCurrentThreadId());
+		GetLogFileHandle().InfoLog("thread(%d) connect lottery db succes\n", GetCurrentThreadId());
+		printf("thread(%d) connect lottery db succes\n", GetCurrentThreadId());
 		ret = true;
 	}
 	return ret;
