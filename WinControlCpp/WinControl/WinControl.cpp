@@ -414,6 +414,7 @@ void SetLogConf()
 	UINT32 iRet = snprintf(szLogBackupDir, sizeof(szLogBackupDir) - 1, "%s\\LogBackupDir", szWorkDir);
 	szLogBackupDir[iRet] = '\0';
 	GetLogFileHandle().SetLogNameByDay("Lottery");
+	GetLogFileHandle().SetStatNameByDay("Statistic");
 	GetLogFileHandle().SetLogPath(szWorkDir); 
 	GetLogFileHandle().SetBakLogPath(szLogBackupDir);
 }
@@ -525,7 +526,10 @@ void ProcessLogFileOnZeroOfDay()
 	GetLogFileHandle().BackupFile(szTargetFile, szTargetFile);
 	GetLogFileHandle().GetLogFileName(szTargetFile, 2);
 	GetLogFileHandle().BackupFile(szTargetFile, szTargetFile);
+	GetLogFileHandle().GetLogFileName(szTargetFile, 3);
+	GetLogFileHandle().BackupFile(szTargetFile, szTargetFile);
 	GetLogFileHandle().SetLogNameByDay("Lottery");
+	GetLogFileHandle().SetStatNameByDay("Statistic");
 #endif
 }
 

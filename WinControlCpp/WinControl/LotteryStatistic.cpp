@@ -12,7 +12,6 @@ CTicker::CTicker(string name)
 CTicker::~CTicker()
 {
 	unsigned int endTick = ::GetTickCount();
-	//执行存储过程时间超过100毫秒，记录告警。超过500，记录错误日志
 	unsigned int usedms = endTick - mBeginTick;
 	gLotteryStatistic.AddStatistic(mName, usedms);
 }

@@ -13,6 +13,7 @@ public:
 	void SetBakLogPath(const char *pBakLogPath);
 	void SetLogName(const char* pLogName);
 	void SetLogNameByDay(const char* pLogName);
+	void SetStatNameByDay(const char* pLogName);
 	void GetLogFileName(char* pLogName, int iLogType);
 
 	void ErrorLog(const char* msg, ...);
@@ -39,6 +40,7 @@ private:
 	char m_szLogName[MAX_PATH];
 	char m_szErrLogName[MAX_PATH];
 	char m_szInfoLogName[MAX_PATH];
+	char m_szStatLogName[MAX_PATH];//应该配置起来，暂时放在这里
 
 	CurrentTime m_currentTime;
 	MUTEX	m_Mutex;

@@ -10,6 +10,7 @@ CLogFile::CLogFile()
 	memset(m_szLogName, 0, sizeof(m_szLogName));
 	memset(m_szErrLogName, 0, sizeof(m_szErrLogName));
 	memset(m_szInfoLogName, 0, sizeof(m_szInfoLogName));
+	memset(m_szStatLogName, 0, sizeof(m_szStatLogName));
 	memset(&m_currentTime, 0, sizeof(m_currentTime));
 }
 
@@ -97,15 +98,32 @@ void CLogFile::SetLogNameByDay(const char* pLogName)
 	SetLogName(m_szLogFileName);
 }
 
-void CLogFile::GetLogFileName(char* pLogName, int iLogType)
+void CLogFile::SetStatNameByDay(const char* pLogName)
 {
-	if (iLogType == 1)//InfoLog
+	if (!pLogName)
+		return;
+
+	char m_szStatFileName[LOG_FILE_NAME_LEN];
+	memset(m_szStatFileName, 0, sizeof(m_szStatFileName));
+	SetCurrentTime();
+	snprintf(m_szStatFileName, sizeof(m_szStatFileName) - 1, "%04u-%02u-%02u_%s",
+		m_currentTime.ulYear, m_currentTime.ulMonth, m_currentTime.ulDay, pLogName);
+	snprintf(m_szStatLogName, sizeof(m_szStatLogName) - 1, "%s.log", m_szStatFileName);
+}
+
+void CLogFile::GetLogFileName(char* pFileName, int iFileType)
+{
+	if (iFileType == 1)//InfoLog
 	{
-		memcpy(pLogName, m_szInfoLogName, sizeof(m_szInfoLogName) - 1);
+		memcpy(pFileName, m_szInfoLogName, sizeof(m_szInfoLogName) - 1);
 	}
-	else if (iLogType == 1)//ErrorLog
+	else if (iFileType == 2)//ErrorLog
 	{
-		memcpy(pLogName, m_szErrLogName, sizeof(m_szErrLogName) - 1);
+		memcpy(pFileName, m_szErrLogName, sizeof(m_szErrLogName) - 1);
+	}
+	else if (iFileType == 3)//StatLog
+	{
+		memcpy(pFileName, m_szStatLogName, sizeof(m_szStatLogName) - 1);
 	}
 }
 
