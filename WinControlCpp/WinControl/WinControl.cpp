@@ -413,7 +413,6 @@ void SetLogConf()
 	GetCurrentWorkDir(szWorkDir, MAX_PATH);
 	UINT32 iRet = snprintf(szLogBackupDir, sizeof(szLogBackupDir) - 1, "%s\\LogBackupDir", szWorkDir);
 	szLogBackupDir[iRet] = '\0';
-	//CLogFile tag = GetLogFileHandle();
 	GetLogFileHandle().SetLogNameByDay("Lottery");
 	GetLogFileHandle().SetStatNameByDay("Statistic");
 	GetLogFileHandle().SetLogPath(szWorkDir); 
@@ -489,8 +488,7 @@ bool IsDrawLotterySecond()
 		bIsDrawing = true;
 	}
 
-	//return bIsDrawing;
-	return true;
+	return bIsDrawing;
 }
 
 bool IsZeroOfDay()

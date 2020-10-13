@@ -84,7 +84,7 @@ void CLogFile::SetLogNameByDay(const char* pLogName)
 	if (!pLogName)
 		return;
 
-	char m_szLogFileName[LOG_FILE_NAME_LEN];
+	char m_szLogFileName[LOG_FILE_NAME_LEN] = {0};
 	memset(m_szLogFileName, 0, sizeof(m_szLogFileName));
 	SetCurrentTime();
 	int nRet = snprintf(m_szLogFileName, sizeof(m_szLogFileName) - 1, "%04u-%02u-%02u_%s",
@@ -129,7 +129,7 @@ void CLogFile::GetLogFileName(char* pFileName, int iFileType)
 
 void CLogFile::SetCurrentTime()
 {
-	struct tm *tmpTime = NULL;
+	struct tm tmpTime = {0};
 	struct timeval tmNow;
 
 #ifndef WIN32
@@ -142,14 +142,14 @@ void CLogFile::SetCurrentTime()
 #endif
 	time_t tNow = tmNow.tv_sec;
 	m_currentTime.ulMSecond = tmNow.tv_usec / 1000;
-	localtime_s(tmpTime, &tNow);
+	localtime_s(&tmpTime, &tNow);
 
-	m_currentTime.ulYear = tmpTime->tm_year + 1900;
-	m_currentTime.ulMonth = tmpTime->tm_mon + 1;
-	m_currentTime.ulDay = tmpTime->tm_mday;
-	m_currentTime.ulHour = tmpTime->tm_hour;
-	m_currentTime.ulMinute = tmpTime->tm_min;
-	m_currentTime.ulSecond = tmpTime->tm_sec;
+	m_currentTime.ulYear = tmpTime.tm_year + 1900;
+	m_currentTime.ulMonth = tmpTime.tm_mon + 1;
+	m_currentTime.ulDay = tmpTime.tm_mday;
+	m_currentTime.ulHour = tmpTime.tm_hour;
+	m_currentTime.ulMinute = tmpTime.tm_min;
+	m_currentTime.ulSecond = tmpTime.tm_sec;
 }
 
 void CLogFile::AddDayOnFileName(const char* pFileName, char* pDayOnFileName, const char* pLogType)

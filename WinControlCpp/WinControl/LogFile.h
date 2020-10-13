@@ -8,7 +8,6 @@ class CLogFile : public CSingleObject<CLogFile>
 public:
 	CLogFile();
 	~CLogFile();
-
 	void SetLogPath(const char *pLogPath);
 	void SetBakLogPath(const char *pBakLogPath);
 	void SetLogName(const char* pLogName);
