@@ -114,6 +114,18 @@ void CLogFile::SetLogNameByDay(const char* pLogName)
 	SetLogName(m_szLogFileName);
 }
 
+void CLogFile::GetLogFileName(char* pLogName, int iLogType)
+{
+	if (iLogType == 1)//InfoLog
+	{
+		memcpy(pLogName, m_szInfoLogName, sizeof(m_szInfoLogName) - 1);
+	}
+	else if (iLogType == 1)//ErrorLog
+	{
+		memcpy(pLogName, m_szErrLogName, sizeof(m_szErrLogName) - 1);
+	}
+}
+
 void CLogFile::SetCurrentTime()
 {
 	struct tm *tmpTime = NULL;
@@ -260,12 +272,10 @@ void CLogFile::WriteLog(FILE* pFile, const char *msg, va_list& args, char* pAddS
 		m_currentTime.ulYear, m_currentTime.ulMonth, m_currentTime.ulDay,
 		m_currentTime.ulHour, m_currentTime.ulMinute,
 		m_currentTime.ulSecond, m_currentTime.ulMSecond);
-
 	if (pAddStr)
 	{
 		fprintf(pFile, "[%s]", pAddStr);
 	}
-
 	vfprintf(pFile, msg, args);
 	//fprintf(pFile,"\n");
 }

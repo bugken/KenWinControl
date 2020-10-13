@@ -292,6 +292,17 @@ bool GetLotteryFinalResult(ORDERS_TEN_RESULTS_VEC lottery10ResultsVec, float fWi
 	float fTargetWinRate = (float)(iControlRate * 1.0 / 10000);
 	sort(lottery10ResultsVec.begin(), lottery10ResultsVec.end(), DescSort);
 
+	INFO_LOG("%s %d fTargetWinRate:%f, totally %d results as bellow:\n", __FUNCTION__, __LINE__, fTargetWinRate, iVecSize);
+	for (auto result : lottery10ResultsVec)
+	{
+		INFO_LOG("iTypeID:%d\n", result.iTypeID);
+		INFO_LOG("strIssueNumber:%s\n", result.strIssueNumber);
+		INFO_LOG("strSelectNumber:%s\n", result.strSelectNumber);
+		INFO_LOG("strSelectColor:%s\n", result.strSelectColor);
+		INFO_LOG("uiAllTotalBonus:%I64u\n", result.uiAllTotalBonus);
+		INFO_LOG("fWinRate:%f\n", result.fWinRate);
+	}
+
 	if (CONTROL_POWER_STRONG == iPowerControl)//强拉
 	{
 		if (fWinRateAsOfLast <= fTargetWinRate)
@@ -371,9 +382,9 @@ bool GetLotteryFinalResult(ORDERS_TEN_RESULTS_VEC lottery10ResultsVec, float fWi
 	return true;
 }
 
-bool ProcessLotteryOrder(LOTTERY_ORDER_DATA& lotteryOrderData, bool& bUserControled)
+bool ProcessControledUserOrder(LOTTERY_ORDER_DATA& lotteryOrderData, bool& bUserControled)
 {
-	CTicker timeLapser("ProcessLotteryOrder");
+	CTicker timeLapser("ProcessControledUserOrder");
 	char strControlUserMostBonusBet[BUFF64] = {0};
 	if (lotteryOrderData.vecControlUserOrders.size() > 0)
 	{
@@ -381,11 +392,13 @@ bool ProcessLotteryOrder(LOTTERY_ORDER_DATA& lotteryOrderData, bool& bUserContro
 	}
 	else
 	{
-		printf("No Controled User.\n");
+		INFO_LOG("%s %d no controled user.\n", __FUNCTION__, __LINE__);
 	}
 
 	if (bUserControled)
 	{
+		INFO_LOG("%s %d strControlUserMostBonusBet %s deleted in lottery 10 results.\n", 
+				__FUNCTION__, __LINE__, strControlUserMostBonusBet);
 		DeleteUserControlType(lotteryOrderData.vecLottery10Results, strControlUserMostBonusBet);
 	}
 
@@ -399,12 +412,14 @@ void SetLogConf()
 	GetCurrentWorkDir(szWorkDir, MAX_PATH);
 	UINT32 iRet = snprintf(szLogBackupDir, sizeof(szLogBackupDir) - 1, "%s\\LogBackupDir", szWorkDir);
 	szLogBackupDir[iRet] = '\0';
-	GetLogFileHandle().SetLogPath(szWorkDir);
+	GetLogFileHandle().SetLogNameByDay("Lottery");
+	GetLogFileHandle().SetLogPath(szWorkDir); 
 	GetLogFileHandle().SetBakLogPath(szLogBackupDir);
 }
 
 void LotteryProcessWorker()
 {
+	printf("work thread id: %d\n", GetCurrentThreadId());
 	LotteryDB lotteryDB;
 	lotteryDB.DBConnect();
 	while (true)
@@ -418,25 +433,42 @@ void LotteryProcessWorker()
 			LotteryLock.unlock();
 		}
 
-		char szLogName[LOG_FILE_NAME_LEN] = { 0 };
-		UINT32 iRet = snprintf(szLogName, sizeof(szLogName) - 1, "LotteryProcessType%d", tagDrawLotteryInfo.iTypeID);
-		szLogName[iRet] = '\0';
-		pLogFile->SetLogNameByDay(szLogName);
-		INFO_LOG("%s %d lottery worker process begin\n");
+		//char szLogName[LOG_FILE_NAME_LEN] = { 0 };
+		//UINT32 iRet = snprintf(szLogName, sizeof(szLogName) - 1, "LotteryProcessType%d", tagDrawLotteryInfo.iTypeID);
+		//szLogName[iRet] = '\0';
+		//pLogFile->SetLogNameByDay(szLogName);
+
+		INFO_LOG("%s %d lottery worker process(%d) begin\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
+		INFO_LOG("uiTypeID:%d\n", tagDrawLotteryInfo.iTypeID);
+		INFO_LOG("uiUserControled:%d\n", tagDrawLotteryInfo.iUserControled);
+		INFO_LOG("uiControlRate:%d\n", tagDrawLotteryInfo.iControlRate);
+		INFO_LOG("uiPowerControl:%d\n", tagDrawLotteryInfo.iPowerControl);
+		INFO_LOG("strCurrentIssueNumber:%s\n", tagDrawLotteryInfo.strCurrentIssueNumber);
+		INFO_LOG("strLastIssueNumber:%s\n", tagDrawLotteryInfo.strLastIssueNumber);
+		INFO_LOG("strBeginIssueNumber:%s\n", tagDrawLotteryInfo.strBeginIssueNumber);
 
 		LOTTERY_ORDER_DATA tagLotteryOrderData;
 		LOTTERY_RESULT tagLotteryResult;
 		bool bUserControled = false;//是否单控
 		bool bResult = lotteryDB.Ex_GetLotteryUserOrders(tagDrawLotteryInfo, tagLotteryOrderData);
 		if (bResult)
-			bResult = ProcessLotteryOrder(tagLotteryOrderData, bUserControled);
+			bResult = ProcessControledUserOrder(tagLotteryOrderData, bUserControled);
 		if (bResult)
 			bResult = GetLotteryFinalResult(tagLotteryOrderData.vecLottery10Results, 
 				tagLotteryOrderData.fWinRateAsOfLast,bUserControled, tagDrawLotteryInfo.iControlRate,
 				tagDrawLotteryInfo.iPowerControl, tagLotteryResult);
 		if (bResult)
+		{
 			lotteryDB.Ex_UpdateGameResult(tagLotteryResult);
-		INFO_LOG("%s %d lottery worker process end\n");
+			INFO_LOG("game final result as bellow:\n");
+			INFO_LOG("iTypeID:%d\n", tagLotteryResult.iTypeID);
+			INFO_LOG("strIssueNumber:%s\n", tagLotteryResult.strIssueNumber);
+			INFO_LOG("strLotteryNumber:%s\n", tagLotteryResult.strLotteryNumber);
+			INFO_LOG("strLotteryColor:%s\n", tagLotteryResult.strLotteryColor);
+			INFO_LOG("iControlType:%d\n", tagLotteryResult.iControlType);
+		}
+			
+		INFO_LOG("%s %d lottery worker process(%d) end\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
 	}
 }
 
@@ -477,6 +509,7 @@ bool IsZeroOfDay()
 void ProcessLogFileOnZeroOfDay()
 {
 	INFO_LOG("%s %d backup log files\n", __FUNCTION__, __LINE__);
+#if 0
 	char szTargetFile[LOG_FILE_NAME_LEN] = { 0 };
 	strncpy(szTargetFile, "CheckLotteryDrawing", sizeof(szTargetFile) - 1);
 	GetLogFileHandle().BackupFile(szTargetFile, szTargetFile);
@@ -485,6 +518,14 @@ void ProcessLogFileOnZeroOfDay()
 		snprintf(szTargetFile, sizeof(szTargetFile) - 1, "LotteryProcessType%d", iTypeID);
 		GetLogFileHandle().BackupFile(szTargetFile, szTargetFile);
 	}
+#else
+	char szTargetFile[LOG_FILE_NAME_LEN] = { 0 };
+	GetLogFileHandle().GetLogFileName(szTargetFile, 1);
+	GetLogFileHandle().BackupFile(szTargetFile, szTargetFile);
+	GetLogFileHandle().GetLogFileName(szTargetFile, 2);
+	GetLogFileHandle().BackupFile(szTargetFile, szTargetFile);
+	GetLogFileHandle().SetLogNameByDay("Lottery");
+#endif
 }
 
 void LoopCheckLottery()
@@ -498,33 +539,31 @@ void LoopCheckLottery()
 		//检查是否是开奖的时间，每分钟的第50秒
 		if (IsDrawLotterySecond())
 		{
-			INFO_LOG("begin new round check drawing lottery\n");
+			INFO_LOG("%s %d thread(%d) begin new round check drawing lottery\n", __FUNCTION__, __LINE__, GetCurrentThread());
 			DRAW_LOTTERY_PERIOD_QUEUE tagDrawLotteryQueue;
+			DRAW_LOTTERY_PERIOD tagDrawLotteryPeriod;
 			if (lotteryDB.Ex_GetDrawLottery(tagDrawLotteryQueue))
 			{
+				INFO_LOG("drawing lottery queue size:%d\n", tagDrawLotteryQueue.size());
 				{
 					lock_guard<mutex> LotteryLock(LotteryMutex);
 					while (!tagDrawLotteryQueue.empty())
 					{
-						DrawLotteryQueue.push(tagDrawLotteryQueue.front());
+						memset(&tagDrawLotteryPeriod, 0, sizeof(tagDrawLotteryPeriod));
+						tagDrawLotteryPeriod = tagDrawLotteryQueue.front();
+						DrawLotteryQueue.push(tagDrawLotteryPeriod);
 						tagDrawLotteryQueue.pop();
+						INFO_LOG("uiTypeID:%d\n", tagDrawLotteryPeriod.iTypeID);
+						INFO_LOG("uiUserControled:%d\n", tagDrawLotteryPeriod.iUserControled);
+						INFO_LOG("uiControlRate:%d\n", tagDrawLotteryPeriod.iControlRate);
+						INFO_LOG("uiPowerControl:%d\n", tagDrawLotteryPeriod.iPowerControl);
+						INFO_LOG("strCurrentIssueNumber:%s\n", tagDrawLotteryPeriod.strCurrentIssueNumber);
+						INFO_LOG("strLastIssueNumber:%s\n", tagDrawLotteryPeriod.strLastIssueNumber);
+						INFO_LOG("strBeginIssueNumber:%s\n", tagDrawLotteryPeriod.strBeginIssueNumber);
 					}
 				}
-				//printf("DrawLotteryQueue:%d\n", DrawLotteryQueue.size());
-				//while (!DrawLotteryQueue.empty())
-				//{
-				//	DRAW_LOTTERY_PERIOD tag = DrawLotteryQueue.front();
-				//	DrawLotteryQueue.pop();
-				//	printf("uiTypeID:%d\n", tag.uiTypeID);
-				//	printf("uiUserControled:%d\n", tag.uiUserControled);
-				//	printf("uiControlRate:%d\n", tag.uiControlRate);
-				//	printf("uiPowerControl:%d\n", tag.uiPowerControl);
-				//	printf("strCurrentIssueNumber:%s\n", tag.strCurrentIssueNumber);
-				//	printf("strBeginIssueNumber:%s\n", tag.strBeginIssueNumber);
-				//	printf("strLastIssueNumber:%s\n", tag.strLastIssueNumber);
-				//}
+				INFO_LOG("%s %d thread(%d) end new round check drawing lottery\n", __FUNCTION__, __LINE__, GetCurrentThread());
 				LotteryConditionVariable.notify_all();
-				INFO_LOG("end new round check drawing lottery\n");
 			}
 		}
 		else

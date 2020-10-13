@@ -13,6 +13,7 @@ public:
 	void SetBakLogPath(const char *pBakLogPath);
 	void SetLogName(const char* pLogName);
 	void SetLogNameByDay(const char* pLogName);
+	void GetLogFileName(char* pLogName, int iLogType);
 
 	void ErrorLog(const char* msg, ...);
 	void ErrorLogToFile(const char* pFileName, const char* msg, ...);

@@ -1,5 +1,7 @@
 #include "stdafx.h"
 #include "LotteryDB.h"
+#include "Common.h"
+#include "LogFile.h"
 
 bool LotteryDB::DBConnect()
 {
@@ -8,7 +10,7 @@ bool LotteryDB::DBConnect()
 	bool IsConnect = DriverConnect(pStr);
 	if (IsConnect)
 	{
-		printf("thread(%d) connect lottery db succes\n", GetCurrentThreadId());
+		GetLogFileHandle().ErrorLog("thread(%d) connect lottery db succes\n", GetCurrentThreadId());
 		ret = true;
 	}
 	return ret;
@@ -25,7 +27,7 @@ bool LotteryDB::Ex_GetDrawLottery(DRAW_LOTTERY_PERIOD_QUEUE& queueDrawLotteryIte
 	bResult = ExecuteDirect(TEXT("{call dbo.sp_GetDrawLotteryInfo}"));
 	if (!bResult)
 	{
-		printf("sp_GetDrawLotteryInfo failed ... \n");
+		GetLogFileHandle().ErrorLog("sp_GetDrawLotteryInfo failed ... \n");
 		return false;
 	}
 	InitBindCol();
@@ -64,7 +66,7 @@ bool LotteryDB::Ex_GetLotteryUserOrders(DRAW_LOTTERY_PERIOD drawLotteryInfo, LOT
 	bResult = ExecuteDirect(TEXT("{call dbo.sp_GetLotteryUserOrders(?,?,?,?,?)}"));
 	if (!bResult)
 	{
-		printf("sp_GetLotteryUserOrders failed ... \n");
+		GetLogFileHandle().ErrorLog("sp_GetLotteryUserOrders failed ... \n");
 		return false;
 	}
 	InitBindCol();
@@ -128,7 +130,7 @@ bool LotteryDB::Ex_UpdateGameResult(LOTTERY_RESULT lotteryResult)
 	bResult = ExecuteDirect(TEXT("{call dbo.sp_UpdateLotteryResult(?,?,?,?,?)}"));
 	if (!bResult)
 	{
-		printf("sp_GetLotteryUserOrders failed ... \n");
+		GetLogFileHandle().ErrorLog("sp_GetLotteryUserOrders failed ... \n");
 		return false;
 	}
 
