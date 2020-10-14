@@ -1,7 +1,7 @@
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GetLotteryUserOrders]    Script Date: 10/15/2020 03:02:34 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetLotteryUserOrders]    Script Date: 10/15/2020 03:27:51 ******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_GetLotteryUserOrders]') AND type in (N'P', N'PC'))
 DROP PROCEDURE [dbo].[sp_GetLotteryUserOrders]
 GO
@@ -9,12 +9,13 @@ GO
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GetLotteryUserOrders]    Script Date: 10/15/2020 03:02:34 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetLotteryUserOrders]    Script Date: 10/15/2020 03:27:51 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
 
 
 
@@ -44,9 +45,9 @@ BEGIN
 	declare @AllBet decimal(20, 2) = 0.0 --投注金额
 	declare @AllBetAsOfLast decimal(20, 2) = 0.0 --截止上期投注金额
 	declare @WinRateAsOfLast decimal(20, 2) = 0.0 --截止上期玩家赢率
-	select @AllBet = sum(RealAmount) from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and IssueNumber >= @InBeginIssueNumber and IssueNumber <= @InCurrentIssueNumber
-	select @AllBetAsOfLast = sum(RealAmount) from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and IssueNumber >= @InBeginIssueNumber and IssueNumber <= @InLastIssueNumber
-	select @BonusAlready = sum(ProfitAmount - RealAmount) from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and IssueNumber >= @InBeginIssueNumber and IssueNumber <= @InLastIssueNumber
+	select @AllBet = isnull(sum(RealAmount), 1) from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and IssueNumber >= @InBeginIssueNumber and IssueNumber <= @InCurrentIssueNumber
+	select @AllBetAsOfLast = isnull(sum(RealAmount), 1) from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and IssueNumber >= @InBeginIssueNumber and IssueNumber <= @InLastIssueNumber
+	select @BonusAlready = isnull(sum(ProfitAmount - RealAmount), 0) from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and IssueNumber >= @InBeginIssueNumber and IssueNumber <= @InLastIssueNumber
 	set @WinRateAsOfLast = isnull(@BonusAlready / @AllBetAsOfLast, 0)
 	select @UserCounts, @AllBet, @AllBetAsOfLast, @BonusAlready, @WinRateAsOfLast
 	--print '投注金额@AllBet:' + isnull(cast(@AllBet as varchar(20)),0)
@@ -83,17 +84,6 @@ BEGIN
 		update #UserControledBonus set TotalBonus *= MultiRate
 	end
 	
-	--玩家没有下注，直接返回
-	declare @BetCounts int = 0
-	select @BetCounts = count(*) from #LotteryTotalBonus
-	if @BetCounts = 0
-	begin
-		--print '玩家没有下注'
-		drop table #LotteryTotalBonus
-		drop table #UserControledBonus
-		drop table #UserTest
-		return
-	end
 	--select TypeID, SelectType, IssueNumber, TotalBonus from #LotteryTotalBonus
 	--select * from #UserControledBonus
 	
@@ -128,6 +118,7 @@ BEGIN
 	drop table #LotteryResult
 	drop table #UserTest
 END
+
 
 
 
