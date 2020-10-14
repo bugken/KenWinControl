@@ -440,13 +440,25 @@ void LotteryProcessWorker()
 		LOTTERY_ORDER_DATA tagLotteryOrderData;
 		LOTTERY_RESULT tagLotteryResult;
 		bool bUserControled = false;//ÊÇ·ñµ¥¿Ø
+
 		bool bResult = lotteryDB.Ex_GetLotteryUserOrders(tagDrawLotteryInfo, tagLotteryOrderData);
-		if (bResult)
+		if (bResult && tagLotteryOrderData.uiUsersBetCounts >= 5)
+		{
 			bResult = ProcessControledUserOrder(tagLotteryOrderData, bUserControled);
+		}
+		else
+		{
+			GetLogFileHandle().InfoLog("bet users counts %d < 5\n", tagLotteryOrderData.uiUsersBetCounts);
+			continue;
+		}
+			
 		if (bResult)
-			bResult = GetLotteryFinalResult(tagLotteryOrderData.vecLottery10Results, 
-				tagLotteryOrderData.fWinRateAsOfLast,bUserControled, tagDrawLotteryInfo.iControlRate,
+		{
+			bResult = GetLotteryFinalResult(tagLotteryOrderData.vecLottery10Results,
+				tagLotteryOrderData.fWinRateAsOfLast, bUserControled, tagDrawLotteryInfo.iControlRate,
 				tagDrawLotteryInfo.iPowerControl, tagLotteryResult);
+		}
+
 		if (bResult)
 		{
 			lotteryDB.Ex_UpdateGameResult(tagLotteryResult);

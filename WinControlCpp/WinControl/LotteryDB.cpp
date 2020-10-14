@@ -82,6 +82,7 @@ bool LotteryDB::Ex_GetLotteryUserOrders(DRAW_LOTTERY_PERIOD drawLotteryInfo, LOT
 	if (IsFetchNoData())//有数据的时候再去取数据
 	{
 		InitBindCol();
+		BindCol(lotteryOrderData.uiUsersBetCounts);
 		BindCol(lotteryOrderData.uiAllBet);
 		BindCol(lotteryOrderData.uiAllBetAsOfLast);
 		BindCol(lotteryOrderData.uiBonusAlready);

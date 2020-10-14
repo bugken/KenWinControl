@@ -171,10 +171,11 @@ typedef std::vector<CONTROLED_USER_ORDERS>  CONTROLED_USER_ORDERS_VEC;
 
 typedef struct  _LOTTERY_ORDER_DATA
 {
-	UINT64 uiAllBet = 0;//所有下注
-	UINT64 uiAllBetAsOfLast = 0;//截止上期下注
-	UINT64 uiBonusAlready = 0;//已经发放的彩金
-	float fWinRateAsOfLast = 0;//截止上期赢率
+	UINT32 uiUsersBetCounts;//下注人数
+	UINT64 uiAllBet;//所有下注
+	UINT64 uiAllBetAsOfLast;//截止上期下注
+	UINT64 uiBonusAlready;//已经发放的彩金
+	float fWinRateAsOfLast;//截止上期赢率
 	ORDERS_TEN_RESULTS_VEC vecLottery10Results;//下注的10种可能结果
 	CONTROLED_USER_ORDERS_VEC vecControlUserOrders;//受控玩家下注
 	_LOTTERY_ORDER_DATA()

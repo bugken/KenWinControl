@@ -1,7 +1,7 @@
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GetLotteryUserOrders]    Script Date: 10/09/2020 14:09:11 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetLotteryUserOrders]    Script Date: 10/15/2020 01:51:06 ******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_GetLotteryUserOrders]') AND type in (N'P', N'PC'))
 DROP PROCEDURE [dbo].[sp_GetLotteryUserOrders]
 GO
@@ -9,12 +9,13 @@ GO
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GetLotteryUserOrders]    Script Date: 10/09/2020 14:09:11 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetLotteryUserOrders]    Script Date: 10/15/2020 01:51:06 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
 
 
 
@@ -57,7 +58,7 @@ BEGIN
 	select @AllBetAsOfLast = sum(RealAmount) from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and IssueNumber >= @InBeginIssueNumber and IssueNumber <= @InLastIssueNumber
 	select @BonusAlready = sum(ProfitAmount - RealAmount) from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and IssueNumber >= @InBeginIssueNumber and IssueNumber <= @InLastIssueNumber
 	set @WinRateAsOfLast = isnull(@BonusAlready / @AllBetAsOfLast, 0)
-	select @AllBet, @AllBetAsOfLast, @BonusAlready, @WinRateAsOfLast
+	select @UserCounts, @AllBet, @AllBetAsOfLast, @BonusAlready, @WinRateAsOfLast
 	--print '投注金额@AllBet:' + isnull(cast(@AllBet as varchar(20)),0)
 	--print '截止上期投注金额@AllBetAsOfLast:' + isnull(cast(@AllBetAsOfLast as varchar(20)),0)
 	--print '已派彩金额@BonusAlready:' + isnull(cast(@BonusAlready as varchar(20)),0)
@@ -138,6 +139,7 @@ BEGIN
 	drop table #LotteryResult
 	drop table #UserTest
 END
+
 
 
 
