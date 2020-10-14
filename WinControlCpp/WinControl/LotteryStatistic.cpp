@@ -57,7 +57,7 @@ void CLotteryStatistic::WriteStats()
 		s_time = nowtime;
 	}
 	int gap = (int)(nowtime - s_time);
-	if (gap < 1000)
+	if (gap < 60)
 	{
 		return;
 	}
@@ -66,10 +66,13 @@ void CLotteryStatistic::WriteStats()
 	char fname[260];
 	CurrentTime stTempNow;
 	char szCurDate[32];
+	char szCurTime[64];
 	char szStatisticDir[MAX_PATH];
 	QueryCurrentTime(&stTempNow);
 	GetCurrentWorkDir(szStatisticDir, MAX_PATH);
 	sprintf(szCurDate, "%04u-%02u-%02u", stTempNow.ulYear, stTempNow.ulMonth, stTempNow.ulDay);
+	sprintf(szCurTime, "[%.4u-%.2u-%.2u,%.2u:%.2u:%.2u:%.3u]", stTempNow.ulYear, stTempNow.ulMonth, stTempNow.ulDay, \
+		stTempNow.ulHour, stTempNow.ulMinute, stTempNow.ulSecond, stTempNow.ulMSecond);
 
 	sprintf(fname, "%s\\%s_Statistic.log", szStatisticDir, szCurDate);
 	FILE* fpStatistic = NULL;
@@ -92,10 +95,10 @@ void CLotteryStatistic::WriteStats()
 	{
 		string name = it->first;
 		TExecInfo& info = it->second;
-		fprintf(fpStatistic, "name = %s count %u usedms %u avgms %.2f maxusedtime %u \n", name.c_str(), 
+		fprintf(fpStatistic, "%s name = %s count %u usedms %u avgms %.2f maxusedtime %u \n", szCurTime, name.c_str(),
 				info.mCount, info.mExecTime, (float)info.mExecTime / (1.0*info.mCount), info.mMaxTime);
 	}
-	fprintf(fpStatistic, "******************************new statistic end************************************\n");
+	fprintf(fpStatistic, "******************************new statistic end**************************************\n\n");
 	fclose(fpStatistic);
 
 	mAllStats.clear();

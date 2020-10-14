@@ -6,12 +6,19 @@
 bool LotteryDB::DBConnect()
 {
 	bool ret = false;
-	char pStr[100] = "DRIVER={SQL Server Native Client 10.0};SERVER=47.56.134.27;DATABASE=9lottery;UID=sa;PWD=Jack7361;";
+	char pStr[100] = "DRIVER={SQL Server Native Client 10.0};SERVER=47.242.25.101;DATABASE=92lottery;UID=sa;PWD=Jack7361;";
 	bool IsConnect = DriverConnect(pStr);
 	if (IsConnect)
 	{
 		GetLogFileHandle().InfoLog("thread(%d) connect lottery db succes\n", GetCurrentThreadId());
+		printf("thread(%d) connect lottery db succes\n", GetCurrentThreadId());
 		ret = true;
+	}
+	else
+	{
+		GetLogFileHandle().ErrorLog("thread(%d) connect lottery db failed\n", GetCurrentThreadId());
+		printf("thread(%d) connect lottery db failed\n", GetCurrentThreadId());
+		ret = false;
 	}
 	return ret;
 }

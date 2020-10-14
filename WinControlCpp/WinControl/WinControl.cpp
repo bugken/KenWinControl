@@ -295,8 +295,8 @@ bool GetLotteryFinalResult(ORDERS_TEN_RESULTS_VEC lottery10ResultsVec, float fWi
 	GetLogFileHandle().InfoLog("%s %d fTargetWinRate:%f, totally %d results as bellow:\n", __FUNCTION__, __LINE__, fTargetWinRate, iVecSize);
 	for (auto result : lottery10ResultsVec)
 	{
-		GetLogFileHandle().InfoLog("TypeID:%d, IssueNumber:%s, SelectNumber:%s, SelectColor:%s, AllTotalBonus:%I64u, \
-			WinRate:%f\n", result.iTypeID, result.strIssueNumber, result.strSelectNumber, \
+		GetLogFileHandle().InfoLog("TypeID:%d, IssueNumber:%s, SelectNumber:%s, SelectColor:%s, AllTotalBonus:%I64u,WinRate:%f\n", \
+			result.iTypeID, result.strIssueNumber, result.strSelectNumber, \
 			result.strSelectColor, result.uiAllTotalBonus, result.fWinRate);
 	}
 
@@ -437,8 +437,7 @@ void LotteryProcessWorker()
 		//pLogFile->SetLogNameByDay(szLogName);
 
 		GetLogFileHandle().InfoLog("%s %d lottery worker process(%d) begin\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
-		GetLogFileHandle().InfoLog("TypeID:%d, UserControled:%d, ControlRate:%d, PowerControl:%d, \
-			CurrentIssueNumber:%s, LastIssueNumber:%s, BeginIssueNumber:%s\n", \
+		GetLogFileHandle().InfoLog("TypeID:%d, UserControled:%d, ControlRate:%d, PowerControl:%d, CurrentIssueNumber:%s, LastIssueNumber:%s, BeginIssueNumber:%s\n", \
 			tagDrawLotteryInfo.iTypeID, tagDrawLotteryInfo.iControlRate, \
 			tagDrawLotteryInfo.iControlRate, tagDrawLotteryInfo.strCurrentIssueNumber, \
 			tagDrawLotteryInfo.strLastIssueNumber, tagDrawLotteryInfo.strBeginIssueNumber);
@@ -457,9 +456,9 @@ void LotteryProcessWorker()
 		{
 			lotteryDB.Ex_UpdateGameResult(tagLotteryResult);
 			GetLogFileHandle().InfoLog("game final result as bellow:\n");
-			GetLogFileHandle().InfoLog("TypeID:%d, IssueNumber:%s, LotteryNumber:%s, LotteryColor:%s, \
-				ControlType:%d\n", tagLotteryResult.iTypeID, tagLotteryResult.strIssueNumber, \
-				tagLotteryResult.strLotteryNumber, tagLotteryResult.strLotteryColor, tagLotteryResult.iControlType);
+			GetLogFileHandle().InfoLog("TypeID:%d, IssueNumber:%s, LotteryNumber:%s, LotteryColor:%s, ControlType:%d\n", \
+				tagLotteryResult.iTypeID, tagLotteryResult.strIssueNumber, tagLotteryResult.strLotteryNumber, \
+				tagLotteryResult.strLotteryColor, tagLotteryResult.iControlType);
 		}
 			
 		GetLogFileHandle().InfoLog("%s %d lottery worker process(%d) end\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
@@ -529,47 +528,55 @@ void LoopCheckLottery()
 {
 	SetLogConf();
 	LotteryDB lotteryDB;
-	lotteryDB.DBConnect();
+	if (!lotteryDB.DBConnect())
+	{
+		return;
+	}
 
+	bool bIsAlreadyChecked = false;
 	while (true)
 	{
 		//检查是否是开奖的时间，每分钟的第50秒
 		if (IsDrawLotterySecond())
 		{
-			GetLogFileHandle().InfoLog("%s %d thread(%d) begin new round check drawing lottery\n",
-				__FUNCTION__, __LINE__, GetCurrentThreadId());
-			DRAW_LOTTERY_PERIOD_QUEUE tagDrawLotteryQueue;
-			DRAW_LOTTERY_PERIOD tagDrawLotteryPeriod;
-			if (lotteryDB.Ex_GetDrawLottery(tagDrawLotteryQueue))
+			if (!bIsAlreadyChecked)
 			{
-				GetLogFileHandle().InfoLog("drawing lottery queue size:%d\n", tagDrawLotteryQueue.size());
+				bIsAlreadyChecked = true;
+				GetLogFileHandle().InfoLog("%s %d thread(%d) begin new round check drawing lottery\n",
+					__FUNCTION__, __LINE__, GetCurrentThreadId());
+				DRAW_LOTTERY_PERIOD_QUEUE tagDrawLotteryQueue;
+				DRAW_LOTTERY_PERIOD tagDrawLotteryPeriod;
+				if (lotteryDB.Ex_GetDrawLottery(tagDrawLotteryQueue))
 				{
-					lock_guard<mutex> LotteryLock(LotteryMutex);
-					while (!tagDrawLotteryQueue.empty())
+					GetLogFileHandle().InfoLog("drawing lottery queue size:%d\n", tagDrawLotteryQueue.size());
 					{
-						memset(&tagDrawLotteryPeriod, 0, sizeof(tagDrawLotteryPeriod));
-						tagDrawLotteryPeriod = tagDrawLotteryQueue.front();
-						DrawLotteryQueue.push(tagDrawLotteryPeriod);
-						tagDrawLotteryQueue.pop();
-						GetLogFileHandle().InfoLog("TypeID:%d, UserControled:%d, ControlRate:%d, PowerControl:%d, \
-									CurrentIssueNumber:%s, LastIssueNumber:%s, BeginIssueNumber:%s\n", \
-									tagDrawLotteryPeriod.iTypeID, tagDrawLotteryPeriod.iControlRate, \
-									tagDrawLotteryPeriod.iControlRate, tagDrawLotteryPeriod.strCurrentIssueNumber, \
-									tagDrawLotteryPeriod.strLastIssueNumber, tagDrawLotteryPeriod.strBeginIssueNumber);
+						lock_guard<mutex> LotteryLock(LotteryMutex);
+						while (!tagDrawLotteryQueue.empty())
+						{
+							memset(&tagDrawLotteryPeriod, 0, sizeof(tagDrawLotteryPeriod));
+							tagDrawLotteryPeriod = tagDrawLotteryQueue.front();
+							DrawLotteryQueue.push(tagDrawLotteryPeriod);
+							tagDrawLotteryQueue.pop();
+							GetLogFileHandle().InfoLog("TypeID:%d, UserControled:%d, ControlRate:%d, PowerControl:%d, CurrentIssueNumber:%s, LastIssueNumber:%s, BeginIssueNumber:%s\n", \
+								tagDrawLotteryPeriod.iTypeID, tagDrawLotteryPeriod.iUserControled, tagDrawLotteryPeriod.iControlRate, \
+								tagDrawLotteryPeriod.iPowerControl, tagDrawLotteryPeriod.strCurrentIssueNumber, \
+								tagDrawLotteryPeriod.strLastIssueNumber, tagDrawLotteryPeriod.strBeginIssueNumber);
+						}
 					}
+					GetLogFileHandle().InfoLog("%s %d thread(%d) end new round check drawing lottery\n\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
+					LotteryConditionVariable.notify_all();
 				}
-				GetLogFileHandle().InfoLog("%s %d thread(%d) end new round check drawing lottery\n\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
-				LotteryConditionVariable.notify_all();
 			}
 		}
 		else
-		{
+		{	
+			bIsAlreadyChecked = false;
 			if (IsZeroOfDay())
 			{
 				ProcessLogFileOnZeroOfDay();//放在这里不会影响获取开奖信息
 			}
 			gLotteryStatistic.OutputStats();//写入统计信息
-			Sleep(100);
+			Sleep(50);
 		}
 	}
 }
