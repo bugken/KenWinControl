@@ -33,6 +33,7 @@ bool LotteryDB::Ex_GetDrawLottery(DRAW_LOTTERY_PERIOD_QUEUE& queueDrawLotteryIte
 
 	ClearMoreResults();
 	InitBindParam();
+	BindParam(iError, SQL_PARAM_OUTPUT);
 	bResult = ExecuteDirect(TEXT("{? = call dbo.sp_GetDrawLotteryInfo}"), errstr);
 	if (iError || !bResult)
 	{
@@ -73,6 +74,7 @@ bool LotteryDB::Ex_GetLotteryUserOrders(DRAW_LOTTERY_PERIOD drawLotteryInfo, LOT
 
 	ClearMoreResults();
 	InitBindParam();
+	BindParam(iError, SQL_PARAM_OUTPUT);
 	BindParam(drawLotteryInfo.iUserControled);
 	BindParam(drawLotteryInfo.iTypeID);
 	BindParamVarChar(drawLotteryInfo.strBeginIssueNumber, ISSUE_NUMBER_LEN);

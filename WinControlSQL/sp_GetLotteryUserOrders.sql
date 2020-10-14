@@ -33,6 +33,7 @@ CREATE PROCEDURE [dbo].[sp_GetLotteryUserOrders]
 	@InLastIssueNumber varchar(30) = ''
 AS
 BEGIN
+	SET NOCOUNT ON
 	--计算投注人数
 	declare @UserCounts int = 0
 	select @UserCounts = count(UserCounts) from 

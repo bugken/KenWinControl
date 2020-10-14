@@ -29,6 +29,7 @@ GO
 CREATE PROCEDURE [dbo].[sp_GetDrawLotteryInfo]
 AS
 BEGIN
+	SET NOCOUNT ON
 	--控制信息变量
 	declare @UserControled int = 0
 	declare @ControlRate int = 0
