@@ -36,7 +36,7 @@ using namespace std;
 #define COLOR_LEN			20 
 #define NUMBER_LEN			10
 #define BUFF64				64
-#define WORKERS_THREAD_NUM	4//工作线程数量
+#define WORKERS_THREAD_NUM	1//工作线程数量
 #define LOTTERY_RESULT_NUM	10//投注最终结果个数
 #define LOG_FILE_NAME_LEN	100
 

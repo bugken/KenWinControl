@@ -292,10 +292,10 @@ bool GetLotteryFinalResult(ORDERS_TEN_RESULTS_VEC lottery10ResultsVec, float fWi
 	float fTargetWinRate = (float)(iControlRate * 1.0 / 10000);
 	sort(lottery10ResultsVec.begin(), lottery10ResultsVec.end(), DescSort);
 
-	GetLogFileHandle().InfoLog("%s %d fTargetWinRate:%f, totally %d results as bellow:\n", __FUNCTION__, __LINE__, fTargetWinRate, iVecSize);
+	GetLogFileHandle().InfoLog("%s %d TargetWinRate:%f, totally %d results as bellow:\n", __FUNCTION__, __LINE__, fTargetWinRate, iVecSize);
 	for (auto result : lottery10ResultsVec)
 	{
-		GetLogFileHandle().InfoLog("TypeID:%d, IssueNumber:%s, SelectNumber:%s, SelectColor:%s, AllTotalBonus:%I64u,WinRate:%f\n", \
+		GetLogFileHandle().InfoLog("TypeID:%d, IssueNumber:%s, SelectNumber:%s, SelectColor:%s, AllTotalBonus:%I64u, WinRate:%f\n", \
 			result.iTypeID, result.strIssueNumber, result.strSelectNumber, \
 			result.strSelectColor, result.uiAllTotalBonus, result.fWinRate);
 	}
@@ -431,15 +431,10 @@ void LotteryProcessWorker()
 			LotteryLock.unlock();
 		}
 
-		//char szLogName[LOG_FILE_NAME_LEN] = { 0 };
-		//UINT32 iRet = snprintf(szLogName, sizeof(szLogName) - 1, "LotteryProcessType%d", tagDrawLotteryInfo.iTypeID);
-		//szLogName[iRet] = '\0';
-		//pLogFile->SetLogNameByDay(szLogName);
-
 		GetLogFileHandle().InfoLog("%s %d lottery worker process(%d) begin\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
 		GetLogFileHandle().InfoLog("TypeID:%d, UserControled:%d, ControlRate:%d, PowerControl:%d, CurrentIssueNumber:%s, LastIssueNumber:%s, BeginIssueNumber:%s\n", \
-			tagDrawLotteryInfo.iTypeID, tagDrawLotteryInfo.iControlRate, \
-			tagDrawLotteryInfo.iControlRate, tagDrawLotteryInfo.strCurrentIssueNumber, \
+			tagDrawLotteryInfo.iTypeID, tagDrawLotteryInfo.iUserControled, tagDrawLotteryInfo.iControlRate, \
+			tagDrawLotteryInfo.iPowerControl, tagDrawLotteryInfo.strCurrentIssueNumber, \
 			tagDrawLotteryInfo.strLastIssueNumber, tagDrawLotteryInfo.strBeginIssueNumber);
 
 		LOTTERY_ORDER_DATA tagLotteryOrderData;
@@ -470,12 +465,14 @@ bool IsDrawLotterySecond()
 	bool bIsDrawing = false;
 	struct tm stTempTm;
 	char cSecond[20];
+	static time_t tLastTimeSeconds = 0;
 
-	time_t nowTime = time(NULL);
-	localtime_s(&stTempTm, &nowTime);
+	time_t tNowTime = time(NULL);
+	localtime_s(&stTempTm, &tNowTime);
 	sprintf_s(cSecond, "%02d", stTempTm.tm_sec);
-	if (strcmp("50", cSecond) == 0)
+	if ((strcmp("50", cSecond) == 0) && (tNowTime - tLastTimeSeconds) > 1)
 	{
+		tLastTimeSeconds = tNowTime;
 		bIsDrawing = true;
 	}
 
@@ -486,13 +483,15 @@ bool IsZeroOfDay()
 {
 	bool bIsZeroOfDay = false;
 	struct tm stTempTm;
-	char cHour[20];
+	char szHourMins[20];
+	static time_t tLastTimeSeconds = 0;
 
-	time_t nowTime = time(NULL);
-	localtime_s(&stTempTm, &nowTime);
-	sprintf_s(cHour, "%02d", stTempTm.tm_hour);
-	if (strcmp("00", cHour) == 0)
+	time_t tNowTime = time(NULL);
+	localtime_s(&stTempTm, &tNowTime);
+	sprintf_s(szHourMins, "%02d-%02d", stTempTm.tm_hour, stTempTm.tm_min);
+	if ((strcmp("00-00", szHourMins) == 0) && (tNowTime - tLastTimeSeconds) > 60)
 	{
+		tLastTimeSeconds = tNowTime;
 		bIsZeroOfDay = true;
 	}
 
@@ -533,49 +532,44 @@ void LoopCheckLottery()
 		return;
 	}
 
-	bool bIsAlreadyChecked = false;
 	while (true)
 	{
 		//检查是否是开奖的时间，每分钟的第50秒
 		if (IsDrawLotterySecond())
 		{
-			if (!bIsAlreadyChecked)
+			GetLogFileHandle().InfoLog("%s %d thread(%d) begin new round check drawing lottery\n",
+				__FUNCTION__, __LINE__, GetCurrentThreadId());
+			DRAW_LOTTERY_PERIOD_QUEUE tagDrawLotteryQueue;
+			DRAW_LOTTERY_PERIOD tagDrawLotteryPeriod;
+			if (lotteryDB.Ex_GetDrawLottery(tagDrawLotteryQueue))
 			{
-				bIsAlreadyChecked = true;
-				GetLogFileHandle().InfoLog("%s %d thread(%d) begin new round check drawing lottery\n",
-					__FUNCTION__, __LINE__, GetCurrentThreadId());
-				DRAW_LOTTERY_PERIOD_QUEUE tagDrawLotteryQueue;
-				DRAW_LOTTERY_PERIOD tagDrawLotteryPeriod;
-				if (lotteryDB.Ex_GetDrawLottery(tagDrawLotteryQueue))
+				GetLogFileHandle().InfoLog("drawing lottery queue size:%d\n", tagDrawLotteryQueue.size());
 				{
-					GetLogFileHandle().InfoLog("drawing lottery queue size:%d\n", tagDrawLotteryQueue.size());
+					lock_guard<mutex> LotteryLock(LotteryMutex);
+					while (!tagDrawLotteryQueue.empty())
 					{
-						lock_guard<mutex> LotteryLock(LotteryMutex);
-						while (!tagDrawLotteryQueue.empty())
-						{
-							memset(&tagDrawLotteryPeriod, 0, sizeof(tagDrawLotteryPeriod));
-							tagDrawLotteryPeriod = tagDrawLotteryQueue.front();
-							DrawLotteryQueue.push(tagDrawLotteryPeriod);
-							tagDrawLotteryQueue.pop();
-							GetLogFileHandle().InfoLog("TypeID:%d, UserControled:%d, ControlRate:%d, PowerControl:%d, CurrentIssueNumber:%s, LastIssueNumber:%s, BeginIssueNumber:%s\n", \
-								tagDrawLotteryPeriod.iTypeID, tagDrawLotteryPeriod.iUserControled, tagDrawLotteryPeriod.iControlRate, \
-								tagDrawLotteryPeriod.iPowerControl, tagDrawLotteryPeriod.strCurrentIssueNumber, \
-								tagDrawLotteryPeriod.strLastIssueNumber, tagDrawLotteryPeriod.strBeginIssueNumber);
-						}
+						memset(&tagDrawLotteryPeriod, 0, sizeof(tagDrawLotteryPeriod));
+						tagDrawLotteryPeriod = tagDrawLotteryQueue.front();
+						DrawLotteryQueue.push(tagDrawLotteryPeriod);
+						tagDrawLotteryQueue.pop();
+						GetLogFileHandle().InfoLog("TypeID:%d, UserControled:%d, ControlRate:%d, PowerControl:%d, CurrentIssueNumber:%s, LastIssueNumber:%s, BeginIssueNumber:%s\n", \
+							tagDrawLotteryPeriod.iTypeID, tagDrawLotteryPeriod.iUserControled, tagDrawLotteryPeriod.iControlRate, \
+							tagDrawLotteryPeriod.iPowerControl, tagDrawLotteryPeriod.strCurrentIssueNumber, \
+							tagDrawLotteryPeriod.strLastIssueNumber, tagDrawLotteryPeriod.strBeginIssueNumber);
 					}
-					GetLogFileHandle().InfoLog("%s %d thread(%d) end new round check drawing lottery\n\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
-					LotteryConditionVariable.notify_all();
 				}
+				GetLogFileHandle().InfoLog("%s %d thread(%d) end new round check drawing lottery\n\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
+				LotteryConditionVariable.notify_all();
 			}
 		}
-		else
+		else//本分支不会影响获取开奖结果信息
 		{	
-			bIsAlreadyChecked = false;
 			if (IsZeroOfDay())
 			{
-				ProcessLogFileOnZeroOfDay();//放在这里不会影响获取开奖信息
+				ProcessLogFileOnZeroOfDay();//备份日志
 			}
 			gLotteryStatistic.OutputStats();//写入统计信息
+
 			Sleep(50);
 		}
 	}
@@ -586,7 +580,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	printf("main process id: %d\n", GetCurrentProcessId());
 	printf("main thread id: %d\n", GetCurrentThreadId());
 	//先启动工作线程再循环检查是否开奖
-	thread arrProcessWorkerThreads[4];
+	thread arrProcessWorkerThreads[WORKERS_THREAD_NUM];
 	for (int i = 0; i < WORKERS_THREAD_NUM; i++)
 	{
 		arrProcessWorkerThreads[i] = thread(LotteryProcessWorker);
