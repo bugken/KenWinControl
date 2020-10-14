@@ -18,6 +18,16 @@ CLogFile::~CLogFile()
 {
 }
 
+/*
+snprintf:
+GCC中的参数n表示向str中写入n个字符，包括'\0'字符，并且返回实际的字符串长度。
+VC中的参数n表示会向str中写入n个字符，不包括'\0'字符，并且不会在字符串末尾添加'\0'符。
+*/
+/*
+char *strncpy(char *dest, const char *src, int n)
+如果n<src的长度，只是将src的前n个字符复制到dest的前n个字符，不自动添加'\0'，也就是结果dest不包括'\0'，
+需要再手动添加一个'\0'。如果src的长度小于n个字节，则以NULL填充dest直到复制完n个字节。
+*/
 void CLogFile::SetLogPath(const char *pLogPath)
 {
 	if (!pLogPath)
@@ -39,9 +49,10 @@ void CLogFile::SetLogPath(const char *pLogPath)
 	{
 		m_szLogPath[nLen] = '/';
 	}
+	m_szLogPath[nLen + 1] = '\0';//手动增加'\0'
 
 	char szPath[MAX_PATH] = { 0 };
-	snprintf(szPath, sizeof(szPath) - 1, "%s\\LogBackupDir", m_szLogPath);
+	snprintf(szPath, sizeof(szPath) - 1, "%s/LogBackupDir", m_szLogPath);
 	SetBakLogPath(szPath);
 }
 
@@ -65,6 +76,7 @@ void CLogFile::SetBakLogPath(const char *pBakLogPath)
 	{
 		m_szBakLogPath[nLen] = '/';
 	}
+	m_szBakLogPath[nLen + 1] = '\0';
 }
 
 void CLogFile::SetLogName(const char* pLogName)
@@ -241,7 +253,7 @@ void CLogFile::WriteToLogFile(const char* pFileName, const char* msg, va_list& a
 {
 	LockGuard lockGuard(m_Mutex);
 	char szLogFile[MAX_PATH];
-	sprintf(szLogFile, "%s%s", m_szLogPath, pFileName);
+	snprintf(szLogFile, sizeof(szLogFile) - 1, "%s%s", m_szLogPath, pFileName);
 
 	FILE *pFile = NULL;
 	fopen_s(&pFile, szLogFile, "a+");

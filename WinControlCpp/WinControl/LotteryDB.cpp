@@ -11,7 +11,6 @@ bool LotteryDB::DBConnect()
 	if (IsConnect)
 	{
 		GetLogFileHandle().InfoLog("thread(%d) connect lottery db succes\n", GetCurrentThreadId());
-		printf("thread(%d) connect lottery db succes\n", GetCurrentThreadId());
 		ret = true;
 	}
 	return ret;
