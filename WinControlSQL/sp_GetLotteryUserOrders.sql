@@ -1,7 +1,7 @@
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GetLotteryUserOrders]    Script Date: 10/15/2020 01:51:06 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetLotteryUserOrders]    Script Date: 10/15/2020 03:02:34 ******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_GetLotteryUserOrders]') AND type in (N'P', N'PC'))
 DROP PROCEDURE [dbo].[sp_GetLotteryUserOrders]
 GO
@@ -9,12 +9,13 @@ GO
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GetLotteryUserOrders]    Script Date: 10/15/2020 01:51:06 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetLotteryUserOrders]    Script Date: 10/15/2020 03:02:34 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
 
 
 
@@ -32,22 +33,10 @@ CREATE PROCEDURE [dbo].[sp_GetLotteryUserOrders]
 	@InLastIssueNumber varchar(30) = ''
 AS
 BEGIN
-	--控制开关未开启或者已经预设,不进行控制
-	if (select ISNULL(GameUpdateNumberOpen,0) from [9lottery].dbo.tab_GameNumberSet) = 0
-	begin
-		--print '控制开关未开启或该期已经预设'
-		return
-	end
-	
-	--投注人数不得少于5，否则不调控
+	--计算投注人数
 	declare @UserCounts int = 0
 	select @UserCounts = count(UserCounts) from 
 			(select count(distinct UserID) UserCounts from [9lottery].[dbo].tab_GameOrder where IssueNumber = @InCurrentIssueNumber and TypeID = @InTypeID group by UserID) as t
-	if @UserCounts <= 5
-	begin
-		--print '下注人数小于5个人'
-		return
-	end
 	
 	--计算区间投注金额 派彩金额
 	declare @BonusAlready decimal(20, 2) = 0.0 --派彩金额
@@ -91,7 +80,6 @@ BEGIN
 					where IssueNumber=@InCurrentIssueNumber and TypeID=@InTypeID and UserID = @InUserControled
 						group by IssueNumber, SelectType
 		update #UserControledBonus set TotalBonus *= MultiRate
-		
 	end
 	
 	--玩家没有下注，直接返回
@@ -139,6 +127,7 @@ BEGIN
 	drop table #LotteryResult
 	drop table #UserTest
 END
+
 
 
 
