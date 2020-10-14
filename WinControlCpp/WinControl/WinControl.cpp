@@ -448,7 +448,8 @@ void LotteryProcessWorker()
 		}
 		else
 		{
-			GetLogFileHandle().InfoLog("bet users counts %d < 5\n", tagLotteryOrderData.uiUsersBetCounts);
+			GetLogFileHandle().InfoLog("TypeID:%d, CurrentIssueNumber:%s bet users counts:%d < 5\n", \
+				tagDrawLotteryInfo.iTypeID, tagDrawLotteryInfo.strCurrentIssueNumber, tagLotteryOrderData.uiUsersBetCounts);
 			continue;
 		}
 			
