@@ -430,7 +430,6 @@ void LotteryProcessWorker()
 			DrawLotteryQueue.pop();
 			LotteryLock.unlock();
 		}
-
 		GetLogFileHandle().InfoLog("%s %d lottery worker process(%d) begin\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
 		GetLogFileHandle().InfoLog("TypeID:%d, UserControled:%d, ControlRate:%d, PowerControl:%d, CurrentIssueNumber:%s, LastIssueNumber:%s, BeginIssueNumber:%s\n", \
 			tagDrawLotteryInfo.iTypeID, tagDrawLotteryInfo.iUserControled, tagDrawLotteryInfo.iControlRate, \
@@ -460,7 +459,6 @@ void LotteryProcessWorker()
 				tagLotteryOrderData.fWinRateAsOfLast, bUserControled, tagDrawLotteryInfo.iControlRate,
 				tagDrawLotteryInfo.iPowerControl, tagLotteryResult);
 		}
-
 		if (bResult)
 		{
 			lotteryDB.Ex_UpdateGameResult(tagLotteryResult);

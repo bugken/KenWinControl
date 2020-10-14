@@ -9,18 +9,11 @@
 #define SUCCEED_ODBC(X)		((SQL_SUCCESS == X)||(SQL_SUCCESS_WITH_INFO == X))
 #define FAILED_ODBC(X)		((SQL_ERROR == X)||(SQL_INVALID_HANDLE == X))
 
-class CLogFileEx;
-
 class CODBCQuery
 {
 public:
 	CODBCQuery();
 	virtual ~CODBCQuery();
-
-	static void InitLogFile(CLogFileEx* logfile)
-	{
-		mLogFile = logfile;
-	}
 
 	void GetError();
 	void GetError2(LPSTR sql, bool& bIsDisconnectted, char* errorStr = NULL);
@@ -101,8 +94,6 @@ private:
 	int   m_nCursorErrorCount;
 	void SetConnecionString(LPTSTR pSZCString);
 	bool ReConnect();
-
-    static CLogFileEx* mLogFile;
 
 public:
 	static int msODBCVer;

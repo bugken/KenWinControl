@@ -15,7 +15,6 @@
 #define MAX_ERROR_SIZE 1024
 #define BINDCHECKVARCHAR(X,Y)  if(Y == 0) X[0] = ' ';
 
-CLogFileEx* CODBCQuery::mLogFile = NULL;
 int CODBCQuery::msODBCVer = 6;
 
 ////////////////////////////////////////////
