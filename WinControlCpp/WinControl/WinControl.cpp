@@ -8,8 +8,7 @@
 
 using namespace std;
 
-//CLogFile logFile;
-//CLogFile* pLogFile = &logFile;//使用指针，传值效率高
+extern CLotteryStatistic gLotteryStatistic;
 
 MUTEX LotteryMutex;
 DRAW_LOTTERY_PERIOD_QUEUE DrawLotteryQueue;
@@ -578,6 +577,7 @@ void LoopCheckLottery()
 			{
 				ProcessLogFileOnZeroOfDay();//放在这里不会影响获取开奖信息
 			}
+			gLotteryStatistic.OutputStats();//写入统计信息
 			Sleep(100);
 		}
 	}

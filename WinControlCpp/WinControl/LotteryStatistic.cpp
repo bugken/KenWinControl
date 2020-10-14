@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "LotteryStatistic.h"
+#include "LogFile.h"
 
 CLotteryStatistic gLotteryStatistic;
 
@@ -56,7 +57,7 @@ void CLotteryStatistic::WriteStats()
 		s_time = nowtime;
 	}
 	int gap = (int)(nowtime - s_time);
-	if (gap < 10*60*1000)
+	if (gap < 1000)
 	{
 		return;
 	}
@@ -80,6 +81,7 @@ void CLotteryStatistic::WriteStats()
 		if (!fpStatistic)
 		{
 			printf("Open statistic file %s failed.\n", fname);
+			GetLogFileHandle().ErrorLog("Open statistic file %s failed.\n", fname);
 			return;
 		}
 
