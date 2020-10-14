@@ -37,7 +37,7 @@ bool LotteryDB::Ex_GetDrawLottery(DRAW_LOTTERY_PERIOD_QUEUE& queueDrawLotteryIte
 		GetLogFileHandle().ErrorLog("sp_GetDrawLotteryInfo failed ... \n");
 		return false;
 	}
-	if (IsFetchNoData())//有数据的时候再去取数据
+	//if (IsFetchNoData())//有数据的时候再去取数据
 	{
 		InitBindCol();
 		BindCol(tagDrwaLotteryPeriod.iTypeID);
@@ -79,7 +79,7 @@ bool LotteryDB::Ex_GetLotteryUserOrders(DRAW_LOTTERY_PERIOD drawLotteryInfo, LOT
 		GetLogFileHandle().ErrorLog("sp_GetLotteryUserOrders failed ... \n");
 		return false;
 	}
-	if (IsFetchNoData())//有数据的时候再去取数据
+	//if (IsFetchNoData())//有数据的时候再去取数据
 	{
 		InitBindCol();
 		BindCol(lotteryOrderData.uiUsersBetCounts);
