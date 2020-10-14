@@ -27,14 +27,17 @@ bool LotteryDB::Ex_GetDrawLottery(DRAW_LOTTERY_PERIOD_QUEUE& queueDrawLotteryIte
 {
 	CTicker timeLapser("Ex_GetDrawLottery");
 	bool bResult = false;
+	int iError = 0;
+	char errstr[2048] = { 0 };
 	DRAW_LOTTERY_PERIOD tagDrwaLotteryPeriod;
 
 	ClearMoreResults();
 	InitBindParam();
-	bResult = ExecuteDirect(TEXT("{call dbo.sp_GetDrawLotteryInfo}"));
-	if (!bResult)
+	bResult = ExecuteDirect(TEXT("{? = call dbo.sp_GetDrawLotteryInfo}"), errstr);
+	if (iError || !bResult)
 	{
-		GetLogFileHandle().ErrorLog("sp_GetDrawLotteryInfo failed ... \n");
+		GetLogFileHandle().ErrorLog("%s %d Error[%d] Result[%d] sp_GetDrawLotteryInfo error [%s]\n", \
+			__FUNCTION__, __LINE__, iError, bResult, errstr);
 		return false;
 	}
 	//if (IsFetchNoData())//有数据的时候再去取数据
@@ -65,6 +68,8 @@ bool LotteryDB::Ex_GetLotteryUserOrders(DRAW_LOTTERY_PERIOD drawLotteryInfo, LOT
 {
 	CTicker timeLapser("Ex_GetLotteryUserOrders");
 	bool bResult = false;
+	int iError = 0;
+	char errstr[2048] = { 0 };
 
 	ClearMoreResults();
 	InitBindParam();
@@ -73,10 +78,11 @@ bool LotteryDB::Ex_GetLotteryUserOrders(DRAW_LOTTERY_PERIOD drawLotteryInfo, LOT
 	BindParamVarChar(drawLotteryInfo.strBeginIssueNumber, ISSUE_NUMBER_LEN);
 	BindParamVarChar(drawLotteryInfo.strCurrentIssueNumber, ISSUE_NUMBER_LEN);
 	BindParamVarChar(drawLotteryInfo.strLastIssueNumber, ISSUE_NUMBER_LEN);
-	bResult = ExecuteDirect(TEXT("{call dbo.sp_GetLotteryUserOrders(?,?,?,?,?)}"));
-	if (!bResult)
+	bResult = ExecuteDirect(TEXT("{? = call dbo.sp_GetLotteryUserOrders(?,?,?,?,?)}"), errstr);
+	if (iError || !bResult)
 	{
-		GetLogFileHandle().ErrorLog("sp_GetLotteryUserOrders failed ... \n");
+		GetLogFileHandle().ErrorLog("%s %d Error[%d] Result[%d] sp_GetLotteryUserOrders error [%s]\n", \
+			__FUNCTION__, __LINE__, iError, bResult, errstr);
 		return false;
 	}
 	//if (IsFetchNoData())//有数据的时候再去取数据
@@ -132,18 +138,22 @@ bool LotteryDB::Ex_UpdateGameResult(LOTTERY_RESULT lotteryResult)
 {
 	CTicker timeLapser("Ex_UpdateGameResult");
 	bool bResult = false;
+	int iError = 0;
+	char errstr[2048] = { 0 };
 
 	ClearMoreResults();
 	InitBindParam();
+	BindParam(iError, SQL_PARAM_OUTPUT);
 	BindParam(lotteryResult.iTypeID);
 	BindParamVarChar(lotteryResult.strIssueNumber, ISSUE_NUMBER_LEN);
 	BindParamVarChar(lotteryResult.strLotteryNumber, NUMBER_LEN);
 	BindParamVarChar(lotteryResult.strLotteryColor, COLOR_LEN);
 	BindParam(lotteryResult.iControlType);
-	bResult = ExecuteDirect(TEXT("{call dbo.sp_UpdateLotteryResult(?,?,?,?,?)}"));
-	if (!bResult)
+	bResult = ExecuteDirect(TEXT("? = {call dbo.sp_UpdateLotteryResult(?,?,?,?,?)}"), errstr);
+	if (iError || !bResult)
 	{
-		GetLogFileHandle().ErrorLog("sp_GetLotteryUserOrders failed ... \n");
+		GetLogFileHandle().ErrorLog("%s %d Error[%d] Result[%d] sp_GetLotteryUserOrders error [%s]\n",\
+			__FUNCTION__, __LINE__, iError, bResult, errstr);
 		return false;
 	}
 
