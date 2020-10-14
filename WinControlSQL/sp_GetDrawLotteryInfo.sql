@@ -29,11 +29,6 @@ GO
 CREATE PROCEDURE [dbo].[sp_GetDrawLotteryInfo]
 AS
 BEGIN
-
-	--控制总开关是否开启
-	if (select ISNULL(GameUpdateNumberOpen,0) from [9lottery].dbo.tab_GameNumberSet) = 0
-		return
-	
 	--控制信息变量
 	declare @UserControled int = 0
 	declare @ControlRate int = 0
@@ -132,6 +127,7 @@ BEGIN
 			select @TypeID, @UserControled, @ControlRate, @PowerControl, @CurrentIssueNumber, @LastIssueNumber, @BeginIssueNumber
 		end
 	end
+
 END
 
 
