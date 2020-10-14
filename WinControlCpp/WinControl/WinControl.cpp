@@ -511,7 +511,7 @@ void ProcessLogFileOnZeroOfDay()
 		GetLogFileHandle().BackupFile(szTargetFile, szTargetFile);
 	}
 #else
-	char szTargetFile[LOG_FILE_NAME_LEN] = { 0 };
+	char szTargetFile[MAX_PATH] = { 0 };
 	GetLogFileHandle().GetLogFileName(szTargetFile, 1);
 	GetLogFileHandle().BackupFile(szTargetFile, szTargetFile);
 	GetLogFileHandle().GetLogFileName(szTargetFile, 2);
