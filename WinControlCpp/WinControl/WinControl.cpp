@@ -570,11 +570,14 @@ void LoopCheckLottery()
 		return;
 	}
 
+	char szLogFileName[MAX_PATH] = { 0 };
+	GetLogFileHandle().GetLogFileName(szLogFileName, 1);
 	while (true)
 	{
 		//检查是否是开奖的时间，每分钟的第50秒
 		if (IsDrawLotterySecond())
 		{
+			GetLogFileHandle().InfoLogToFileNoTime(szLogFileName, "\n");
 			GetLogFileHandle().InfoLog("%s %d thread(%d) begin new round check drawing lottery\n",
 				__FUNCTION__, __LINE__, GetCurrentThreadId());
 			DRAW_LOTTERY_PERIOD_QUEUE tagDrawLotteryQueue;
@@ -596,7 +599,8 @@ void LoopCheckLottery()
 							tagDrawLotteryPeriod.strLastIssueNumber, tagDrawLotteryPeriod.strBeginIssueNumber);
 					}
 				}
-				GetLogFileHandle().InfoLog("%s %d thread(%d) end new round check drawing lottery\n\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
+				GetLogFileHandle().InfoLog("%s %d thread(%d) end new round check drawing lottery\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
+				GetLogFileHandle().InfoLogToFileNoTime(szLogFileName, "\n");
 				LotteryConditionVariable.notify_all();
 			}
 		}
@@ -607,6 +611,7 @@ void LoopCheckLottery()
 				ProcessLogFileOnZeroOfDay();//备份日志
 			}
 			gLotteryStatistic.OutputStats();//写入统计信息
+			GetLogFileHandle().GetLogFileName(szLogFileName, 1);
 
 			Sleep(50);
 		}

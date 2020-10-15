@@ -19,6 +19,7 @@ public:
 	void ErrorLogToFile(const char* pFileName, const char* msg, ...);
 	void InfoLog(const char* msg, ...);
 	void InfoLogToFile(const char* pFileName, const char* msg, ...);
+	void InfoLogToFileNoTime(const char* pFileName, const char* msg, ...);
 	void WriteLogFile(int nPriority, const char* msg, ...);//更具优先级写入日志
 	void LogToFile(const char* pszLogFile, const char* msg, ...);
 	void LogToFileByDay(const char* pszLogFile, const char* msg, ...);

@@ -249,6 +249,41 @@ void CLogFile::InfoLogToFile(const char* pFileName, const char* msg, ...)
 	va_end(args);
 }
 
+void CLogFile::InfoLogToFileNoTime(const char* pFileName, const char* msg, ...)
+{
+	va_list args;
+	va_start(args, msg);
+
+	LockGuard lockGuard(m_Mutex);
+	char szLogFile[MAX_PATH];
+	snprintf(szLogFile, sizeof(szLogFile) - 1, "%s%s", m_szLogPath, pFileName);
+	FILE *pFile = NULL;
+	fopen_s(&pFile, szLogFile, "a+");
+	if (NULL == pFile)
+	{
+		char szTempLogFile[MAX_PATH];
+		strncpy(szTempLogFile, szLogFile, sizeof(szTempLogFile) - 1);
+		char *pTemp = strrchr(szTempLogFile, '/');
+		if (pTemp == NULL)
+		{
+			return;
+		}
+		*pTemp = 0;
+		if (_access(szTempLogFile, 0) != 0)
+		{
+			CreatePath(szTempLogFile);
+		}
+		fopen_s(&pFile, szLogFile, "a+");
+	}
+	if (pFile)
+	{
+		vfprintf(pFile, msg, args);
+		fclose(pFile);
+	}
+
+	va_end(args);
+}
+
 void CLogFile::WriteToLogFile(const char* pFileName, const char* msg, va_list& args, char *pAddStr)
 {
 	LockGuard lockGuard(m_Mutex);
