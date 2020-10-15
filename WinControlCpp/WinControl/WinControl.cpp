@@ -5,6 +5,7 @@
 #include "LotteryStatistic.h"
 #include <iostream>
 #include <thread>
+#include <algorithm>
 
 using namespace std;
 
@@ -390,11 +391,12 @@ bool ProcessControledUserOrder(LOTTERY_ORDER_DATA& lotteryOrderData, bool& bUser
 	else
 	{
 		GetLogFileHandle().InfoLog("%s %d no controled user.\n", __FUNCTION__, __LINE__);
+		return true;
 	}
 
 	if (bUserControled)
 	{
-		GetLogFileHandle().InfoLog("%s %d strControlUserMostBonusBet %s deleted in lottery 10 results.\n",
+		GetLogFileHandle().InfoLog("%s %d ControlUserMostBonusBet %s deleted in lottery 10 results.\n",
 				__FUNCTION__, __LINE__, strControlUserMostBonusBet);
 		DeleteUserControlType(lotteryOrderData.vecLottery10Results, strControlUserMostBonusBet);
 	}

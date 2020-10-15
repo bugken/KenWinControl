@@ -36,14 +36,14 @@ using namespace std;
 #define COLOR_LEN			20 
 #define NUMBER_LEN			10
 #define BUFF64				64
-#define WORKERS_THREAD_NUM	1//工作线程数量
-#define LOTTERY_RESULT_NUM	10//投注最终结果个数
+#define WORKERS_THREAD_NUM	1	//工作线程数量
+#define LOTTERY_RESULT_NUM	10	//投注最终结果个数
 #define LOG_FILE_NAME_LEN	100
 
-#define WIN_RATE_NUMBER 9
-#define WIN_RATE_VIOLET 5.5
-#define WIN_RATE_SIZE 2
-#define WIN_RATE_SMALL_BIG 2
+#define WIN_RATE_NUMBER		9
+#define WIN_RATE_VIOLET		5.5
+#define WIN_RATE_SIZE		2
+#define WIN_RATE_SMALL_BIG	2
 
 #define GAME_TYPE_MAX 4
 
@@ -148,9 +148,6 @@ typedef struct _ORDERS_TEN_RESULTS
 	_ORDERS_TEN_RESULTS()
 	{
 		memset(this, 0, sizeof(*this));
-	}
-	bool operator < (const _ORDERS_TEN_RESULTS &that)const {
-		return fWinRate < that.fWinRate;
 	}
 }ORDERS_TEN_RESULTS;
 typedef std::vector<ORDERS_TEN_RESULTS>  ORDERS_TEN_RESULTS_VEC;

@@ -99,6 +99,7 @@ bool LotteryDB::Ex_GetLotteryUserOrders(DRAW_LOTTERY_PERIOD drawLotteryInfo, LOT
 
 		CONTROLED_USER_ORDERS tagControledUserOrders;
 		ORDERS_TEN_RESULTS tagOrdersTenResults;
+		UINT32 uiItemsCounts = 0;
 		if (Fetch())
 		{
 			InitBindCol();
@@ -108,7 +109,7 @@ bool LotteryDB::Ex_GetLotteryUserOrders(DRAW_LOTTERY_PERIOD drawLotteryInfo, LOT
 			BindCol(tagOrdersTenResults.strSelectColor, sizeof(tagOrdersTenResults.strSelectColor));
 			BindCol(tagOrdersTenResults.uiAllTotalBonus);
 			BindCol(tagOrdersTenResults.fWinRate);
-			while (Fetch())
+			while (Fetch() && (++uiItemsCounts) <= LOTTERY_RESULT_NUM)
 			{
 				lotteryOrderData.vecLottery10Results.push_back(tagOrdersTenResults);
 				memset(&tagOrdersTenResults, 0, sizeof(tagOrdersTenResults));
@@ -151,7 +152,7 @@ bool LotteryDB::Ex_UpdateGameResult(LOTTERY_RESULT lotteryResult)
 	BindParamVarChar(lotteryResult.strLotteryNumber, NUMBER_LEN);
 	BindParamVarChar(lotteryResult.strLotteryColor, COLOR_LEN);
 	BindParam(lotteryResult.iControlType);
-	bResult = ExecuteDirect(TEXT("? = {call dbo.sp_UpdateLotteryResult(?,?,?,?,?)}"), errstr);
+	bResult = ExecuteDirect(TEXT("{? = call dbo.sp_UpdateLotteryResult(?,?,?,?,?)}"), errstr);
 	if (iError || !bResult)
 	{
 		GetLogFileHandle().ErrorLog("%s %d Error[%d] Result[%d] sp_GetLotteryUserOrders error [%s]\n",\
