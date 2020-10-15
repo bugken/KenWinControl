@@ -1,7 +1,7 @@
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_UpdateLotteryResult]    Script Date: 10/10/2020 17:30:32 ******/
+/****** Object:  StoredProcedure [dbo].[sp_UpdateLotteryResult]    Script Date: 10/15/2020 16:50:43 ******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_UpdateLotteryResult]') AND type in (N'P', N'PC'))
 DROP PROCEDURE [dbo].[sp_UpdateLotteryResult]
 GO
@@ -9,7 +9,7 @@ GO
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_UpdateLotteryResult]    Script Date: 10/10/2020 17:30:32 ******/
+/****** Object:  StoredProcedure [dbo].[sp_UpdateLotteryResult]    Script Date: 10/15/2020 16:50:43 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -20,7 +20,9 @@ GO
 
 
 
+
 CREATE PROCEDURE [dbo].[sp_UpdateLotteryResult]
+	@RetID int = 0 output,
 	@InTypeID int = 1,
 	@InCurrentIssueNumber varchar(30) = '',
 	@InNumber varchar(30) = '',
@@ -31,13 +33,15 @@ BEGIN
 	--总控制开关
 	if (select ISNULL(GameUpdateNumberOpen,0) from [9lottery].dbo.tab_GameNumberSet) = 0
 	begin
-		--print '控制开关未开启或该期已经预设'
+		--print '控制开关未开启'
+		set @RetID = 1 --控制开关未开启
 		return
 	end
 	--单控开关
 	if (select ISNULL(ControlEnabled,0) from [9lottery].dbo.tab_GameType where TypeID=@InTypeID) = 0
 	begin
 		--print '控制开关未开启或该期已经预设'
+		set @RetID = 2 --单控开关未开启
 		return
 	end
 	--单个控制开关 预设
@@ -55,10 +59,16 @@ BEGIN
 	begin
 		update [9lottery].dbo.tab_Games set Premium = @RandNumVar, Number = @InNumber, Colour = @InColor
 			where TypeID = @InTypeID and IssueNumber = @InCurrentIssueNumber
+		insert into [9lottery].dbo.tab_Game_Control_Log(TypeID, IssueNumber, OldPremium, OldNumber, OldColour, NewPremium, NewNumber, NewColour, ControlType, UpdateTime)
+			values(@InTypeID, @InCurrentIssueNumber, @BeforePrenium, @BeforeSelectTypeNum, @BeforeSelectTypeColor, @RandNumVar, @InNumber, @InColor, @InControlType, getdate())
+		set @RetID = 0
 	end
-	insert into [9lottery].dbo.tab_Game_Control_Log(TypeID, IssueNumber, OldPremium, OldNumber, OldColour, NewPremium, NewNumber, NewColour, ControlType, UpdateTime)
-		values(@InTypeID, @InCurrentIssueNumber, @BeforePrenium, @BeforeSelectTypeNum, @BeforeSelectTypeColor, @RandNumVar, @InNumber, @InColor, @InControlType, getdate())
+	else
+	begin
+		set @RetID = 3--未在更新时间内或已经预设或已经开奖
+	end
 END
+
 
 
 

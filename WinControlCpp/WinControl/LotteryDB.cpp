@@ -137,7 +137,7 @@ bool LotteryDB::Ex_GetLotteryUserOrders(DRAW_LOTTERY_PERIOD drawLotteryInfo, LOT
 	return true;
 }
 
-bool LotteryDB::Ex_UpdateGameResult(LOTTERY_RESULT lotteryResult)
+bool LotteryDB::Ex_UpdateGameResult(LOTTERY_RESULT lotteryResult, UINT32& uiRetID)
 {
 	CTicker timeLapser("Ex_UpdateGameResult");
 	bool bResult = false;
@@ -147,12 +147,13 @@ bool LotteryDB::Ex_UpdateGameResult(LOTTERY_RESULT lotteryResult)
 	ClearMoreResults();
 	InitBindParam();
 	BindParam(iError, SQL_PARAM_OUTPUT);
+	BindParam(uiRetID, SQL_PARAM_OUTPUT);
 	BindParam(lotteryResult.iTypeID);
 	BindParamVarChar(lotteryResult.strIssueNumber, ISSUE_NUMBER_LEN);
 	BindParamVarChar(lotteryResult.strLotteryNumber, NUMBER_LEN);
 	BindParamVarChar(lotteryResult.strLotteryColor, COLOR_LEN);
 	BindParam(lotteryResult.iControlType);
-	bResult = ExecuteDirect(TEXT("{? = call dbo.sp_UpdateLotteryResult(?,?,?,?,?)}"), errstr);
+	bResult = ExecuteDirect(TEXT("{? = call dbo.sp_UpdateLotteryResult(?,?,?,?,?,?)}"), errstr);
 	if (iError || !bResult)
 	{
 		GetLogFileHandle().ErrorLog("%s %d Error[%d] Result[%d] sp_GetLotteryUserOrders error [%s]\n",\

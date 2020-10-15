@@ -441,9 +441,10 @@ void LotteryProcessWorker()
 		LOTTERY_ORDER_DATA tagLotteryOrderData;
 		LOTTERY_RESULT tagLotteryResult;
 		bool bUserControled = false;//是否单控
+		UINT32 uiRetID = 0;
 
 		bool bResult = lotteryDB.Ex_GetLotteryUserOrders(tagDrawLotteryInfo, tagLotteryOrderData);
-		if (bResult && tagLotteryOrderData.uiUsersBetCounts >= 5)
+		if (bResult && tagLotteryOrderData.uiUsersBetCounts >= 1)
 		{
 			bResult = ProcessControledUserOrder(tagLotteryOrderData, bUserControled);
 		}
@@ -463,13 +464,27 @@ void LotteryProcessWorker()
 		}
 		if (bResult)
 		{
-			lotteryDB.Ex_UpdateGameResult(tagLotteryResult);
 			GetLogFileHandle().InfoLog("game final result as bellow:\n");
 			GetLogFileHandle().InfoLog("TypeID:%d, IssueNumber:%s, LotteryNumber:%s, LotteryColor:%s, ControlType:%d\n", \
 				tagLotteryResult.iTypeID, tagLotteryResult.strIssueNumber, tagLotteryResult.strLotteryNumber, \
 				tagLotteryResult.strLotteryColor, tagLotteryResult.iControlType);
+			lotteryDB.Ex_UpdateGameResult(tagLotteryResult, uiRetID);
+			if (1 == uiRetID)
+			{
+				GetLogFileHandle().InfoLog("TypeID:%d, IssueNumber:%s, %s", \
+					tagLotteryResult.iTypeID, tagLotteryResult.strIssueNumber, "控制开关未开启");
+			}
+			else if (2 == uiRetID)
+			{
+				GetLogFileHandle().InfoLog("TypeID:%d, IssueNumber:%s, %s", \
+					tagLotteryResult.iTypeID, tagLotteryResult.strIssueNumber, "单控开关未开启");
+			}
+			else if (3 == uiRetID)
+			{
+				GetLogFileHandle().InfoLog("TypeID:%d, IssueNumber:%s, %s", \
+					tagLotteryResult.iTypeID, tagLotteryResult.strIssueNumber, "未在更新时间内或已经预设或已经开奖");
+			}
 		}
-			
 		GetLogFileHandle().InfoLog("%s %d lottery worker process(%d) end\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
 	}
 }

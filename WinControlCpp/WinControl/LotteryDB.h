@@ -14,7 +14,7 @@ public:
 	bool DBConnect();
 	bool Ex_GetDrawLottery(DRAW_LOTTERY_PERIOD_QUEUE& queueDrawLotteryItems);
 	bool Ex_GetLotteryUserOrders(DRAW_LOTTERY_PERIOD drawLotteryInfo, LOTTERY_ORDER_DATA& lotteryOrderData);
-	bool Ex_UpdateGameResult(LOTTERY_RESULT tagLotteryResult);
+	bool Ex_UpdateGameResult(LOTTERY_RESULT tagLotteryResult, UINT32& uiRetID);
 private:
 	static CLogFile* pLogFile;
 };
