@@ -107,6 +107,7 @@ using namespace std;
 #define CONDITION_VARIABLE condition_variable
 #define MUTEX mutex
 #define LockGuard lock_guard<mutex> 
+#define LockUnique unique_lock<mutex>
 
 //当前时间
 typedef struct _CurrentTime
@@ -166,6 +167,19 @@ typedef struct _CONTROLED_USER_ORDERS
 }CONTROLED_USER_ORDERS;
 typedef std::vector<CONTROLED_USER_ORDERS>  CONTROLED_USER_ORDERS_VEC;
 
+typedef struct  _LOTTERY_ORDER_STAT
+{
+	UINT32 uiUsersBetCounts;//下注人数
+	UINT64 uiAllBet;//所有下注
+	UINT64 uiAllBetAsOfLast;//截止上期下注
+	UINT64 uiBonusAlready;//已经发放的彩金
+	float fWinRateAsOfLast;//截止上期赢率
+	_LOTTERY_ORDER_STAT()
+	{
+		memset(this, 0, sizeof(*this));
+	}
+}LOTTERY_ORDER_STAT;
+
 typedef struct  _LOTTERY_ORDER_DATA
 {
 	UINT32 uiUsersBetCounts;//下注人数
@@ -173,8 +187,8 @@ typedef struct  _LOTTERY_ORDER_DATA
 	UINT64 uiAllBetAsOfLast;//截止上期下注
 	UINT64 uiBonusAlready;//已经发放的彩金
 	float fWinRateAsOfLast;//截止上期赢率
-	ORDERS_TEN_RESULTS_VEC vecLottery10Results;//下注的10种可能结果
-	CONTROLED_USER_ORDERS_VEC vecControlUserOrders;//受控玩家下注
+	CONTROLED_USER_ORDERS_VEC vecControlUserOrders;
+	ORDERS_TEN_RESULTS_VEC vecLottery10Results;
 	_LOTTERY_ORDER_DATA()
 	{
 		memset(this, 0, sizeof(*this));

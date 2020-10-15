@@ -294,14 +294,6 @@ bool GetLotteryFinalResult(ORDERS_TEN_RESULTS_VEC lottery10ResultsVec, float fWi
 	float fTargetWinRate = (float)(iControlRate * 1.0 / 10000);
 	sort(lottery10ResultsVec.begin(), lottery10ResultsVec.end(), DescSort);
 
-	GetLogFileHandle().InfoLog("%s %d TargetWinRate:%f, totally %d results as bellow:\n", __FUNCTION__, __LINE__, fTargetWinRate, iVecSize);
-	for (auto result : lottery10ResultsVec)
-	{
-		GetLogFileHandle().InfoLog("TypeID:%d, IssueNumber:%s, SelectNumber:%s, SelectColor:%s, AllTotalBonus:%I64u, WinRate:%f\n", \
-			result.iTypeID, result.strIssueNumber, result.strSelectNumber, \
-			result.strSelectColor, result.uiAllTotalBonus, result.fWinRate);
-	}
-
 	if (CONTROL_POWER_STRONG == iPowerControl)//强拉
 	{
 		if (fWinRateAsOfLast <= fTargetWinRate)
@@ -381,13 +373,13 @@ bool GetLotteryFinalResult(ORDERS_TEN_RESULTS_VEC lottery10ResultsVec, float fWi
 	return true;
 }
 
-bool ProcessControledUserOrder(LOTTERY_ORDER_DATA& lotteryOrderData, bool& bUserControled)
+bool ProcessControledUserOrder(CONTROLED_USER_ORDERS_VEC vecControlUserOrders, ORDERS_TEN_RESULTS_VEC& vecLottery10Results)
 {
 	CTicker timeLapser("ProcessControledUserOrder");
 	char strControlUserMostBonusBet[BUFF64] = {0};
-	if (lotteryOrderData.vecControlUserOrders.size() > 0)
+	if (vecControlUserOrders.size() > 0)
 	{
-		bUserControled = GetControlUserMostBonusBet(lotteryOrderData.vecControlUserOrders, strControlUserMostBonusBet);
+		GetControlUserMostBonusBet(vecControlUserOrders, strControlUserMostBonusBet);
 	}
 	else
 	{
@@ -395,12 +387,9 @@ bool ProcessControledUserOrder(LOTTERY_ORDER_DATA& lotteryOrderData, bool& bUser
 		return true;
 	}
 
-	if (bUserControled)
-	{
-		GetLogFileHandle().InfoLog("%s %d ControlUserMostBonusBet %s deleted in lottery 10 results.\n",
-				__FUNCTION__, __LINE__, strControlUserMostBonusBet);
-		DeleteUserControlType(lotteryOrderData.vecLottery10Results, strControlUserMostBonusBet);
-	}
+	DeleteUserControlType(vecLottery10Results, strControlUserMostBonusBet);
+	GetLogFileHandle().InfoLog("%s %d ControlUserMostBonusBet %s deleted in lottery 10 results.\n",
+		__FUNCTION__, __LINE__, strControlUserMostBonusBet);
 
 	return true;
 }
@@ -423,11 +412,12 @@ void LotteryProcessWorker()
 	printf("work thread id: %d\n", GetCurrentThreadId());
 	LotteryDB lotteryDB;
 	lotteryDB.DBConnect();
+
 	while (true)
 	{
 		DRAW_LOTTERY_PERIOD tagDrawLotteryInfo;
 		{
-			std::unique_lock<std::mutex> LotteryLock(LotteryMutex);
+			LockUnique LotteryLock(LotteryMutex);
 			LotteryConditionVariable.wait(LotteryLock, []{return !DrawLotteryQueue.empty();});
 			tagDrawLotteryInfo = DrawLotteryQueue.front();
 			DrawLotteryQueue.pop();
@@ -439,42 +429,70 @@ void LotteryProcessWorker()
 			tagDrawLotteryInfo.iPowerControl, tagDrawLotteryInfo.strCurrentIssueNumber, \
 			tagDrawLotteryInfo.strLastIssueNumber, tagDrawLotteryInfo.strBeginIssueNumber);
 
-		LOTTERY_ORDER_DATA tagLotteryOrderData;
-		LOTTERY_RESULT tagLotteryResult;
-		bool bUserControled = false;//是否单控
 		UINT32 uiRetID = 0;
+		float fTargetWinRate = 0.0;
+		bool bUserControled = false;//是否单控
+		bool bReturn = false, bReStatistic = false;
+		bool bRet10Results = false, bRetControledUserOrders = false;
+		LOTTERY_ORDER_STAT tagLotteryOrderStat;
+		ORDERS_TEN_RESULTS_VEC tagOrder10ResultsVec;
+		CONTROLED_USER_ORDERS_VEC tagControledUserOrdersVec;
+		LOTTERY_RESULT tagLotteryResult;
 
-		bool bResult = lotteryDB.Ex_GetLotteryUserOrders(tagDrawLotteryInfo, tagLotteryOrderData);
-		if (bResult && tagLotteryOrderData.uiUsersBetCounts >= 1)
+		//获取统计信息 10中结果 单控用户订单
+		bReStatistic = lotteryDB.Ex_GetLotteryStatistic(tagDrawLotteryInfo, tagLotteryOrderStat);
+		bRet10Results = lotteryDB.Ex_GetLottery10Results(tagDrawLotteryInfo, tagLotteryOrderStat.uiBonusAlready,
+					tagLotteryOrderStat.uiAllBet, tagOrder10ResultsVec);
+		bRetControledUserOrders = lotteryDB.Ex_GetControledUserOrders(tagDrawLotteryInfo, tagControledUserOrdersVec);
+		if (!bReStatistic || !bRet10Results || !bRetControledUserOrders)
 		{
-			bResult = ProcessControledUserOrder(tagLotteryOrderData, bUserControled);
-		}
-		else
-		{
-			GetLogFileHandle().InfoLog("TypeID:%d, CurrentIssueNumber:%s bet users counts:%d < 5\n", \
-				tagDrawLotteryInfo.iTypeID, tagDrawLotteryInfo.strCurrentIssueNumber, tagLotteryOrderData.uiUsersBetCounts);
+			GetLogFileHandle().InfoLog("TypeID:%d, CurrentIssueNumber:%s get order statistic or ten results or controled user order failed\n", \
+				tagDrawLotteryInfo.iTypeID, tagDrawLotteryInfo.strCurrentIssueNumber);
 			GetLogFileHandle().InfoLog("%s %d lottery worker process(%d) end\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
 			continue;
 		}
-			
-		if (bResult)
+		if (tagLotteryOrderStat.uiUsersBetCounts < 1)
 		{
-			bResult = GetLotteryFinalResult(tagLotteryOrderData.vecLottery10Results,
-				tagLotteryOrderData.fWinRateAsOfLast, bUserControled, tagDrawLotteryInfo.iControlRate,
-				tagDrawLotteryInfo.iPowerControl, tagLotteryResult);
+			GetLogFileHandle().InfoLog("TypeID:%d, CurrentIssueNumber:%s bet users counts:%d < 5\n", \
+				tagDrawLotteryInfo.iTypeID, tagDrawLotteryInfo.strCurrentIssueNumber, tagLotteryOrderStat.uiUsersBetCounts);
+			GetLogFileHandle().InfoLog("%s %d lottery worker process(%d) end\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
+			continue;
 		}
-		if (bResult)
+
+		//处理单控玩家数据
+		if (tagDrawLotteryInfo.iUserControled > 0 && tagControledUserOrdersVec.size() > 0)
 		{
-			GetLogFileHandle().InfoLog("game final result as bellow:\n");
-			GetLogFileHandle().InfoLog("TypeID:%d, IssueNumber:%s, LotteryNumber:%s, LotteryColor:%s, ControlType:%d\n", \
-				tagLotteryResult.iTypeID, tagLotteryResult.strIssueNumber, tagLotteryResult.strLotteryNumber, \
-				tagLotteryResult.strLotteryColor, tagLotteryResult.iControlType);
-			lotteryDB.Ex_UpdateGameResult(tagLotteryResult, uiRetID);
-			if (0 != uiRetID)
-			{
-				GetLogFileHandle().InfoLog("TypeID:%d, IssueNumber:%s, %s\n", \
-					tagLotteryResult.iTypeID, tagLotteryResult.strIssueNumber, GetErrorString(uiRetID).c_str());
-			}
+			bUserControled = true;
+			ProcessControledUserOrder(tagControledUserOrdersVec, tagOrder10ResultsVec);
+		}
+		else
+		{
+			GetLogFileHandle().InfoLog("%s %d no controled user.\n", __FUNCTION__, __LINE__);
+		}
+
+		//得到最终结果
+		fTargetWinRate = (float)(tagDrawLotteryInfo.iControlRate * 1.0 / 10000);
+		GetLogFileHandle().InfoLog("%s %d TargetWinRate:%f, totally %d results as bellow:\n", 
+			__FUNCTION__, __LINE__, fTargetWinRate, tagOrder10ResultsVec.size());
+		for (auto result : tagOrder10ResultsVec)
+		{
+			GetLogFileHandle().InfoLog("TypeID:%d, IssueNumber:%s, SelectNumber:%s, SelectColor:%s, AllTotalBonus:%I64u, WinRate:%f\n", \
+				result.iTypeID, result.strIssueNumber, result.strSelectNumber, \
+				result.strSelectColor, result.uiAllTotalBonus, result.fWinRate);
+		}
+		GetLotteryFinalResult(tagOrder10ResultsVec, tagLotteryOrderStat.fWinRateAsOfLast,
+			bUserControled, tagDrawLotteryInfo.iControlRate, tagDrawLotteryInfo.iPowerControl, tagLotteryResult);
+
+		//更新Game表
+		GetLogFileHandle().InfoLog("game final result as bellow:\n");
+		GetLogFileHandle().InfoLog("TypeID:%d, IssueNumber:%s, LotteryNumber:%s, LotteryColor:%s, ControlType:%d\n", \
+			tagLotteryResult.iTypeID, tagLotteryResult.strIssueNumber, tagLotteryResult.strLotteryNumber, \
+			tagLotteryResult.strLotteryColor, tagLotteryResult.iControlType);
+		lotteryDB.Ex_UpdateGameResult(tagLotteryResult, uiRetID);
+		if (0 != uiRetID)
+		{
+			GetLogFileHandle().InfoLog("TypeID:%d, IssueNumber:%s, %s\n", \
+				tagLotteryResult.iTypeID, tagLotteryResult.strIssueNumber, GetErrorString(uiRetID).c_str());
 		}
 		GetLogFileHandle().InfoLog("%s %d lottery worker process(%d) end\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
 	}

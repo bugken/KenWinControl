@@ -137,6 +137,133 @@ bool LotteryDB::Ex_GetLotteryUserOrders(DRAW_LOTTERY_PERIOD drawLotteryInfo, LOT
 	return true;
 }
 
+bool LotteryDB::Ex_GetLotteryStatistic(DRAW_LOTTERY_PERIOD drawLotteryInfo, LOTTERY_ORDER_STAT& lotteryOrderStat)
+{
+	CTicker timeLapser("Ex_GetLotteryStatistic");
+	bool bResult = false;
+	int iError = 0;
+	char errstr[2048] = { 0 };
+
+	ClearMoreResults();
+	InitBindParam();
+	BindParam(iError, SQL_PARAM_OUTPUT);
+	BindParam(drawLotteryInfo.iUserControled);
+	BindParam(drawLotteryInfo.iTypeID);
+	BindParamVarChar(drawLotteryInfo.strBeginIssueNumber, ISSUE_NUMBER_LEN);
+	BindParamVarChar(drawLotteryInfo.strCurrentIssueNumber, ISSUE_NUMBER_LEN);
+	BindParamVarChar(drawLotteryInfo.strLastIssueNumber, ISSUE_NUMBER_LEN);
+	bResult = ExecuteDirect(TEXT("{? = call dbo.sp_GetLotteryStatistic(?,?,?,?,?)}"), errstr);
+	if (iError || !bResult)
+	{
+		GetLogFileHandle().ErrorLog("%s %d Error[%d] Result[%d] sp_GetLotteryStatistic error [%s]\n", \
+			__FUNCTION__, __LINE__, iError, bResult, errstr);
+		return false;
+	}
+
+	InitBindCol();
+	BindCol(lotteryOrderStat.uiUsersBetCounts);
+	BindCol(lotteryOrderStat.uiAllBet);
+	BindCol(lotteryOrderStat.uiAllBetAsOfLast);
+	BindCol(lotteryOrderStat.uiBonusAlready);
+	BindCol(lotteryOrderStat.fWinRateAsOfLast);
+	Fetch();
+
+	ClearMoreResults();
+
+	return true;
+}
+bool LotteryDB::Ex_GetLottery10Results(DRAW_LOTTERY_PERIOD drawLotteryInfo, UINT64 ulBonusAlready, UINT64 ulAllBet, ORDERS_TEN_RESULTS_VEC& order10ResultsVec)
+{
+	CTicker timeLapser("Ex_GetLottery10Results");
+	bool bResult = false;
+	int iError = 0;
+	char errstr[2048] = { 0 };
+
+	ClearMoreResults();
+	InitBindParam();
+	BindParam(iError, SQL_PARAM_OUTPUT);
+	BindParam(ulBonusAlready);
+	BindParam(ulAllBet);
+	BindParam(drawLotteryInfo.iUserControled);
+	BindParam(drawLotteryInfo.iTypeID);
+	BindParamVarChar(drawLotteryInfo.strBeginIssueNumber, ISSUE_NUMBER_LEN);
+	BindParamVarChar(drawLotteryInfo.strCurrentIssueNumber, ISSUE_NUMBER_LEN);
+	BindParamVarChar(drawLotteryInfo.strLastIssueNumber, ISSUE_NUMBER_LEN);
+	bResult = ExecuteDirect(TEXT("{? = call dbo.sp_GetLottery10Results(?,?,?,?,?)}"), errstr);
+	if (iError || !bResult)
+	{
+		GetLogFileHandle().ErrorLog("%s %d Error[%d] Result[%d] sp_GetLottery10Results error [%s]\n", \
+			__FUNCTION__, __LINE__, iError, bResult, errstr);
+		return false;
+	}
+
+	ORDERS_TEN_RESULTS tagOrdersTenResults;
+	UINT32 uiItemsCounts = 0;
+	InitBindCol();
+	BindCol(tagOrdersTenResults.iTypeID);
+	BindCol(tagOrdersTenResults.strIssueNumber, sizeof(tagOrdersTenResults.strIssueNumber));
+	BindCol(tagOrdersTenResults.strSelectNumber, sizeof(tagOrdersTenResults.strSelectNumber));
+	BindCol(tagOrdersTenResults.strSelectColor, sizeof(tagOrdersTenResults.strSelectColor));
+	BindCol(tagOrdersTenResults.uiAllTotalBonus);
+	BindCol(tagOrdersTenResults.fWinRate);
+	while (Fetch() && (++uiItemsCounts) <= LOTTERY_RESULT_NUM)
+	{
+		order10ResultsVec.push_back(tagOrdersTenResults);
+		memset(&tagOrdersTenResults, 0, sizeof(tagOrdersTenResults));
+	}
+
+	ClearMoreResults();
+
+	return true;
+}
+bool LotteryDB::Ex_GetControledUserOrders(DRAW_LOTTERY_PERIOD drawLotteryInfo, CONTROLED_USER_ORDERS_VEC& controledUserOrdersVec)
+{
+	CTicker timeLapser("Ex_GetControledUserOrders");
+	bool bResult = false;
+	int iError = 0;
+	char errstr[2048] = { 0 };
+
+	if (drawLotteryInfo.iUserControled <= 0)
+	{
+		return true;
+	}
+
+	ClearMoreResults();
+	InitBindParam();
+	BindParam(iError, SQL_PARAM_OUTPUT);
+	BindParam(drawLotteryInfo.iUserControled);
+	BindParam(drawLotteryInfo.iTypeID);
+	BindParamVarChar(drawLotteryInfo.strBeginIssueNumber, ISSUE_NUMBER_LEN);
+	BindParamVarChar(drawLotteryInfo.strCurrentIssueNumber, ISSUE_NUMBER_LEN);
+	BindParamVarChar(drawLotteryInfo.strLastIssueNumber, ISSUE_NUMBER_LEN);
+	bResult = ExecuteDirect(TEXT("{? = call dbo.sp_GetControledUserOrders(?,?,?,?,?)}"), errstr);
+	if (iError || !bResult)
+	{
+		GetLogFileHandle().ErrorLog("%s %d Error[%d] Result[%d] sp_GetControledUserOrders error [%s]\n", \
+			__FUNCTION__, __LINE__, iError, bResult, errstr);
+		return false;
+	}
+	
+	if (drawLotteryInfo.iUserControled > 0)
+	{
+		CONTROLED_USER_ORDERS tagControledUserOrders;
+		InitBindCol();
+		BindCol(tagControledUserOrders.iTypeID);
+		BindCol(tagControledUserOrders.strIssueNumber, sizeof(tagControledUserOrders.strIssueNumber));
+		BindCol(tagControledUserOrders.strSelectType, sizeof(tagControledUserOrders.strSelectType));
+		BindCol(tagControledUserOrders.uiTotalBonus);
+		while (Fetch())
+		{
+			controledUserOrdersVec.push_back(tagControledUserOrders);
+			memset(&tagControledUserOrders, 0, sizeof(tagControledUserOrders));
+		}
+	}
+
+	ClearMoreResults();
+
+	return true;
+}
+
 bool LotteryDB::Ex_UpdateGameResult(LOTTERY_RESULT lotteryResult, UINT32& uiRetID)
 {
 	CTicker timeLapser("Ex_UpdateGameResult");
