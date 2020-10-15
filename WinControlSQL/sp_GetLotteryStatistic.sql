@@ -31,26 +31,30 @@ AS
 BEGIN
 	SET NOCOUNT ON
 	
-	--计算投注人数
-	declare @UserCounts int = 0
-	select @UserCounts = count(UserCounts) from 
-			(select count(distinct UserID) UserCounts from [9lottery].[dbo].tab_GameOrder where IssueNumber = @InCurrentIssueNumber and TypeID = @InTypeID group by UserID) as t
-	
 	--计算区间投注金额 派彩金额
+	declare @UserCounts int = 0
 	declare @BonusAlready decimal(20, 2) = 0.0 --派彩金额
 	declare @AllBet decimal(20, 2) = 0.0 --投注金额
 	declare @AllBetAsOfLast decimal(20, 2) = 0.0 --截止上期投注金额
 	declare @WinRateAsOfLast decimal(20, 2) = 0.0 --截止上期玩家赢率
-	select @AllBet = isnull(sum(RealAmount), 1) from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and IssueNumber >= @InBeginIssueNumber and IssueNumber <= @InCurrentIssueNumber
-	select @AllBetAsOfLast = isnull(sum(RealAmount), 1) from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and IssueNumber >= @InBeginIssueNumber and IssueNumber <= @InLastIssueNumber
-	select @BonusAlready = isnull(sum(ProfitAmount - RealAmount), 0) from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and IssueNumber >= @InBeginIssueNumber and IssueNumber <= @InLastIssueNumber
-	set @WinRateAsOfLast = isnull(@BonusAlready / @AllBetAsOfLast, 0)
+	declare @BetCurrentIssue decimal(20, 2) = 0.0 --当期投注金额
+	--使用top创建临时表,在临时表中读取数据效率高
+	select top 5000 UserID, TypeID, IssueNumber, RealAmount, ProfitAmount into #tabGameOrder 
+		from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID 
+	select @UserCounts = count(UserCounts) from 
+		(select count(distinct UserID) UserCounts from #tabGameOrder where IssueNumber = @InCurrentIssueNumber and TypeID = @InTypeID group by UserID) as t
+	select @BetCurrentIssue = sum(RealAmount) from #tabGameOrder where TypeID = @InTypeID and IssueNumber = @InCurrentIssueNumber
+	select @AllBetAsOfLast = sum(RealAmount), @BonusAlready = sum(ProfitAmount - RealAmount) from #tabGameOrder 
+		where TypeID = @InTypeID and IssueNumber >= @InBeginIssueNumber and IssueNumber <= @InLastIssueNumber
+	set @WinRateAsOfLast = @BonusAlready / @AllBetAsOfLast
+	set @AllBet = @BetCurrentIssue + @AllBetAsOfLast
+	drop table #tabGameOrder
+	
 	select @UserCounts, @AllBet, @AllBetAsOfLast, @BonusAlready, @WinRateAsOfLast
-	--print '投注金额@AllBet:' + isnull(cast(@AllBet as varchar(20)),0)
-	--print '截止上期投注金额@AllBetAsOfLast:' + isnull(cast(@AllBetAsOfLast as varchar(20)),0)
-	--print '已派彩金额@BonusAlready:' + isnull(cast(@BonusAlready as varchar(20)),0)
-	--print '截止上期赢率@WinRateAsOfLast:' + isnull(cast(@WinRateAsOfLast as varchar(20)),0)
 END
+
+
+
 
 
 
