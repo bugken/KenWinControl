@@ -3,6 +3,7 @@
 #include "LotteryDB.h"
 #include "LogFile.h"
 #include "LotteryStatistic.h"
+#include "ErrorID.h"
 #include <iostream>
 #include <thread>
 #include <algorithm>
@@ -469,20 +470,10 @@ void LotteryProcessWorker()
 				tagLotteryResult.iTypeID, tagLotteryResult.strIssueNumber, tagLotteryResult.strLotteryNumber, \
 				tagLotteryResult.strLotteryColor, tagLotteryResult.iControlType);
 			lotteryDB.Ex_UpdateGameResult(tagLotteryResult, uiRetID);
-			if (1 == uiRetID)
+			if (0 != uiRetID)
 			{
-				GetLogFileHandle().InfoLog("TypeID:%d, IssueNumber:%s, %s", \
-					tagLotteryResult.iTypeID, tagLotteryResult.strIssueNumber, "控制开关未开启");
-			}
-			else if (2 == uiRetID)
-			{
-				GetLogFileHandle().InfoLog("TypeID:%d, IssueNumber:%s, %s", \
-					tagLotteryResult.iTypeID, tagLotteryResult.strIssueNumber, "单控开关未开启");
-			}
-			else if (3 == uiRetID)
-			{
-				GetLogFileHandle().InfoLog("TypeID:%d, IssueNumber:%s, %s", \
-					tagLotteryResult.iTypeID, tagLotteryResult.strIssueNumber, "未在更新时间内或已经预设或已经开奖");
+				GetLogFileHandle().InfoLog("TypeID:%d, IssueNumber:%s, %s\n", \
+					tagLotteryResult.iTypeID, tagLotteryResult.strIssueNumber, GetErrorString(uiRetID).c_str());
 			}
 		}
 		GetLogFileHandle().InfoLog("%s %d lottery worker process(%d) end\n", __FUNCTION__, __LINE__, GetCurrentThreadId());

@@ -34,14 +34,14 @@ BEGIN
 	if (select ISNULL(GameUpdateNumberOpen,0) from [9lottery].dbo.tab_GameNumberSet) = 0
 	begin
 		--print '控制开关未开启'
-		set @RetID = 1 --控制开关未开启
+		set @RetID = 100001 --控制开关未开启
 		return
 	end
 	--单控开关
 	if (select ISNULL(ControlEnabled,0) from [9lottery].dbo.tab_GameType where TypeID=@InTypeID) = 0
 	begin
 		--print '控制开关未开启或该期已经预设'
-		set @RetID = 2 --单控开关未开启
+		set @RetID = 100002 --单控开关未开启
 		return
 	end
 	--单个控制开关 预设
@@ -65,7 +65,7 @@ BEGIN
 	end
 	else
 	begin
-		set @RetID = 3--未在更新时间内或已经预设或已经开奖
+		set @RetID = 100003--未在更新时间内或已经预设或已经开奖
 	end
 END
 
