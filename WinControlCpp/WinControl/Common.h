@@ -32,13 +32,14 @@ using namespace std;
 #include <unistd.h>
 #endif
 
-#define ISSUE_NUMBER_LEN	20                         
-#define COLOR_LEN			20 
-#define NUMBER_LEN			10
-#define BUFF64				64
-#define WORKERS_THREAD_NUM	1	//工作线程数量
-#define LOTTERY_RESULT_NUM	10	//投注最终结果个数
-#define LOG_FILE_NAME_LEN	100
+#define ISSUE_NUMBER_LEN			20                         
+#define COLOR_LEN					20 
+#define NUMBER_LEN					10
+#define BUFF64						64
+#define WORKERS_THREAD_NUM_MODE1	1	//工作模式1线程数量
+#define WORKERS_THREAD_NUM_MODE2	1	//工作模式2线程数量
+#define LOTTERY_RESULT_NUM			10	//投注最终结果个数
+#define LOG_FILE_NAME_LEN			100
 
 #define WIN_RATE_NUMBER		9
 #define WIN_RATE_VIOLET		5.5

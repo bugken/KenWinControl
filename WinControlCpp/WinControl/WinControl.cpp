@@ -422,9 +422,9 @@ void SetLogConf()
 	GetLogFileHandle().SetBakLogPath(szLogBackupDir);
 }
 
-void LotteryProcessWorker()
+void LotteryProcessWorkerMode1()
 {
-	printf("work thread id: %d\n", GetCurrentThreadId());
+	printf("work thread id: %d mode1\n", GetCurrentThreadId());
 	LotteryDB lotteryDB;
 	lotteryDB.DBConnect();
 
@@ -439,7 +439,7 @@ void LotteryProcessWorker()
 			LotteryLock.unlock();
 		}
 		{
-			CTicker timeLapser("LotteryProcessWorker");
+			CTicker timeLapser("LotteryProcessWorkerMode1");
 			GetLogFileHandle().InfoLog("%s %d lottery worker process(%d) begin\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
 			GetLogFileHandle().InfoLog("TypeID:%d, UserControled:%d, ControlRate:%d, PowerControl:%d, CurrentIssueNumber:%s, LastIssueNumber:%s, BeginIssueNumber:%s\n", \
 				tagDrawLotteryInfo.iTypeID, tagDrawLotteryInfo.iUserControled, tagDrawLotteryInfo.iControlRate, \
@@ -499,6 +499,91 @@ void LotteryProcessWorker()
 			}
 			GetLotteryFinalResult(tagOrder10ResultsVec, tagLotteryOrderStat.fWinRateAsOfLast,
 				bUserControled, tagDrawLotteryInfo.iControlRate, tagDrawLotteryInfo.iPowerControl, tagLotteryResult);
+
+			//更新Game表
+			GetLogFileHandle().InfoLog("game final result as bellow:\n");
+			GetLogFileHandle().InfoLog("TypeID:%d, IssueNumber:%s, LotteryNumber:%s, LotteryColor:%s, ControlType:%d\n", \
+				tagLotteryResult.iTypeID, tagLotteryResult.strIssueNumber, tagLotteryResult.strLotteryNumber, \
+				tagLotteryResult.strLotteryColor, tagLotteryResult.iControlType);
+			lotteryDB.Ex_UpdateGameResult(tagLotteryResult, uiRetID);
+			if (0 != uiRetID)
+			{
+				GetLogFileHandle().InfoLog("TypeID:%d, IssueNumber:%s, %s\n", \
+					tagLotteryResult.iTypeID, tagLotteryResult.strIssueNumber, GetErrorString(uiRetID).c_str());
+			}
+			GetLogFileHandle().InfoLog("%s %d lottery worker process(%d) end\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
+		}
+	}
+}
+
+void LotteryProcessWorkerMode2()
+{
+	printf("work thread id: %d mode2\n", GetCurrentThreadId());
+	LotteryDB lotteryDB;
+	lotteryDB.DBConnect();
+	while (true)
+	{
+		DRAW_LOTTERY_PERIOD tagDrawLotteryInfo;
+		{
+			LockUnique LotteryLock(LotteryMutex);
+			LotteryConditionVariable.wait(LotteryLock, []{return !DrawLotteryQueue.empty(); });
+			tagDrawLotteryInfo = DrawLotteryQueue.front();
+			DrawLotteryQueue.pop();
+			LotteryLock.unlock();
+		}
+		{
+			CTicker timeLapser("LotteryProcessWorkerMode1");
+			GetLogFileHandle().InfoLog("%s %d lottery worker process(%d) begin\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
+			GetLogFileHandle().InfoLog("TypeID:%d, UserControled:%d, ControlRate:%d, PowerControl:%d, CurrentIssueNumber:%s, LastIssueNumber:%s, BeginIssueNumber:%s\n", \
+				tagDrawLotteryInfo.iTypeID, tagDrawLotteryInfo.iUserControled, tagDrawLotteryInfo.iControlRate, \
+				tagDrawLotteryInfo.iPowerControl, tagDrawLotteryInfo.strCurrentIssueNumber, \
+				tagDrawLotteryInfo.strLastIssueNumber, tagDrawLotteryInfo.strBeginIssueNumber);
+		
+
+			UINT32 uiRetID = 0;
+			float fTargetWinRate = 0.0;
+			bool bUserControled = false;//是否单控
+			LOTTERY_ORDER_DATA tagLotteryOrderData;
+			LOTTERY_RESULT tagLotteryResult;
+
+			bool bResult = lotteryDB.Ex_GetLotteryUserOrders(tagDrawLotteryInfo, tagLotteryOrderData);
+			if (!bResult)
+			{
+				GetLogFileHandle().InfoLog("TypeID:%d, CurrentIssueNumber:%s get lottery user order failed\n", \
+					tagDrawLotteryInfo.iTypeID, tagDrawLotteryInfo.strCurrentIssueNumber);
+				GetLogFileHandle().InfoLog("%s %d lottery worker process(%d) end\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
+				continue;
+			}
+			if (tagLotteryOrderData.uiUsersBetCounts < 1)
+			{
+				GetLogFileHandle().InfoLog("TypeID:%d, CurrentIssueNumber:%s bet users counts:%d < 5\n", \
+					tagDrawLotteryInfo.iTypeID, tagDrawLotteryInfo.strCurrentIssueNumber, tagLotteryOrderData.uiUsersBetCounts);
+				GetLogFileHandle().InfoLog("%s %d lottery worker process(%d) end\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
+				continue;
+			}
+			if (tagDrawLotteryInfo.iUserControled > 0 && tagLotteryOrderData.vecControlUserOrders.size() > 0)
+			{
+				bUserControled = true;
+				ProcessControledUserOrder(tagLotteryOrderData.vecControlUserOrders, tagLotteryOrderData.vecLottery10Results);
+			}
+			else
+			{
+				GetLogFileHandle().InfoLog("%s %d no controled user.\n", __FUNCTION__, __LINE__);
+			}
+
+			//得到最终结果
+			fTargetWinRate = (float)(tagDrawLotteryInfo.iControlRate * 1.0 / 10000);
+			GetLogFileHandle().InfoLog("%s %d TargetWinRate:%f, totally %d results as bellow:\n",
+				__FUNCTION__, __LINE__, fTargetWinRate, tagLotteryOrderData.vecLottery10Results.size());
+			for (auto result : tagLotteryOrderData.vecLottery10Results)
+			{
+				GetLogFileHandle().InfoLog("TypeID:%d, IssueNumber:%s, SelectNumber:%s, SelectColor:%s, AllTotalBonus:%I64u, WinRate:%f\n", \
+					result.iTypeID, result.strIssueNumber, result.strSelectNumber, \
+					result.strSelectColor, result.uiAllTotalBonus, result.fWinRate);
+			}
+			GetLotteryFinalResult(tagLotteryOrderData.vecLottery10Results,
+					tagLotteryOrderData.fWinRateAsOfLast, bUserControled, tagDrawLotteryInfo.iControlRate,
+					tagDrawLotteryInfo.iPowerControl, tagLotteryResult);
 
 			//更新Game表
 			GetLogFileHandle().InfoLog("game final result as bellow:\n");
@@ -642,10 +727,15 @@ int _tmain(int argc, _TCHAR* argv[])
 	printf("main process id: %d\n", GetCurrentProcessId());
 	printf("main thread id: %d\n", GetCurrentThreadId());
 	//先启动工作线程再循环检查是否开奖
-	thread arrProcessWorkerThreads[WORKERS_THREAD_NUM];
-	for (int i = 0; i < WORKERS_THREAD_NUM; i++)
+	int iArrSize = 0;
+	thread arrProcessWorkerThreads[WORKERS_THREAD_NUM_MODE1 + WORKERS_THREAD_NUM_MODE2];
+	for (int i = 0; i < WORKERS_THREAD_NUM_MODE1; i++)
 	{
-		arrProcessWorkerThreads[i] = thread(LotteryProcessWorker);
+		arrProcessWorkerThreads[iArrSize++] = thread(LotteryProcessWorkerMode1);
+	}
+	for (int i = 0; i < WORKERS_THREAD_NUM_MODE2; i++)
+	{
+		arrProcessWorkerThreads[iArrSize++] = thread(LotteryProcessWorkerMode2);
 	}
 	for (auto &Thread : arrProcessWorkerThreads)
 	{
