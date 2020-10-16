@@ -39,8 +39,8 @@ BEGIN
 	declare @WinRateAsOfLast decimal(20, 2) = 0.0 --截止上期玩家赢率
 	declare @BetCurrentIssue decimal(20, 2) = 0.0 --当期投注金额
 	--使用top创建临时表,在临时表中读取数据效率高
-	select top 6000 UserID, TypeID, IssueNumber, RealAmount, ProfitAmount into #tabGameOrder 
-		from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and State < 2 order by BetID desc
+	select UserID, TypeID, IssueNumber, RealAmount, ProfitAmount into #tabGameOrder 
+		from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and IssueNumber >= @InBeginIssueNumber and IssueNumber <= @InCurrentIssueNumber
 	select @UserCounts = count(UserCounts) from 
 		(select count(distinct UserID) UserCounts from #tabGameOrder where IssueNumber = @InCurrentIssueNumber and TypeID = @InTypeID group by UserID) as t
 	select @BetCurrentIssue = sum(RealAmount) from #tabGameOrder where TypeID = @InTypeID and IssueNumber = @InCurrentIssueNumber
