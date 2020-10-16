@@ -46,6 +46,8 @@ BEGIN
 	select @BetCurrentIssue = sum(RealAmount) from #tabGameOrder where TypeID = @InTypeID and IssueNumber = @InCurrentIssueNumber
 	select @AllBetAsOfLast = sum(RealAmount), @BonusAlready = sum(ProfitAmount - RealAmount) from #tabGameOrder 
 		where TypeID = @InTypeID and IssueNumber >= @InBeginIssueNumber and IssueNumber <= @InLastIssueNumber
+	if @AllBetAsOfLast=0
+		set @AllBetAsOfLast=1
 	set @WinRateAsOfLast = @BonusAlready / @AllBetAsOfLast
 	set @AllBet = @BetCurrentIssue + @AllBetAsOfLast
 	drop table #tabGameOrder

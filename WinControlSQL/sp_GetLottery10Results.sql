@@ -33,10 +33,12 @@ CREATE PROCEDURE [dbo].[sp_GetLottery10Results]
 AS
 BEGIN
 	SET NOCOUNT ON
-	
+
 	--#LotteryTotalBonus记录输赢的临时表
 	create table #LotteryTotalBonus(TypeID int, IssueNumber varchar(30), SelectType varchar(20), TotalBonus bigint, MultiRate decimal(2, 1))
-	select UserId into #UserTest from tab_Users where UserType=1;
+	create table #UserTest(UserID int)
+	insert into #UserTest select UserId from tab_Users where UserType=1;
+	--insert into #UserTest select @InUserControled --TODO:如果有单控,是否需要将单控玩家下注去掉 
 	insert into #LotteryTotalBonus(TypeID, IssueNumber, SelectType, TotalBonus, MultiRate)
 		select @InTypeID, @InCurrentIssueNumber, SelectType, sum(RealAmount),
 				case when SelectType in ('0','1','2','3','4','5','6','7','8','9') then 9
@@ -71,6 +73,8 @@ BEGIN
 	--更改结果的颜色
 	update #LotteryResult SET SelectTypeColor = (case SelectTypeNum when '0' then 'red,violet' when '5' then 'green,violet' else SelectTypeColor end)
 	--计算赢率
+	if @AllBet=0
+		set @AllBet=1
 	update #LotteryResult set WinRate = (@BonusAlready+AllTotalBonus+0.0)/@AllBet 
 	
 	select TypeID, IssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, WinRate from #LotteryResult order by WinRate desc

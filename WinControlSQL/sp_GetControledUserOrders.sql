@@ -53,8 +53,8 @@ BEGIN
 		update #UserControledBonus set TotalBonus *= MultiRate
 		
 		select TypeID, IssueNumber, SelectType, TotalBonus from #UserControledBonus order by TotalBonus desc
-		drop table #UserControledBonus
 	end
+	drop table #UserControledBonus
 END
 
 
