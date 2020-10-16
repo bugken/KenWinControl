@@ -191,10 +191,6 @@ typedef struct  _LOTTERY_ORDER_DATA
 	float fWinRateAsOfLast;//½ØÖ¹ÉÏÆÚÓ®ÂÊ
 	CONTROLED_USER_ORDERS_VEC vecControlUserOrders;
 	ORDERS_TEN_RESULTS_VEC vecLottery10Results;
-	_LOTTERY_ORDER_DATA()
-	{
-		memset(this, 0, sizeof(*this));
-	}
 }LOTTERY_ORDER_DATA;
 
 typedef struct _LOTTERY_RESULT
