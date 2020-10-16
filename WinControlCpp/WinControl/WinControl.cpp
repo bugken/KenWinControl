@@ -532,7 +532,7 @@ void LotteryProcessWorkerMode2()
 			LotteryLock.unlock();
 		}
 		{
-			CTicker timeLapser("LotteryProcessWorkerMode1");
+			CTicker timeLapser("LotteryProcessWorkerMode2");
 			GetLogFileHandle().InfoLog("%s %d lottery worker process(%d) begin\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
 			GetLogFileHandle().InfoLog("TypeID:%d, UserControled:%d, ControlRate:%d, PowerControl:%d, CurrentIssueNumber:%s, LastIssueNumber:%s, BeginIssueNumber:%s\n", \
 				tagDrawLotteryInfo.iTypeID, tagDrawLotteryInfo.iUserControled, tagDrawLotteryInfo.iControlRate, \
@@ -561,6 +561,8 @@ void LotteryProcessWorkerMode2()
 				GetLogFileHandle().InfoLog("%s %d lottery worker process(%d) end\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
 				continue;
 			}
+
+			//处理单控玩家数据
 			if (tagDrawLotteryInfo.iUserControled > 0 && tagLotteryOrderData.vecControlUserOrders.size() > 0)
 			{
 				bUserControled = true;

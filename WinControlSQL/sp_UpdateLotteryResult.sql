@@ -30,13 +30,6 @@ CREATE PROCEDURE [dbo].[sp_UpdateLotteryResult]
 	@InControlType int = 9
 AS
 BEGIN
-	--总控制开关
-	if (select ISNULL(GameUpdateNumberOpen,0) from [9lottery].dbo.tab_GameNumberSet) = 0
-	begin
-		--print '控制开关未开启'
-		set @RetID = 100001 --控制开关未开启
-		return
-	end
 	--单控开关
 	if (select ISNULL(ControlEnabled,0) from [9lottery].dbo.tab_GameType where TypeID=@InTypeID) = 0
 	begin
