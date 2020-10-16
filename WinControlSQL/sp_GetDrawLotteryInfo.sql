@@ -1,7 +1,7 @@
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GetDrawLotteryInfo]    Script Date: 10/06/2020 22:00:50 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetDrawLotteryInfo]    Script Date: 10/16/2020 21:19:55 ******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_GetDrawLotteryInfo]') AND type in (N'P', N'PC'))
 DROP PROCEDURE [dbo].[sp_GetDrawLotteryInfo]
 GO
@@ -9,7 +9,7 @@ GO
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GetDrawLotteryInfo]    Script Date: 10/06/2020 22:00:50 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetDrawLotteryInfo]    Script Date: 10/16/2020 21:19:55 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -26,10 +26,11 @@ GO
 
 
 
+
 CREATE PROCEDURE [dbo].[sp_GetDrawLotteryInfo]
 AS
 BEGIN
-	SET NOCOUNT ON
+	set nocount on
 	--控制信息变量
 	declare @UserControled int = 0
 	declare @ControlRate int = 0
@@ -49,17 +50,17 @@ BEGIN
 	declare @LastIssueNumber varchar(30) = ''
 	declare @IssueStartTime datetime = getdate() --游戏开始时间
 	declare @MinutesElapse int = datediff(minute, convert(datetime,convert(varchar(10),getdate(),120)), @CurrentTimeNextMin)--距离凌晨的分钟数
-	select @Counts = count(*) from [9lottery].[dbo].tab_Games where State=0 and StartTime<=@CurrentTime
-	--select * from [9lottery].[dbo].tab_Games where State=0 and StartTime<=@CurrentTime
+	
+	select top 20 * into #tabTmpGame from [9lottery].[dbo].tab_Games where State=0 and StartTime<=@CurrentTime order by StartTime desc
+	select @Counts = count(*) from #tabTmpGame
 	--print '当前期数@Counts:' + cast(@Counts as varchar(30))
 	while @LoopCounts < @Counts
 	begin
 		set @LoopCounts = @LoopCounts + 1
 		--获取开奖期号
 		select @CurrentIssueNumber=IssueNumber, @IntervalM=IntervalM, @OptState=OptState,@IssueStartTime=StartTime, @TypeIDFromTable=TypeID from  
-				(select row_number() over(order by StartTime desc, TypeID asc) as rowid, * from [9lottery].[dbo].tab_Games 
-					where State=0 and StartTime<=@CurrentTime) as t 
-			where rowid=@LoopCounts 
+				(select row_number() over(order by StartTime desc, TypeID asc) as rowid, * from #tabTmpGame) as t 
+			where rowid=@LoopCounts
 		if @MinutesElapse = 0--考虑凌晨情况
 			set @MinutesElapse = 1
 		if @MinutesElapse%@IntervalM <> 0
@@ -128,11 +129,9 @@ BEGIN
 			select @TypeID, @UserControled, @ControlRate, @PowerControl, @CurrentIssueNumber, @LastIssueNumber, @BeginIssueNumber
 		end
 	end
+	drop table #tabTmpGame
 
 END
-
-
-
 
 
 
