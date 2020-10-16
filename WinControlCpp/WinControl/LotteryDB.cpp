@@ -41,23 +41,21 @@ bool LotteryDB::Ex_GetDrawLottery(DRAW_LOTTERY_PERIOD_QUEUE& queueDrawLotteryIte
 			__FUNCTION__, __LINE__, iError, bResult, errstr);
 		return false;
 	}
-	//if (IsFetchNoData())//有数据的时候再去取数据
+
+	InitBindCol();
+	BindCol(tagDrwaLotteryPeriod.iTypeID);
+	BindCol(tagDrwaLotteryPeriod.iUserControled);
+	BindCol(tagDrwaLotteryPeriod.iControlRate);
+	BindCol(tagDrwaLotteryPeriod.iPowerControl);
+	BindCol(tagDrwaLotteryPeriod.strCurrentIssueNumber, sizeof(tagDrwaLotteryPeriod.strCurrentIssueNumber));
+	BindCol(tagDrwaLotteryPeriod.strLastIssueNumber, sizeof(tagDrwaLotteryPeriod.strLastIssueNumber));
+	BindCol(tagDrwaLotteryPeriod.strBeginIssueNumber, sizeof(tagDrwaLotteryPeriod.strBeginIssueNumber));
+	while (Fetch())
 	{
-		InitBindCol();
-		BindCol(tagDrwaLotteryPeriod.iTypeID);
-		BindCol(tagDrwaLotteryPeriod.iUserControled);
-		BindCol(tagDrwaLotteryPeriod.iControlRate);
-		BindCol(tagDrwaLotteryPeriod.iPowerControl);
-		BindCol(tagDrwaLotteryPeriod.strCurrentIssueNumber, sizeof(tagDrwaLotteryPeriod.strCurrentIssueNumber));
-		BindCol(tagDrwaLotteryPeriod.strLastIssueNumber, sizeof(tagDrwaLotteryPeriod.strLastIssueNumber));
-		BindCol(tagDrwaLotteryPeriod.strBeginIssueNumber, sizeof(tagDrwaLotteryPeriod.strBeginIssueNumber));
-		while (Fetch())
+		if ((tagDrwaLotteryPeriod.iTypeID != 0) && (strlen(tagDrwaLotteryPeriod.strCurrentIssueNumber) > 0))
 		{
-			if ((tagDrwaLotteryPeriod.iTypeID != 0) && (strlen(tagDrwaLotteryPeriod.strCurrentIssueNumber) > 0))
-			{
-				queueDrawLotteryItems.push(tagDrwaLotteryPeriod);
-				memset(&tagDrwaLotteryPeriod, 0, sizeof(tagDrwaLotteryPeriod));
-			}
+			queueDrawLotteryItems.push(tagDrwaLotteryPeriod);
+			memset(&tagDrwaLotteryPeriod, 0, sizeof(tagDrwaLotteryPeriod));
 		}
 	}
 	ClearMoreResults();
@@ -117,18 +115,15 @@ bool LotteryDB::Ex_GetLotteryUserOrders(DRAW_LOTTERY_PERIOD& drawLotteryInfo, LO
 		}
 		if (drawLotteryInfo.iUserControled > 0)
 		{
-			if (Fetch())
+			InitBindCol();
+			BindCol(tagControledUserOrders.iTypeID);
+			BindCol(tagControledUserOrders.strIssueNumber, sizeof(tagControledUserOrders.strIssueNumber));
+			BindCol(tagControledUserOrders.strSelectType, sizeof(tagControledUserOrders.strSelectType));
+			BindCol(tagControledUserOrders.uiTotalBonus);
+			while (Fetch())
 			{
-				InitBindCol();
-				BindCol(tagControledUserOrders.iTypeID);
-				BindCol(tagControledUserOrders.strIssueNumber, sizeof(tagControledUserOrders.strIssueNumber));
-				BindCol(tagControledUserOrders.strSelectType, sizeof(tagControledUserOrders.strSelectType));
-				BindCol(tagControledUserOrders.uiTotalBonus);
-				while (Fetch())
-				{
-					lotteryOrderData.vecControlUserOrders.push_back(tagControledUserOrders);
-					memset(&tagControledUserOrders, 0, sizeof(tagControledUserOrders));
-				}
+				lotteryOrderData.vecControlUserOrders.push_back(tagControledUserOrders);
+				memset(&tagControledUserOrders, 0, sizeof(tagControledUserOrders));
 			}
 		}
 	}

@@ -63,8 +63,9 @@ BEGIN
 	
 	--#LotteryTotalBonus记录输赢的临时表
 	create table #LotteryTotalBonus(TypeID int, IssueNumber varchar(30), SelectType varchar(20), TotalBonus bigint, MultiRate decimal(2, 1))
-	create table #UserControledBonus(TypeID int, IssueNumber varchar(30), SelectType varchar(20), TotalBonus bigint, MultiRate decimal(2, 1))
-	select UserId into #UserTest from tab_Users where UserType=1;
+	create table #UserTest(UserID int)
+	insert into #UserTest select UserId from tab_Users where UserType=1;
+	--insert into #UserTest select @InUserControled --TODO:如果有单控,是否需要将单控玩家下注去掉 
 	insert into #LotteryTotalBonus(TypeID, IssueNumber, SelectType, TotalBonus, MultiRate)
 		select @InTypeID, @InCurrentIssueNumber, SelectType, sum(RealAmount),
 				case when SelectType in ('0','1','2','3','4','5','6','7','8','9') then 9
@@ -74,21 +75,6 @@ BEGIN
 			from #tabGameOrder  where UserID not in (Select UserID from #UserTest) 
 				and IssueNumber=@InCurrentIssueNumber group by IssueNumber, SelectType
 	update #LotteryTotalBonus set TotalBonus *= MultiRate
-	
-	--单人下注信息计算
-	if @InUserControled <> 0
-	begin 
-		insert into #UserControledBonus(TypeID, IssueNumber, SelectType, TotalBonus, MultiRate)
-			select @InTypeID, @InCurrentIssueNumber, SelectType, sum(RealAmount),
-					case when SelectType in ('0','1','2','3','4','5','6','7','8','9') then 9
-						 when SelectType in ('red','green','big','small') then 2
-						 when SelectType = 'violet' then 5.5
-					end 
-				from #tabGameOrder
-					where IssueNumber=@InCurrentIssueNumber 
-						and UserID = @InUserControled group by IssueNumber, SelectType
-		update #UserControledBonus set TotalBonus *= MultiRate
-	end
 	
 	--select TypeID, SelectType, IssueNumber, TotalBonus from #LotteryTotalBonus
 	--select * from #UserControledBonus
@@ -116,7 +102,23 @@ BEGIN
 	--计算赢率
 	update #LotteryResult set WinRate = (isnull(@BonusAlready, 0)+AllTotalBonus)/@AllBet 
 	
-	select TypeID, IssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, WinRate from #LotteryResult order by WinRate
+	--单杀下注信息计算
+	create table #UserControledBonus(TypeID int, IssueNumber varchar(30), SelectType varchar(20), TotalBonus bigint, MultiRate decimal(2, 1))
+	if @InUserControled <> 0
+	begin 
+		insert into #UserControledBonus(TypeID, IssueNumber, SelectType, TotalBonus, MultiRate)
+			select @InTypeID, @InCurrentIssueNumber, SelectType, sum(RealAmount),
+					case when SelectType in ('0','1','2','3','4','5','6','7','8','9') then 9
+						 when SelectType in ('red','green','big','small') then 2
+						 when SelectType = 'violet' then 5.5
+					end 
+				from #tabGameOrder
+					where IssueNumber=@InCurrentIssueNumber 
+						and UserID = @InUserControled group by IssueNumber, SelectType
+		update #UserControledBonus set TotalBonus *= MultiRate
+	end
+	
+	select TypeID, IssueNumber, SelectTypeNum, SelectTypeColor, AllTotalBonus, WinRate from #LotteryResult order by WinRate desc
 	select TypeID, IssueNumber, SelectType, TotalBonus from #UserControledBonus order by TotalBonus desc
 	
 	drop table #LotteryTotalBonus

@@ -489,8 +489,9 @@ void LotteryProcessWorkerMode1()
 
 			//得到最终结果
 			fTargetWinRate = (float)(tagDrawLotteryInfo.iControlRate * 1.0 / 10000);
-			GetLogFileHandle().InfoLog("%s %d TargetWinRate:%f, totally %d results as bellow:\n",
-				__FUNCTION__, __LINE__, fTargetWinRate, tagOrder10ResultsVec.size());
+			GetLogFileHandle().InfoLog("%s %d TargetWinRate:%f, WinRateAsOfLast:%f totally %d results as bellow:\n",
+				__FUNCTION__, __LINE__, fTargetWinRate, tagLotteryOrderStat.fWinRateAsOfLast,
+				tagOrder10ResultsVec.size());
 			for (auto result : tagOrder10ResultsVec)
 			{
 				GetLogFileHandle().InfoLog("TypeID:%d, IssueNumber:%s, SelectNumber:%s, SelectColor:%s, AllTotalBonus:%I64u, WinRate:%f\n", \
@@ -538,7 +539,6 @@ void LotteryProcessWorkerMode2()
 				tagDrawLotteryInfo.iTypeID, tagDrawLotteryInfo.iUserControled, tagDrawLotteryInfo.iControlRate, \
 				tagDrawLotteryInfo.iPowerControl, tagDrawLotteryInfo.strCurrentIssueNumber, \
 				tagDrawLotteryInfo.strLastIssueNumber, tagDrawLotteryInfo.strBeginIssueNumber);
-		
 
 			UINT32 uiRetID = 0;
 			float fTargetWinRate = 0.0;
@@ -575,8 +575,9 @@ void LotteryProcessWorkerMode2()
 
 			//得到最终结果
 			fTargetWinRate = (float)(tagDrawLotteryInfo.iControlRate * 1.0 / 10000);
-			GetLogFileHandle().InfoLog("%s %d TargetWinRate:%f, totally %d results as bellow:\n",
-				__FUNCTION__, __LINE__, fTargetWinRate, tagLotteryOrderData.vecLottery10Results.size());
+			GetLogFileHandle().InfoLog("%s %d TargetWinRate:%f, WinRateAsOfLast:%f, totally %d results as bellow:\n",
+				__FUNCTION__, __LINE__, fTargetWinRate, tagLotteryOrderData.fWinRateAsOfLast,
+				tagLotteryOrderData.vecLottery10Results.size());
 			for (auto result : tagLotteryOrderData.vecLottery10Results)
 			{
 				GetLogFileHandle().InfoLog("TypeID:%d, IssueNumber:%s, SelectNumber:%s, SelectColor:%s, AllTotalBonus:%I64u, WinRate:%f\n", \
@@ -708,6 +709,11 @@ void LoopCheckLottery()
 				GetLogFileHandle().InfoLog("%s %d thread(%d) end new round check drawing lottery\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
 				GetLogFileHandle().InfoLogToFileNoTime(szLogFileName, "\n");
 				LotteryConditionVariable.notify_all();
+			}
+			else
+			{
+				GetLogFileHandle().InfoLog("%s %d thread(%d) end new round check drawing lottery\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
+				GetLogFileHandle().InfoLogToFileNoTime(szLogFileName, "\n");
 			}
 		}
 		else//本分支不会影响获取开奖结果信息

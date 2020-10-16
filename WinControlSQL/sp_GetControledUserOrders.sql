@@ -36,9 +36,8 @@ AS
 BEGIN
 	SET NOCOUNT ON
 	
-	--#单控玩家下注临时表
+	--单杀下注信息计算
 	create table #UserControledBonus(TypeID int, IssueNumber varchar(30), SelectType varchar(20), TotalBonus bigint, MultiRate decimal(2, 1))
-	--单人下注信息计算
 	if @InUserControled > 0
 	begin 
 		insert into #UserControledBonus(TypeID, IssueNumber, SelectType, TotalBonus, MultiRate)
