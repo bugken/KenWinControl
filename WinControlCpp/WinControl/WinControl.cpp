@@ -632,7 +632,7 @@ void LoopCheckLottery()
 			gLotteryStatistic.OutputStats();//写入统计信息
 			GetLogFileHandle().GetLogFileName(szLogFileName, 1);
 
-			Sleep(50);
+			Sleep(10);
 		}
 	}
 }
