@@ -79,20 +79,21 @@ using namespace std;
 								uiMaxTotalBonusCurr = order.uiTotalBonus; \
 								strcpy_s(strMaxSelectTypeCurr, order.strSelectType); \
 							}
-#define IF_CONDITION_VAR3(VAR1, VAR2, VAR3) if (order.strSelectType == VAR1 \
-							|| order.strSelectType == VAR2 || order.strSelectType == VAR3) \
+#define IF_CONDITION_VAR3(VAR1, VAR2, VAR3) if (strcmp(order.strSelectType, VAR1) == 0 \
+							|| strcmp(order.strSelectType, VAR2) == 0 ||strcmp(order.strSelectType, VAR3) == 0) \
 							{ \
 								IF_CONTENT() \
 							}
-#define IF_CONDITION_VAR4(VAR1, VAR2, VAR3, VAR4) if (order.strSelectType == VAR1 || order.strSelectType == VAR2 \
-							|| order.strSelectType == VAR3 || order.strSelectType == VAR4) \
+#define IF_CONDITION_VAR4(VAR1, VAR2, VAR3, VAR4) if (strcmp(order.strSelectType, VAR1) == 0 \
+							|| strcmp(order.strSelectType, VAR2) == 0 || strcmp(order.strSelectType, VAR3) == 0  \
+							|| strcmp(order.strSelectType, VAR4) == 0) \
 							{ \
 								IF_CONTENT() \
 							}
-#define IF_CONDITION_VAR6(VAR1, VAR2, VAR3, VAR4, VAR5, VAR6) if (order.strSelectType == VAR1 \
-							|| order.strSelectType == VAR2 || order.strSelectType == VAR3 \
-							|| order.strSelectType == VAR4 || order.strSelectType == VAR5 \
-							|| order.strSelectType == VAR6) \
+#define IF_CONDITION_VAR6(VAR1, VAR2, VAR3, VAR4, VAR5, VAR6) if (strcmp(order.strSelectType, VAR1) == 0 \
+							|| strcmp(order.strSelectType, VAR2) == 0|| strcmp(order.strSelectType, VAR3) == 0 \
+							|| strcmp(order.strSelectType, VAR4) == 0 || strcmp(order.strSelectType, VAR5) == 0 \
+							|| strcmp(order.strSelectType, VAR6) == 0) \
 							{ \
 								IF_CONTENT()\
 							}

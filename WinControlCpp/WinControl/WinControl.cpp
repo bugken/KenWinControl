@@ -22,7 +22,7 @@ CONDITION_VARIABLE LotteryConditionVariable;
 计算单杀用户赢得最多派彩的思路:其与整体派彩思路相反,玩家下注已知,在玩家下注基础上,把下注对应的结果产生的派彩都加到下注上,这样就可以选出哪个下注赢钱最多,把赢钱最多的下注杀掉
 计算单杀用户思路和计算整体派彩思路不同，如果按照整体派彩思路一样,那么会有这种情况:0下注300 5下注400 小下注200,然后5被杀,但实际上应该杀0,0这个结果上的派彩是300+200=500
 */
-bool GetControlUserMostBonusBet(CONTROLED_USER_ORDERS_VEC vecControlUserOrders, char* strControlUserMostBonusBet)
+bool GetControlUserMostBonusBet(const CONTROLED_USER_ORDERS_VEC& vecControlUserOrders, char* strControlUserMostBonusBet)
 {
 	CTicker timeLapser("GetControlUserMostBonusBet");
 	char strMaxSelectTypeCurr[BUFF64] = { 0 };
@@ -33,97 +33,98 @@ bool GetControlUserMostBonusBet(CONTROLED_USER_ORDERS_VEC vecControlUserOrders, 
 		uiSumBonus = 0;
 		uiMaxTotalBonusCurr = 0;
 		memset(strMaxSelectTypeCurr, 0, sizeof(strMaxSelectTypeCurr));
-		if (userOrder.strSelectType == "0")
+		if (strcmp("0", userOrder.strSelectType) == 0)
 		{
 			FOR_CONTENT_BEGIN()
 				IF_CONDITION_VAR4("0", "red", "violet", "small")
 			FOR_CONTENT_END()
 		}
-		else if (userOrder.strSelectType == "1")
+		else if (strcmp("1", userOrder.strSelectType) == 0)
 		{
 			FOR_CONTENT_BEGIN()
 				IF_CONDITION_VAR3("1", "green", "small")
 			FOR_CONTENT_END()
 		}
-		else if (userOrder.strSelectType == "2")
+		else if (strcmp("2", userOrder.strSelectType) == 0)
 		{
 			FOR_CONTENT_BEGIN()
 				IF_CONDITION_VAR3("2", "red", "small")
 			FOR_CONTENT_END()
 		}
-		else if (userOrder.strSelectType == "3")
+		else if (strcmp("3", userOrder.strSelectType) == 0)
 		{
 			FOR_CONTENT_BEGIN()
 				IF_CONDITION_VAR3("3", "green", "small")
 			FOR_CONTENT_END()
 		}
-		else if (userOrder.strSelectType == "4")
+		else if (strcmp("4", userOrder.strSelectType) == 0)
 		{
 			FOR_CONTENT_BEGIN()
 				IF_CONDITION_VAR3("4", "red", "small")
 			FOR_CONTENT_END()
 		}
-		else if (userOrder.strSelectType == "5")
+		else if (strcmp("5", userOrder.strSelectType) == 0)
 		{
 			FOR_CONTENT_BEGIN()
 				IF_CONDITION_VAR4("5", "green", "violet", "big")
 			FOR_CONTENT_END()
 		}
-		else if (userOrder.strSelectType == "6")
+		else if (strcmp("6", userOrder.strSelectType) == 0)
 		{
 			FOR_CONTENT_BEGIN()
 				IF_CONDITION_VAR3("6", "red", "big")
 			FOR_CONTENT_END()
 		}
-		else if (userOrder.strSelectType == "7")
+		else if (strcmp("7", userOrder.strSelectType) == 0)
 		{
 			FOR_CONTENT_BEGIN()
 				IF_CONDITION_VAR3("7", "green", "big")
 			FOR_CONTENT_END()
 		}
-		else if (userOrder.strSelectType == "8")
+		else if (strcmp("8", userOrder.strSelectType) == 0)
 		{
 			FOR_CONTENT_BEGIN()
 				IF_CONDITION_VAR3("8", "red", "big")
 			FOR_CONTENT_END()
 		}
-		else if (userOrder.strSelectType == "9")
+		else if (strcmp("9", userOrder.strSelectType) == 0)
 		{
 			FOR_CONTENT_BEGIN()
 				IF_CONDITION_VAR3("9", "green", "big")
 			FOR_CONTENT_END()
 		}
-		else if (userOrder.strSelectType == "small")
+		else if (strcmp("small", userOrder.strSelectType) == 0)
 		{
 			FOR_CONTENT_BEGIN()
 				IF_CONDITION_VAR6("small", "0", "1", "2", "3", "4")
 			FOR_CONTENT_END()
 		}
-		else if (userOrder.strSelectType == "big")
+		else if (strcmp("big", userOrder.strSelectType) == 0)
 		{
 			FOR_CONTENT_BEGIN()
 				IF_CONDITION_VAR6("big", "5", "6", "7", "8", "9")
 			FOR_CONTENT_END()
 		}
-		else if (userOrder.strSelectType == "red")
+		else if (strcmp("red", userOrder.strSelectType) == 0)
 		{//这里有待完善:@SumBonus应该算('0', '2', '4', '6', '8')与'red'组合中最大的一个,目前这个写法只会多杀,不会少杀
 			FOR_CONTENT_BEGIN()
 				IF_CONDITION_VAR6("red", "0", "2", "4", "6", "8")
 			FOR_CONTENT_END()
 		}
-		else if (userOrder.strSelectType == "green")
+		else if (strcmp("green", userOrder.strSelectType) == 0)
 		{//这里有待完善:@SumBonus应该算('1', '3', '5', '7', '9')与'green'组合中最大的一个,目前这个写法只会多杀,不会少杀
 			FOR_CONTENT_BEGIN()
 				IF_CONDITION_VAR6("green", "1", "3", "5", "7", "9")
 			FOR_CONTENT_END()
 		}
-		else if (userOrder.strSelectType == "violet")
+		else if (strcmp("violet", userOrder.strSelectType) == 0)
 		{//紫色分红紫和绿紫
 			UINT64 uiRedVioletBonus = 0, uiGreenVioletBonus = 0;
 			UINT64 MaxBonusRedViolet = 0, MaxBonusGreenViolet = 0;
 			for (auto order : vecControlUserOrders)
 			{
-				if (order.strSelectType == "red" || order.strSelectType == "0" || order.strSelectType == "violet")
+				if (strcmp("red", order.strSelectType) == 0 || strcmp("0", order.strSelectType) == 0 
+					|| strcmp("violet", order.strSelectType) == 0)
 				{
 					uiRedVioletBonus += order.uiTotalBonus;
 					if (order.uiTotalBonus > MaxBonusRedViolet)
@@ -135,7 +136,8 @@ bool GetControlUserMostBonusBet(CONTROLED_USER_ORDERS_VEC vecControlUserOrders, 
 			}
 			for (auto order : vecControlUserOrders)
 			{
-				if (order.strSelectType == "green" || order.strSelectType == "5" || order.strSelectType == "violet")
+				if (strcmp("green", order.strSelectType) == 0 || strcmp("5", order.strSelectType) == 0
+					|| strcmp("violet", order.strSelectType) == 0)
 				{
 					uiGreenVioletBonus += order.uiTotalBonus;
 					if (order.uiTotalBonus > MaxBonusGreenViolet)
@@ -199,70 +201,81 @@ bool DeleteUserControlType(ORDERS_TEN_RESULTS_VEC& lottery10Results, const char*
 {
 	CTicker timeLapser("DeleteUserControlType");
 	//if中嵌套循环，效率稍高，编译器可对循环优化
-	if (strControlUserMostBonusBet == "0" || strControlUserMostBonusBet == "1" || strControlUserMostBonusBet == "2"\
-		|| strControlUserMostBonusBet == "3" || strControlUserMostBonusBet == "4" || strControlUserMostBonusBet == "5"\
-		|| strControlUserMostBonusBet == "6" || strControlUserMostBonusBet == "7" || strControlUserMostBonusBet == "8"\
-		|| strControlUserMostBonusBet == "9")
+	if (strcmp("0", strControlUserMostBonusBet) == 0 || strcmp("1", strControlUserMostBonusBet) == 0 
+		|| strcmp("2", strControlUserMostBonusBet) == 0 || strcmp("3", strControlUserMostBonusBet) == 0
+		|| strcmp("4", strControlUserMostBonusBet) == 0 || strcmp("5", strControlUserMostBonusBet) == 0
+		|| strcmp("6", strControlUserMostBonusBet) == 0 || strcmp("7", strControlUserMostBonusBet) == 0
+		|| strcmp("8", strControlUserMostBonusBet) == 0 || strcmp("9", strControlUserMostBonusBet) == 0)
 	{
 		for (ORDERS_TEN_RESULTS_VEC_IT it = lottery10Results.begin(); it != lottery10Results.end(); ++it)
 		{
-			if (it->strIssueNumber == strControlUserMostBonusBet)
+			if (strcmp(it->strSelectNumber, strControlUserMostBonusBet) == 0)
 			{
 				it = lottery10Results.erase(it);
+				break;
 			}
 		}
 	}
-	else if (strControlUserMostBonusBet == "big")
+	else if (strcmp("big", strControlUserMostBonusBet) == 0)
 	{
 		for (ORDERS_TEN_RESULTS_VEC_IT it = lottery10Results.begin(); it != lottery10Results.end(); ++it)
 		{
-			if (it->strIssueNumber == "5" || it->strIssueNumber == "6" || it->strIssueNumber == "7"\
-				|| it->strIssueNumber == "8" || it->strIssueNumber == "9")
+			if (strcmp("5", it->strSelectNumber) == 0 || strcmp("6", it->strSelectNumber) == 0
+				|| strcmp("7", it->strSelectNumber) == 0 || strcmp("8", it->strSelectNumber) == 0
+				|| strcmp("9", it->strSelectNumber) == 0)
 			{
 				it = lottery10Results.erase(it);
+				break;
 			}
 		}
 	}
-	else if (strControlUserMostBonusBet == "small")
+	else if (strcmp("small", strControlUserMostBonusBet) == 0)
 	{
 		for (ORDERS_TEN_RESULTS_VEC_IT it = lottery10Results.begin(); it != lottery10Results.end(); ++it)
 		{
-			if (it->strIssueNumber == "0" || it->strIssueNumber == "1" || it->strIssueNumber == "2"\
-				|| it->strIssueNumber == "3" || it->strIssueNumber == "4")
+			if (strcmp("0", it->strSelectNumber) == 0 || strcmp("1", it->strSelectNumber) == 0
+				|| strcmp("2", it->strSelectNumber) == 0 || strcmp("3", it->strSelectNumber) == 0
+				|| strcmp("4", it->strSelectNumber) == 0)
 			{
 				it = lottery10Results.erase(it);
+				break;
 			}
 		}
 	}
-	else if (strControlUserMostBonusBet == "red")
+	else if (strcmp("red", strControlUserMostBonusBet) == 0)
 	{
 		for (ORDERS_TEN_RESULTS_VEC_IT it = lottery10Results.begin(); it != lottery10Results.end(); ++it)
 		{
-			if (it->strIssueNumber == "0" || it->strIssueNumber == "2" || it->strIssueNumber == "4"\
-				|| it->strIssueNumber == "6" || it->strIssueNumber == "8")
+			if (strcmp("0", it->strSelectNumber) == 0 || strcmp("2", it->strSelectNumber) == 0
+				|| strcmp("4", it->strSelectNumber) == 0 || strcmp("6", it->strSelectNumber) == 0
+				|| strcmp("8", it->strSelectNumber) == 0)
 			{
 				it = lottery10Results.erase(it);
+				break;
 			}
 		}
 	}
-	else if (strControlUserMostBonusBet == "green")
+	else if (strcmp("green", strControlUserMostBonusBet) == 0)
 	{
 		for (ORDERS_TEN_RESULTS_VEC_IT it = lottery10Results.begin(); it != lottery10Results.end(); ++it)
 		{
-			if (it->strIssueNumber == "1" || it->strIssueNumber == "3" || it->strIssueNumber == "5"\
-				|| it->strIssueNumber == "7" || it->strIssueNumber == "9")
+			if (strcmp("1", it->strSelectNumber) == 0 || strcmp("3", it->strSelectNumber) == 0
+				|| strcmp("5", it->strSelectNumber) == 0 || strcmp("7", it->strSelectNumber) == 0
+				|| strcmp("9", it->strSelectNumber) == 0)
 			{
 				it = lottery10Results.erase(it);
+				break;
 			}
 		}
 	}
-	else if (strControlUserMostBonusBet == "violet")
+	else if (strcmp("violet", strControlUserMostBonusBet) == 0)
 	{
 		for (ORDERS_TEN_RESULTS_VEC_IT it = lottery10Results.begin(); it != lottery10Results.end(); ++it)
 		{
-			if (it->strIssueNumber == "0" || it->strIssueNumber == "5")
+			if (strcmp("0", it->strSelectNumber) == 0 || strcmp("5", it->strSelectNumber) == 0)
 			{
 				it = lottery10Results.erase(it);
+				break;
 			}
 		}
 	}
@@ -270,7 +283,7 @@ bool DeleteUserControlType(ORDERS_TEN_RESULTS_VEC& lottery10Results, const char*
 	return true;
 }
 
-void SetLotteryResult(const ORDERS_TEN_RESULTS Result, LOTTERY_RESULT& lotteryResult)
+void SetLotteryResult(ORDERS_TEN_RESULTS& Result, LOTTERY_RESULT& lotteryResult)
 {
 	lotteryResult.iTypeID = Result.iTypeID;
 	strcpy_s(lotteryResult.strIssueNumber, Result.strIssueNumber);
@@ -285,7 +298,7 @@ void SetLotteryResult(const ORDERS_TEN_RESULTS Result, LOTTERY_RESULT& lotteryRe
 控制力度
 0:赢率控制在ControlRate附近 1:强拉回 2:弱拉回
 */
-bool GetLotteryFinalResult(ORDERS_TEN_RESULTS_VEC lottery10ResultsVec, float fWinRateAsOfLast, 
+bool GetLotteryFinalResult(ORDERS_TEN_RESULTS_VEC& lottery10ResultsVec, float fWinRateAsOfLast, 
 		bool bUserControled, UINT32 iControlRate, UINT32 iPowerControl, LOTTERY_RESULT& lotteryResult)
 {
 	CTicker timeLapser("GetLotteryFinalResult");
@@ -375,7 +388,7 @@ bool GetLotteryFinalResult(ORDERS_TEN_RESULTS_VEC lottery10ResultsVec, float fWi
 	return true;
 }
 
-bool ProcessControledUserOrder(CONTROLED_USER_ORDERS_VEC vecControlUserOrders, ORDERS_TEN_RESULTS_VEC& vecLottery10Results)
+bool ProcessControledUserOrder(const CONTROLED_USER_ORDERS_VEC& vecControlUserOrders, ORDERS_TEN_RESULTS_VEC& vecLottery10Results)
 {
 	CTicker timeLapser("ProcessControledUserOrder");
 	char strControlUserMostBonusBet[BUFF64] = {0};
@@ -417,7 +430,6 @@ void LotteryProcessWorker()
 
 	while (true)
 	{
-		
 		DRAW_LOTTERY_PERIOD tagDrawLotteryInfo;
 		{
 			LockUnique LotteryLock(LotteryMutex);

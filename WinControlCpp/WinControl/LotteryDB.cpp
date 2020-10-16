@@ -65,7 +65,7 @@ bool LotteryDB::Ex_GetDrawLottery(DRAW_LOTTERY_PERIOD_QUEUE& queueDrawLotteryIte
 	return !queueDrawLotteryItems.empty();
 }
 
-bool LotteryDB::Ex_GetLotteryUserOrders(DRAW_LOTTERY_PERIOD drawLotteryInfo, LOTTERY_ORDER_DATA& lotteryOrderData)
+bool LotteryDB::Ex_GetLotteryUserOrders(DRAW_LOTTERY_PERIOD& drawLotteryInfo, LOTTERY_ORDER_DATA& lotteryOrderData)
 {
 	CTicker timeLapser("Ex_GetLotteryUserOrders");
 	bool bResult = false;
@@ -137,7 +137,7 @@ bool LotteryDB::Ex_GetLotteryUserOrders(DRAW_LOTTERY_PERIOD drawLotteryInfo, LOT
 	return true;
 }
 
-bool LotteryDB::Ex_GetLotteryStatistic(DRAW_LOTTERY_PERIOD drawLotteryInfo, LOTTERY_ORDER_STAT& lotteryOrderStat)
+bool LotteryDB::Ex_GetLotteryStatistic(DRAW_LOTTERY_PERIOD& drawLotteryInfo, LOTTERY_ORDER_STAT& lotteryOrderStat)
 {
 	CTicker timeLapser("Ex_GetLotteryStatistic");
 	bool bResult = false;
@@ -172,7 +172,7 @@ bool LotteryDB::Ex_GetLotteryStatistic(DRAW_LOTTERY_PERIOD drawLotteryInfo, LOTT
 
 	return true;
 }
-bool LotteryDB::Ex_GetLottery10Results(DRAW_LOTTERY_PERIOD drawLotteryInfo, UINT64 ulBonusAlready, UINT64 ulAllBet, ORDERS_TEN_RESULTS_VEC& order10ResultsVec)
+bool LotteryDB::Ex_GetLottery10Results(DRAW_LOTTERY_PERIOD& drawLotteryInfo, UINT64 ulBonusAlready, UINT64 ulAllBet, ORDERS_TEN_RESULTS_VEC& order10ResultsVec)
 {
 	CTicker timeLapser("Ex_GetLottery10Results");
 	bool bResult = false;
@@ -216,7 +216,7 @@ bool LotteryDB::Ex_GetLottery10Results(DRAW_LOTTERY_PERIOD drawLotteryInfo, UINT
 
 	return true;
 }
-bool LotteryDB::Ex_GetControledUserOrders(DRAW_LOTTERY_PERIOD drawLotteryInfo, CONTROLED_USER_ORDERS_VEC& controledUserOrdersVec)
+bool LotteryDB::Ex_GetControledUserOrders(DRAW_LOTTERY_PERIOD& drawLotteryInfo, CONTROLED_USER_ORDERS_VEC& controledUserOrdersVec)
 {
 	CTicker timeLapser("Ex_GetControledUserOrders");
 	bool bResult = false;
@@ -264,7 +264,7 @@ bool LotteryDB::Ex_GetControledUserOrders(DRAW_LOTTERY_PERIOD drawLotteryInfo, C
 	return true;
 }
 
-bool LotteryDB::Ex_UpdateGameResult(LOTTERY_RESULT lotteryResult, UINT32& uiRetID)
+bool LotteryDB::Ex_UpdateGameResult(LOTTERY_RESULT& lotteryResult, UINT32& uiRetID)
 {
 	CTicker timeLapser("Ex_UpdateGameResult");
 	bool bResult = false;
