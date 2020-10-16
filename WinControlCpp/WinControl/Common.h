@@ -106,10 +106,10 @@ using namespace std;
 #define ERROR_LOG_TO_FILE(szFileName, ...)	if(pLogFile) pLogFile->ErrorLogToFile(szFileName, __VA_ARGS__);
 #define INFO_LOG_TO_FILE(szFileName, ...)	if(pLogFile) pLogFile->InfoLogToFile(szFileName, __VA_ARGS__);
 
-#define CONDITION_VARIABLE condition_variable
-#define MUTEX mutex
-#define LockGuard lock_guard<mutex> 
-#define LockUnique unique_lock<mutex>
+#define CONDITION_VARIABLE std::condition_variable
+#define MUTEX std::mutex
+#define LockGuard std::lock_guard<std::mutex> 
+#define LockUnique std::unique_lock<std::mutex>
 
 //当前时间
 typedef struct _CurrentTime

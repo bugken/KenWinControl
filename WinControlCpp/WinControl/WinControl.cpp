@@ -426,8 +426,11 @@ void LotteryProcessWorkerMode1()
 {
 	printf("work thread id: %d mode1\n", GetCurrentThreadId());
 	LotteryDB lotteryDB;
-	lotteryDB.DBConnect();
-
+	if (!lotteryDB.DBConnect())
+	{
+		return;
+	}
+	
 	while (true)
 	{
 		DRAW_LOTTERY_PERIOD tagDrawLotteryInfo;
@@ -521,7 +524,11 @@ void LotteryProcessWorkerMode2()
 {
 	printf("work thread id: %d mode2\n", GetCurrentThreadId());
 	LotteryDB lotteryDB;
-	lotteryDB.DBConnect();
+	if (!lotteryDB.DBConnect())
+	{
+		return;
+	}
+
 	while (true)
 	{
 		DRAW_LOTTERY_PERIOD tagDrawLotteryInfo;
