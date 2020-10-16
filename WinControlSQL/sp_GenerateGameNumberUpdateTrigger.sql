@@ -31,11 +31,6 @@ CREATE PROCEDURE [dbo].[sp_GenerateGameNumberUpdateTrigger]
 	@InTypeID int = 1
 AS
 BEGIN
-	--declare @InTypeID int = 1
-	--控制总开关是否开启
-	if (select ISNULL(GameUpdateNumberOpen,0) from [9lottery].dbo.tab_GameNumberSet) = 0
-		return
-	
 	--控制信息变量
 	declare @UserControled int = 0
 	declare @ControlRate int = 0

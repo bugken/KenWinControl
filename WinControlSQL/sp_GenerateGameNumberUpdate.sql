@@ -40,13 +40,6 @@ CREATE PROCEDURE [dbo].[sp_GenerateGameNumberUpdate]
 	@InLastIssueNumber varchar(30) = ''
 AS
 BEGIN
-	--控制开关未开启或者已经预设,不进行控制
-	if (select ISNULL(GameUpdateNumberOpen,0) from [9lottery].dbo.tab_GameNumberSet) = 0 or @InOptState = 1
-	begin
-		print '控制开关未开启或该期已经预设'
-		return
-	end
-	
 	--投注人数不得少于5，否则不调控
 	declare @UserCounts int = 0
 	select @UserCounts = count(UserCounts) from 
