@@ -37,7 +37,7 @@ using namespace std;
 #define NUMBER_LEN					10
 #define BUFF64						64
 #define WORKERS_THREAD_NUM_MODE1	0	//工作模式1线程数量
-#define WORKERS_THREAD_NUM_MODE2	2	//工作模式2线程数量
+#define WORKERS_THREAD_NUM_MODE2	4	//工作模式2线程数量
 #define LOTTERY_RESULT_NUM			10	//投注最终结果个数
 #define LOG_FILE_NAME_LEN			100
 
