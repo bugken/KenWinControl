@@ -603,7 +603,7 @@ void LotteryProcessWorkerMode2()
 			lotteryDB.Ex_UpdateGameResult(tagLotteryResult, uiRetID);
 			if (0 != uiRetID)
 			{
-				GetLogFileHandle().InfoLog("TypeID:%d, IssueNumber:%s, %s\n", \
+				GetLogFileHandle().InfoLog("TypeID:%d, IssueNumber:%s %s\n", \
 					tagLotteryResult.iTypeID, tagLotteryResult.strIssueNumber, GetErrorString(uiRetID).c_str());
 			}
 			GetLogFileHandle().InfoLog("%s %d lottery worker process(%d) end\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
@@ -719,6 +719,7 @@ void LoopCheckLottery()
 			}
 			else
 			{
+				GetLogFileHandle().InfoLog("%s %d thread(%d) no lottery data available\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
 				GetLogFileHandle().InfoLog("%s %d thread(%d) end new round check drawing lottery\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
 				GetLogFileHandle().InfoLogToFileNoTime(szLogFileName, "\n");
 			}

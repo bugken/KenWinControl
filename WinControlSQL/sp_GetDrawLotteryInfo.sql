@@ -1,7 +1,7 @@
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GetDrawLotteryInfo]    Script Date: 10/16/2020 21:19:55 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetDrawLotteryInfo]    Script Date: 10/18/2020 16:53:19 ******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_GetDrawLotteryInfo]') AND type in (N'P', N'PC'))
 DROP PROCEDURE [dbo].[sp_GetDrawLotteryInfo]
 GO
@@ -9,12 +9,13 @@ GO
 USE [9lottery]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_GetDrawLotteryInfo]    Script Date: 10/16/2020 21:19:55 ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetDrawLotteryInfo]    Script Date: 10/18/2020 16:53:19 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
 
 
 
@@ -128,10 +129,15 @@ BEGIN
 		begin
 			select @TypeID, @UserControled, @ControlRate, @PowerControl, @CurrentIssueNumber, @LastIssueNumber, @BeginIssueNumber
 		end
+		else
+		begin
+			select 0, 0, 0, 0, '', '', ''--避免无效的游标状态错误
+		end
 	end
 	drop table #tabTmpGame
 
 END
+
 
 
 
