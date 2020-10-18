@@ -40,25 +40,33 @@ CREATE PROCEDURE [dbo].[sp_GenerateGameNumberUpdate]
 	@InLastIssueNumber varchar(30) = ''
 AS
 BEGIN
+	set nocount on
+	
+	--创建临时表,在临时表中读取数据效率高
+	select UserID, TypeID, IssueNumber, RealAmount, ProfitAmount, SelectType into #tabGameOrder 
+		from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and IssueNumber >= @InBeginIssueNumber and IssueNumber <= @InCurrentIssueNumber
+	
 	--投注人数不得少于5，否则不调控
 	declare @UserCounts int = 0
 	select @UserCounts = count(UserCounts) from 
-			(select count(distinct UserID) UserCounts from [9lottery].[dbo].tab_GameOrder where IssueNumber = @InCurrentIssueNumber and TypeID = @InTypeID group by UserID) as t
+			(select count(distinct UserID) UserCounts from #tabGameOrder  where IssueNumber = @InCurrentIssueNumber group by UserID) as t
 	if @UserCounts <= 5
 	begin
 		print '下注人数小于5个人'
+		drop table #tabGameOrder
 		return
 	end
 	
 	--计算区间投注金额 派彩金额
 	declare @BonusAlready decimal(20, 2) = 0.0 --派彩金额
 	declare @AllBet decimal(20, 2) = 0.0 --投注金额
-	declare @AllBetUntilLast decimal(20, 2) = 0.0 --截止上期投注金额
+	declare @AllBetAsOfLast decimal(20, 2) = 0.0 --截止上期投注金额
 	declare @WinRateAsOfLast decimal(20, 7) = 0.0 --截止上期玩家赢率
-	select @AllBet = sum(RealAmount) from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and IssueNumber >= @InBeginIssueNumber and IssueNumber <= @InCurrentIssueNumber
-	select @AllBetUntilLast = sum(RealAmount) from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and IssueNumber >= @InBeginIssueNumber and IssueNumber <= @InLastIssueNumber
-	select @BonusAlready = sum(ProfitAmount - RealAmount) from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and IssueNumber >= @InBeginIssueNumber and IssueNumber <= @InLastIssueNumber
-	set @WinRateAsOfLast = isnull(@BonusAlready / @AllBetUntilLast, 0)
+	select @AllBet = sum(RealAmount) from #tabGameOrder
+	select @AllBetAsOfLast = sum(RealAmount), @BonusAlready = sum(ProfitAmount - RealAmount) from #tabGameOrder where IssueNumber <= @InLastIssueNumber
+	if @AllBetAsOfLast=0
+		set @AllBetAsOfLast=1
+	set @WinRateAsOfLast = @BonusAlready / @AllBetAsOfLast
 	print '投注金额@AllBet:' + isnull(cast(@AllBet as varchar(20)),0)
 	print '截止上期投注金额@AllBetUntilLast:' + isnull(cast(@AllBetUntilLast as varchar(20)),0)
 	print '已派彩金额@BonusAlready:' + isnull(cast(@BonusAlready as varchar(20)),0)
@@ -74,8 +82,7 @@ BEGIN
 					 when SelectType in ('red','green','big','small') then 2
 					 when SelectType = 'violet' then 5.5
 				end
-			from [9lottery].dbo.tab_GameOrder where UserID not in (Select UserID from #UserTest) and IssueNumber=@InCurrentIssueNumber 
-				and TypeID=@InTypeID group by IssueNumber, SelectType
+			from #tabGameOrder where UserID not in (Select UserID from #UserTest) and IssueNumber=@InCurrentIssueNumber group by IssueNumber, SelectType
 	update #LotteryTotalBonus set TotalBonus *= MultiRate
 	--单人下注信息计算
 	if @InUserControled <> 0
@@ -86,9 +93,7 @@ BEGIN
 						 when SelectType in ('red','green','big','small') then 2
 						 when SelectType = 'violet' then 5.5
 					end 
-				from [9lottery].dbo.tab_GameOrder 
-					where IssueNumber=@InCurrentIssueNumber and TypeID=@InTypeID and UserID = @InUserControled
-						group by IssueNumber, SelectType
+				from #tabGameOrder where IssueNumber=@InCurrentIssueNumber and UserID = @InUserControled group by IssueNumber, SelectType
 		update #UserControledBonus set TotalBonus *= MultiRate
 	end
 	
@@ -534,6 +539,7 @@ BEGIN
 	drop table #UserControledBonus
 	drop table #UserTest
 	drop table #LotteryResult
+	drop table #tabGameOrder
 END
 
 
