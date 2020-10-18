@@ -47,10 +47,9 @@ BEGIN
 	select UserID, TypeID, IssueNumber, RealAmount, ProfitAmount, SelectType into #tabGameOrder 
 		from [9lottery].dbo.tab_GameOrder where TypeID = @InTypeID and IssueNumber >= @InBeginIssueNumber and IssueNumber <= @InCurrentIssueNumber
 	select @UserCounts = count(UserCounts) from 
-		(select count(distinct UserID) UserCounts from #tabGameOrder where IssueNumber = @InCurrentIssueNumber and TypeID = @InTypeID group by UserID) as t
-	select @BetCurrentIssue = sum(RealAmount) from #tabGameOrder where TypeID = @InTypeID and IssueNumber = @InCurrentIssueNumber
-	select @AllBetAsOfLast = sum(RealAmount), @BonusAlready = sum(ProfitAmount - RealAmount) from #tabGameOrder 
-		where TypeID = @InTypeID and IssueNumber >= @InBeginIssueNumber and IssueNumber <= @InLastIssueNumber
+		(select count(distinct UserID) UserCounts from #tabGameOrder where IssueNumber = @InCurrentIssueNumber group by UserID) as t
+	select @BetCurrentIssue = sum(RealAmount) from #tabGameOrder where IssueNumber = @InCurrentIssueNumber
+	select @AllBetAsOfLast = sum(RealAmount), @BonusAlready = sum(ProfitAmount - RealAmount) from #tabGameOrder where IssueNumber <= @InLastIssueNumber
 	if @AllBetAsOfLast=0
 		set @AllBetAsOfLast=1
 	set @WinRateAsOfLast = @BonusAlready / @AllBetAsOfLast
