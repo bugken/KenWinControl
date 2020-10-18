@@ -75,6 +75,11 @@ BEGIN
 			print '没有开奖'
 			continue
 		end
+		if @OptState=1
+		begin
+			print '已经预设'
+			continue
+		end
 		--判断游戏开始时间，避免之前游戏开奖后State没有置1
 		if datediff(minute, @IssueStartTime, @CurrentTime) >= @IntervalM
 		begin

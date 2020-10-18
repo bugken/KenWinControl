@@ -68,7 +68,7 @@ BEGIN
 		set @AllBetAsOfLast=1
 	set @WinRateAsOfLast = @BonusAlready / @AllBetAsOfLast
 	print '投注金额@AllBet:' + isnull(cast(@AllBet as varchar(20)),0)
-	print '截止上期投注金额@AllBetUntilLast:' + isnull(cast(@AllBetUntilLast as varchar(20)),0)
+	print '截止上期投注金额@AllBetAsOfLast:' + isnull(cast(@AllBetAsOfLast as varchar(20)),0)
 	print '已派彩金额@BonusAlready:' + isnull(cast(@BonusAlready as varchar(20)),0)
 	print '截止上期赢率@WinRateAsOfLast:' + isnull(cast(@WinRateAsOfLast as varchar(20)),0)
 	
@@ -106,6 +106,7 @@ BEGIN
 		drop table #LotteryTotalBonus
 		drop table #UserControledBonus
 		drop table #UserTest
+		drop table #tabGameOrder
 		return
 	end
 	--select TypeID, SelectType, IssueNumber, TotalBonus from #LotteryTotalBonus
@@ -520,9 +521,10 @@ BEGIN
 		print 'UpdateAndInsertLog' 
 		set @RandNumVar = substring(@BeforePrenium, 0, 5) + @LogTypeNum
 		declare @IsOpen int = 1
-		select @IsOpen = State from [9lottery].dbo.tab_Games where TypeID = @InTypeID and IssueNumber = @IssueNumber
+		declare @IsPreSetting int = 1
+		select @IsOpen = State, @IsPreSetting=OptState from [9lottery].dbo.tab_Games where TypeID = @InTypeID and IssueNumber = @IssueNumber
 		declare @Second varchar(4) = substring(CONVERT(varchar,GETDATE(),120), 18, 2)
-		if @Second>='50' and @Second<'55' and @IsOpen=0   --50杀率计算开始,56秒前计算结束,57秒开始开奖结算 
+		if @Second>='50' and @Second<'55' and @IsOpen=0 and @IsPreSetting=0   --50杀率计算开始,判断是否开奖,再判断一次预设
 		begin
 			update [9lottery].dbo.tab_Games set Premium = @RandNumVar, Number = @LogTypeNum, Colour = @LogTypeColor
 				where TypeID = @InTypeID and IssueNumber = @IssueNumber
@@ -535,11 +537,11 @@ BEGIN
 	close CursorUpdate
 	deallocate CursorUpdate
 	
+	drop table #tabGameOrder
 	drop table #LotteryTotalBonus
 	drop table #UserControledBonus
 	drop table #UserTest
 	drop table #LotteryResult
-	drop table #tabGameOrder
 END
 
 
