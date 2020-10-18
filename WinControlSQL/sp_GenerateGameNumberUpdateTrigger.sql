@@ -34,6 +34,7 @@ BEGIN
 	set nocount on
 	
 	--控制信息变量
+	--declare @InTypeID int = 4
 	declare @UserControled int = 0
 	declare @ControlRate int = 0
 	declare @PeriodGap int = 0
@@ -136,12 +137,12 @@ BEGIN
 			execute sp_GenerateGameNumberUpdate @UserControled, @ControlRate, @PowerControl, 
 						@TypeID, @OptState, @BeginIssueNumber, @CurrentIssueNumber, @LastIssueNumber
 		end
-		drop table #tabTmpGame
 		
 		declare @EndTime datetime = getdate()
 		declare @Miliseconds int = datediff(ms, @StartTime, @EndTime)
 		print '------------------------end time eclaps:' + cast(@Miliseconds as varchar(20)) + '-------------------------------------'
 	end
+	drop table #tabTmpGame
 END
 
 
