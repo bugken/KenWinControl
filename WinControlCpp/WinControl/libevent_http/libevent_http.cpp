@@ -91,7 +91,7 @@ int CHttpServerHandle::Run()
 {
 	evhttp_set_cb(httpd, "/", RootHandler, NULL);
 	evhttp_set_gencb(httpd, GenericHandler, NULL);
-	printf("httpd server start OK!\n");
+	printf("httpd(%d) server start OK!\n", GetCurrentThreadId());
 	GetLogFileHandle().ErrorLog("%s %d httpd server start OK!\n", __FUNCTION__, __LINE__);
 	event_dispatch();
 	evhttp_free(httpd);

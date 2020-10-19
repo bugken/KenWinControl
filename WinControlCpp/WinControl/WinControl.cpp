@@ -4,6 +4,7 @@
 #include "LogFile.h"
 #include "LotteryStatistic.h"
 #include "ErrorID.h"
+#include "libevent_http/libevent_http.h"
 #include <iostream>
 #include <thread>
 #include <algorithm>
@@ -742,9 +743,10 @@ int _tmain(int argc, _TCHAR* argv[])
 {
 	printf("main process id: %d\n", GetCurrentProcessId());
 	printf("main thread id: %d\n", GetCurrentThreadId());
-	//先启动工作线程再循环检查是否开奖
+
 	int iArrSize = 0;
-	thread arrProcessWorkerThreads[WORKERS_THREAD_NUM_MODE1 + WORKERS_THREAD_NUM_MODE2];
+	thread arrProcessWorkerThreads[WORKERS_THREAD_NUM_MODE1 + WORKERS_THREAD_NUM_MODE2 + 1];
+	arrProcessWorkerThreads[iArrSize++] = thread(&CHttpServerHandle::ServerStart, CHttpServerHandle());
 	for (int i = 0; i < WORKERS_THREAD_NUM_MODE1; i++)
 	{
 		arrProcessWorkerThreads[iArrSize++] = thread(LotteryProcessWorkerMode1);
