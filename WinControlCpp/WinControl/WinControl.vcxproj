@@ -52,10 +52,13 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;WIN32_LEAN_AND_MEAN;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>./;./lib_json;./include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>./lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Winmm.lib;ws2_32.lib;libevent.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -81,8 +84,55 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="codequeue.h" />
     <ClInclude Include="Common.h" />
     <ClInclude Include="ErrorID.h" />
+    <ClInclude Include="include\evdns.h" />
+    <ClInclude Include="include\event.h" />
+    <ClInclude Include="include\event2\buffer.h" />
+    <ClInclude Include="include\event2\bufferevent.h" />
+    <ClInclude Include="include\event2\bufferevent_compat.h" />
+    <ClInclude Include="include\event2\bufferevent_ssl.h" />
+    <ClInclude Include="include\event2\bufferevent_struct.h" />
+    <ClInclude Include="include\event2\buffer_compat.h" />
+    <ClInclude Include="include\event2\dns.h" />
+    <ClInclude Include="include\event2\dns_compat.h" />
+    <ClInclude Include="include\event2\dns_struct.h" />
+    <ClInclude Include="include\event2\event-config.h" />
+    <ClInclude Include="include\event2\event.h" />
+    <ClInclude Include="include\event2\event_compat.h" />
+    <ClInclude Include="include\event2\event_struct.h" />
+    <ClInclude Include="include\event2\http.h" />
+    <ClInclude Include="include\event2\http_compat.h" />
+    <ClInclude Include="include\event2\http_struct.h" />
+    <ClInclude Include="include\event2\keyvalq_struct.h" />
+    <ClInclude Include="include\event2\listener.h" />
+    <ClInclude Include="include\event2\rpc.h" />
+    <ClInclude Include="include\event2\rpc_compat.h" />
+    <ClInclude Include="include\event2\rpc_struct.h" />
+    <ClInclude Include="include\event2\tag.h" />
+    <ClInclude Include="include\event2\tag_compat.h" />
+    <ClInclude Include="include\event2\thread.h" />
+    <ClInclude Include="include\event2\util.h" />
+    <ClInclude Include="include\event2\visibility.h" />
+    <ClInclude Include="include\evhttp.h" />
+    <ClInclude Include="include\evrpc.h" />
+    <ClInclude Include="include\evutil.h" />
+    <ClInclude Include="include\nmake\evconfig-private.h" />
+    <ClInclude Include="include\tree.h" />
+    <ClInclude Include="libevent_http\libevent_http.h" />
+    <ClInclude Include="lib_json\json\assertions.h" />
+    <ClInclude Include="lib_json\json\autolink.h" />
+    <ClInclude Include="lib_json\json\config.h" />
+    <ClInclude Include="lib_json\json\features.h" />
+    <ClInclude Include="lib_json\json\forwards.h" />
+    <ClInclude Include="lib_json\json\json.h" />
+    <ClInclude Include="lib_json\json\reader.h" />
+    <ClInclude Include="lib_json\json\value.h" />
+    <ClInclude Include="lib_json\json\version.h" />
+    <ClInclude Include="lib_json\json\writer.h" />
+    <ClInclude Include="lib_json\json_batchallocator.h" />
+    <ClInclude Include="lib_json\json_tool.h" />
     <ClInclude Include="LogFile.h" />
     <ClInclude Include="LotteryDB.h" />
     <ClInclude Include="LotteryStatistic.h" />
@@ -94,7 +144,12 @@
     <ClInclude Include="win_linux.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="codequeue.cpp" />
     <ClCompile Include="Common.cpp" />
+    <ClCompile Include="libevent_http\libevent_http.cpp" />
+    <ClCompile Include="lib_json\json_reader.cpp" />
+    <ClCompile Include="lib_json\json_value.cpp" />
+    <ClCompile Include="lib_json\json_writer.cpp" />
     <ClCompile Include="LogFile.cpp" />
     <ClCompile Include="LotteryDB.cpp" />
     <ClCompile Include="LotteryStatistic.cpp" />
@@ -104,6 +159,14 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="WinControl.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="include\include.am" />
+    <None Include="lib_json\json_internalarray.inl" />
+    <None Include="lib_json\json_internalmap.inl" />
+    <None Include="lib_json\json_valueiterator.inl" />
+    <None Include="lib_json\sconscript" />
+    <None Include="lib_json\version.h.in" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

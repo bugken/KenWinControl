@@ -13,6 +13,24 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="libevent">
+      <UniqueIdentifier>{afd8506c-aa9d-42ba-8213-bc571541991c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libevent\include">
+      <UniqueIdentifier>{2ab56b05-7ae0-44cd-ae71-ba3e4dd1f9a7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libevent\nmake">
+      <UniqueIdentifier>{e9174071-5143-4158-aa53-b600ed598806}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libevent\include\event2">
+      <UniqueIdentifier>{a0157453-27a9-4d7c-bb13-f5cac1f51d02}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib_json">
+      <UniqueIdentifier>{8f7a3047-e956-41ff-a88f-b60cdf3c1f36}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib_json\json">
+      <UniqueIdentifier>{da1da47c-5c78-4b38-9ede-e651d8f9a58c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -51,6 +69,147 @@
     <ClInclude Include="ErrorID.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="libevent_http\libevent_http.h">
+      <Filter>libevent</Filter>
+    </ClInclude>
+    <ClInclude Include="include\nmake\evconfig-private.h">
+      <Filter>libevent\nmake</Filter>
+    </ClInclude>
+    <ClInclude Include="include\event2\buffer.h">
+      <Filter>libevent\include\event2</Filter>
+    </ClInclude>
+    <ClInclude Include="include\event2\buffer_compat.h">
+      <Filter>libevent\include\event2</Filter>
+    </ClInclude>
+    <ClInclude Include="include\event2\bufferevent.h">
+      <Filter>libevent\include\event2</Filter>
+    </ClInclude>
+    <ClInclude Include="include\event2\bufferevent_compat.h">
+      <Filter>libevent\include\event2</Filter>
+    </ClInclude>
+    <ClInclude Include="include\event2\bufferevent_ssl.h">
+      <Filter>libevent\include\event2</Filter>
+    </ClInclude>
+    <ClInclude Include="include\event2\bufferevent_struct.h">
+      <Filter>libevent\include\event2</Filter>
+    </ClInclude>
+    <ClInclude Include="include\event2\dns.h">
+      <Filter>libevent\include\event2</Filter>
+    </ClInclude>
+    <ClInclude Include="include\event2\dns_compat.h">
+      <Filter>libevent\include\event2</Filter>
+    </ClInclude>
+    <ClInclude Include="include\event2\dns_struct.h">
+      <Filter>libevent\include\event2</Filter>
+    </ClInclude>
+    <ClInclude Include="include\event2\event.h">
+      <Filter>libevent\include\event2</Filter>
+    </ClInclude>
+    <ClInclude Include="include\event2\event_compat.h">
+      <Filter>libevent\include\event2</Filter>
+    </ClInclude>
+    <ClInclude Include="include\event2\event_struct.h">
+      <Filter>libevent\include\event2</Filter>
+    </ClInclude>
+    <ClInclude Include="include\event2\event-config.h">
+      <Filter>libevent\include\event2</Filter>
+    </ClInclude>
+    <ClInclude Include="include\event2\http.h">
+      <Filter>libevent\include\event2</Filter>
+    </ClInclude>
+    <ClInclude Include="include\event2\http_compat.h">
+      <Filter>libevent\include\event2</Filter>
+    </ClInclude>
+    <ClInclude Include="include\event2\http_struct.h">
+      <Filter>libevent\include\event2</Filter>
+    </ClInclude>
+    <ClInclude Include="include\event2\keyvalq_struct.h">
+      <Filter>libevent\include\event2</Filter>
+    </ClInclude>
+    <ClInclude Include="include\event2\listener.h">
+      <Filter>libevent\include\event2</Filter>
+    </ClInclude>
+    <ClInclude Include="include\event2\rpc.h">
+      <Filter>libevent\include\event2</Filter>
+    </ClInclude>
+    <ClInclude Include="include\event2\rpc_compat.h">
+      <Filter>libevent\include\event2</Filter>
+    </ClInclude>
+    <ClInclude Include="include\event2\rpc_struct.h">
+      <Filter>libevent\include\event2</Filter>
+    </ClInclude>
+    <ClInclude Include="include\event2\tag.h">
+      <Filter>libevent\include\event2</Filter>
+    </ClInclude>
+    <ClInclude Include="include\event2\tag_compat.h">
+      <Filter>libevent\include\event2</Filter>
+    </ClInclude>
+    <ClInclude Include="include\event2\thread.h">
+      <Filter>libevent\include\event2</Filter>
+    </ClInclude>
+    <ClInclude Include="include\event2\util.h">
+      <Filter>libevent\include\event2</Filter>
+    </ClInclude>
+    <ClInclude Include="include\event2\visibility.h">
+      <Filter>libevent\include\event2</Filter>
+    </ClInclude>
+    <ClInclude Include="include\evdns.h">
+      <Filter>libevent\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\event.h">
+      <Filter>libevent\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\evhttp.h">
+      <Filter>libevent\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\evrpc.h">
+      <Filter>libevent\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\evutil.h">
+      <Filter>libevent\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\tree.h">
+      <Filter>libevent\include</Filter>
+    </ClInclude>
+    <ClInclude Include="lib_json\json\assertions.h">
+      <Filter>lib_json\json</Filter>
+    </ClInclude>
+    <ClInclude Include="lib_json\json\autolink.h">
+      <Filter>lib_json\json</Filter>
+    </ClInclude>
+    <ClInclude Include="lib_json\json\config.h">
+      <Filter>lib_json\json</Filter>
+    </ClInclude>
+    <ClInclude Include="lib_json\json\features.h">
+      <Filter>lib_json\json</Filter>
+    </ClInclude>
+    <ClInclude Include="lib_json\json\forwards.h">
+      <Filter>lib_json\json</Filter>
+    </ClInclude>
+    <ClInclude Include="lib_json\json\json.h">
+      <Filter>lib_json\json</Filter>
+    </ClInclude>
+    <ClInclude Include="lib_json\json\reader.h">
+      <Filter>lib_json\json</Filter>
+    </ClInclude>
+    <ClInclude Include="lib_json\json\value.h">
+      <Filter>lib_json\json</Filter>
+    </ClInclude>
+    <ClInclude Include="lib_json\json\version.h">
+      <Filter>lib_json\json</Filter>
+    </ClInclude>
+    <ClInclude Include="lib_json\json\writer.h">
+      <Filter>lib_json\json</Filter>
+    </ClInclude>
+    <ClInclude Include="lib_json\json_batchallocator.h">
+      <Filter>lib_json</Filter>
+    </ClInclude>
+    <ClInclude Include="lib_json\json_tool.h">
+      <Filter>lib_json</Filter>
+    </ClInclude>
+    <ClInclude Include="codequeue.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -74,5 +233,40 @@
     <ClCompile Include="LotteryStatistic.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="libevent_http\libevent_http.cpp">
+      <Filter>libevent</Filter>
+    </ClCompile>
+    <ClCompile Include="lib_json\json_reader.cpp">
+      <Filter>lib_json</Filter>
+    </ClCompile>
+    <ClCompile Include="lib_json\json_value.cpp">
+      <Filter>lib_json</Filter>
+    </ClCompile>
+    <ClCompile Include="lib_json\json_writer.cpp">
+      <Filter>lib_json</Filter>
+    </ClCompile>
+    <ClCompile Include="codequeue.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="include\include.am">
+      <Filter>libevent\include</Filter>
+    </None>
+    <None Include="lib_json\json_internalarray.inl">
+      <Filter>lib_json</Filter>
+    </None>
+    <None Include="lib_json\json_internalmap.inl">
+      <Filter>lib_json</Filter>
+    </None>
+    <None Include="lib_json\json_valueiterator.inl">
+      <Filter>lib_json</Filter>
+    </None>
+    <None Include="lib_json\sconscript">
+      <Filter>lib_json</Filter>
+    </None>
+    <None Include="lib_json\version.h.in">
+      <Filter>lib_json</Filter>
+    </None>
   </ItemGroup>
 </Project>
