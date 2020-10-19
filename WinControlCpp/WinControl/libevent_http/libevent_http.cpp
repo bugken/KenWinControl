@@ -1,10 +1,18 @@
 ﻿#include "stdafx.h"
 #include "libevent_http.h"
 #include "../LogFile.h"
-//#include "ServerPublic.h"
 #include "json/reader.h"
 
 CCodeQueue* CHttpServerHandle::mHttpCallBackQueue = NULL;
+
+CHttpServerHandle::CHttpServerHandle()
+{
+	httpd = NULL;
+}
+
+CHttpServerHandle::~CHttpServerHandle()
+{
+}
 
 void CHttpServerHandle::root_handler(struct evhttp_request *req, void *arg)
 {
@@ -12,6 +20,7 @@ void CHttpServerHandle::root_handler(struct evhttp_request *req, void *arg)
 	if (!buf)
 	{
 		puts("failed to create response buffer");
+		GetLogFileHandle().ErrorLog("%s %d failed to create response buffer\n", __FUNCTION__, __LINE__);
 		return;
 	}
 
@@ -44,6 +53,7 @@ void CHttpServerHandle::generic_handler(struct evhttp_request *req, void *arg)
 	if (!buf)
 	{
 		puts("failed to create response buffer");
+		GetLogFileHandle().ErrorLog("%s %d failed to create response buffer\n", __FUNCTION__, __LINE__);
 		return;
 	}
 	const char* requri = evhttp_request_uri(req);
@@ -55,20 +65,6 @@ void CHttpServerHandle::generic_handler(struct evhttp_request *req, void *arg)
 	evbuffer_free(buf);
 }
 
-CHttpServerHandle::CHttpServerHandle()
-{
-	httpd = NULL;
-}
-
-CHttpServerHandle::~CHttpServerHandle()
-{
-}
-
-bool CHttpServerHandle::IsToBeBlocked()
-{
-	return false;
-}
-
 int CHttpServerHandle::PrepareToRun()
 {
 	WSADATA wsaData;
@@ -76,6 +72,7 @@ int CHttpServerHandle::PrepareToRun()
 	if ((Ret = WSAStartup(MAKEWORD(2, 2), &wsaData)) != 0)
 	{
 		printf("WSAStartup failed with error %d\n", Ret);
+		GetLogFileHandle().ErrorLog("%s %d WSAStartup failed with error %d\n", __FUNCTION__, __LINE__, Ret);
 		return -1;
 	}
 	event_init();
@@ -83,6 +80,7 @@ int CHttpServerHandle::PrepareToRun()
 	if (!httpd)
 	{
 		printf("httpd start error \n");
+		GetLogFileHandle().ErrorLog("%s %d httpd start error \n", __FUNCTION__, __LINE__);
 		return -1;
 	}
 	mHttpCallBackQueue = new CCodeQueue(4 * 1024);
@@ -94,6 +92,7 @@ int CHttpServerHandle::Run()
 	evhttp_set_cb(httpd, "/", root_handler, NULL);
 	evhttp_set_gencb(httpd, generic_handler, NULL);
 	printf("httpd server start OK!\n");
+	GetLogFileHandle().ErrorLog("%s %d httpd server start OK!\n", __FUNCTION__, __LINE__);
 	event_dispatch();
 	evhttp_free(httpd);
 	WSACleanup();

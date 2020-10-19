@@ -17,7 +17,6 @@ public:
 	CHttpServerHandle();
 	~CHttpServerHandle();
 
-	bool IsToBeBlocked();
 	int PrepareToRun();
 	int Run();
 
