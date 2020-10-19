@@ -17,8 +17,7 @@ public:
 	CHttpServerHandle();
 	~CHttpServerHandle();
 
-	int PrepareToRun();
-	int Run();
+	void ServerStart();
 
 	int GetHeadCode(unsigned char *pOutCode, unsigned int nOutMaxBufLen)
 	{
@@ -30,10 +29,11 @@ public:
 	}
 
 private:
-	static void root_handler(struct evhttp_request *req, void *arg);
-	static void generic_handler(struct evhttp_request *req, void *arg);
+	static void RootHandler(struct evhttp_request *req, void *arg);
+	static void GenericHandler(struct evhttp_request *req, void *arg);
+	int ServerInit();
+	int Run();
 
-private:
 	static CCodeQueue* mHttpCallBackQueue;
 	struct evhttp *httpd;
 };

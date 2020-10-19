@@ -14,12 +14,12 @@ CHttpServerHandle::~CHttpServerHandle()
 {
 }
 
-void CHttpServerHandle::root_handler(struct evhttp_request *req, void *arg)
+void CHttpServerHandle::RootHandler(struct evhttp_request *req, void *arg)
 {
 	struct evbuffer *buf = evbuffer_new();
 	if (!buf)
 	{
-		puts("failed to create response buffer");
+		//puts("failed to create response buffer");
 		GetLogFileHandle().ErrorLog("%s %d failed to create response buffer\n", __FUNCTION__, __LINE__);
 		return;
 	}
@@ -47,12 +47,12 @@ void CHttpServerHandle::root_handler(struct evhttp_request *req, void *arg)
 	evbuffer_free(buf);
 }
 
-void CHttpServerHandle::generic_handler(struct evhttp_request *req, void *arg)
+void CHttpServerHandle::GenericHandler(struct evhttp_request *req, void *arg)
 {
 	struct evbuffer *buf = evbuffer_new();
 	if (!buf)
 	{
-		puts("failed to create response buffer");
+		//puts("failed to create response buffer");
 		GetLogFileHandle().ErrorLog("%s %d failed to create response buffer\n", __FUNCTION__, __LINE__);
 		return;
 	}
@@ -65,7 +65,7 @@ void CHttpServerHandle::generic_handler(struct evhttp_request *req, void *arg)
 	evbuffer_free(buf);
 }
 
-int CHttpServerHandle::PrepareToRun()
+int CHttpServerHandle::ServerInit()
 {
 	WSADATA wsaData;
 	DWORD Ret;
@@ -79,7 +79,7 @@ int CHttpServerHandle::PrepareToRun()
 	httpd = evhttp_start("0.0.0.0", 9002);
 	if (!httpd)
 	{
-		printf("httpd start error \n");
+		printf("httpd start error\n");
 		GetLogFileHandle().ErrorLog("%s %d httpd start error \n", __FUNCTION__, __LINE__);
 		return -1;
 	}
@@ -89,13 +89,19 @@ int CHttpServerHandle::PrepareToRun()
 
 int CHttpServerHandle::Run()
 {
-	evhttp_set_cb(httpd, "/", root_handler, NULL);
-	evhttp_set_gencb(httpd, generic_handler, NULL);
+	evhttp_set_cb(httpd, "/", RootHandler, NULL);
+	evhttp_set_gencb(httpd, GenericHandler, NULL);
 	printf("httpd server start OK!\n");
 	GetLogFileHandle().ErrorLog("%s %d httpd server start OK!\n", __FUNCTION__, __LINE__);
 	event_dispatch();
 	evhttp_free(httpd);
 	WSACleanup();
 	return 0;
+}
+
+void CHttpServerHandle::ServerStart()
+{
+	ServerInit();
+	Run();
 }
 
