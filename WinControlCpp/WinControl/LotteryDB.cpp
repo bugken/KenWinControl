@@ -6,7 +6,7 @@
 bool LotteryDB::DBConnect()
 {
 	bool ret = false;
-	char pStr[100] = "DRIVER={SQL Server Native Client 10.0};SERVER=47.242.25.101;DATABASE=92lottery;UID=sa;PWD=Jack7361;";
+	char pStr[100] = "DRIVER={SQL Server Native Client 10.0};SERVER=127.0.0.1;DATABASE=92lottery;UID=sa;PWD=123456;";
 	bool IsConnect = DriverConnect(pStr);
 	if (IsConnect)
 	{
