@@ -89,10 +89,10 @@ void CHttpServerHandle::GetHttpPostData(string& strDataBuffer, struct evhttp_req
 	while (left > 0)
 	{
 		char szBuffer[512] = { 0 };
-		int hasRead = evbuffer_remove(pEvBuffer, szBuffer, 512);
-		if (hasRead > 0)
+		UINT32 uiHasRead = evbuffer_remove(pEvBuffer, szBuffer, 512);
+		if (uiHasRead > 0)
 		{
-			uiLeft -= static_cast<UINT32>(hasRead);
+			uiLeft -= static_cast<UINT32>(uiHasRead);
 			strDataBuffer.append(szBuffer);
 		}
 		else
@@ -100,6 +100,19 @@ void CHttpServerHandle::GetHttpPostData(string& strDataBuffer, struct evhttp_req
 			break;
 		}
 	}
+	/*//获取json数据的另外一种方式
+	post_size = evbuffer_get_length(req->input_buffer);
+	if (post_size <= 0)
+	{
+		return;
+	}
+	else
+	{
+		size_t copy_len = post_size > BUF_MAX ? BUF_MAX : post_size;
+		memcpy(buf, evbuffer_pullup(req->input_buffer,-1), copy_len);
+		buf[post_size] = '\0';
+	}
+	*/
 }
 
 //Post方法处理函数
