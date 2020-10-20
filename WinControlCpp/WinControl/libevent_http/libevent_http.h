@@ -10,6 +10,7 @@
 #include <event2/buffer.h>
 #include <evhttp.h>
 #include <string>
+#include "json/reader.h"
 
 using namespace std;
 

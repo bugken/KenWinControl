@@ -2,6 +2,7 @@
 #include "libevent_http.h"
 #include "../LogFile.h"
 #include "json/reader.h"
+#include "../HttpRequestProcess.h"
 #include <string>
 
 using namespace std;
@@ -40,10 +41,11 @@ void CHttpServerHandle::WebRequestDispatch(UINT32 uiID, Json::Value& jsonJarg, s
 {
 	switch (uiID)
 	{
-	case 900001:
-
+	case HTTP_USERSNUMONLINE:
+		CHttpProcessor::Proc_GetUsersNumOnline(jsonJarg, strReplyBuffer);
 		break;
 	default:
+		CHttpProcessor::Proc_HttpDefaultProcessor(jsonJarg, strReplyBuffer);
 		break;
 	}
 }
@@ -88,7 +90,7 @@ void CHttpServerHandle::GetHttpPostData(string& strDataBuffer, struct evhttp_req
 	{
 		char szBuffer[512] = { 0 };
 		int hasRead = evbuffer_remove(pEvBuffer, szBuffer, 512);
-		if (hasRead != -1)
+		if (hasRead > 0)
 		{
 			uiLeft -= static_cast<UINT32>(hasRead);
 			strDataBuffer.append(szBuffer);
@@ -110,6 +112,7 @@ void CHttpServerHandle::HttpPostHandler(string& strReplyBuffer, struct evhttp_re
 		GetLogFileHandle().ErrorLog("%s %d failed to create response buffer\n", __FUNCTION__, __LINE__);
 		return;
 	}
+	GetLogFileHandle().InfoLog("%s %d get request from web:%s\n", __FUNCTION__, __LINE__, strRequestBuffer.c_str());
 
 	WebRequestParser(strRequestBuffer, strReplyBuffer);
 }
@@ -137,6 +140,7 @@ void CHttpServerHandle::HttpRootHandler(struct evhttp_request *pEvHttpRequest, v
 		HttpDefaultHandler(strReplyBuffer, pEvHttpRequest, pArg);
 		break;
 	}
+	GetLogFileHandle().InfoLog("%s %d reply to web:%s\n", __FUNCTION__, __LINE__, strReplyBuffer.c_str());
 
 	evbuffer_add_printf(pEvBuffer, strReplyBuffer.c_str());
 	evhttp_send_reply(pEvHttpRequest, HTTP_OK, "OK", pEvBuffer);

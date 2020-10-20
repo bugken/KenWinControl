@@ -88,6 +88,7 @@
   <ItemGroup>
     <ClInclude Include="Common.h" />
     <ClInclude Include="ErrorID.h" />
+    <ClInclude Include="HttpRequestProcess.h" />
     <ClInclude Include="include\evdns.h" />
     <ClInclude Include="include\event.h" />
     <ClInclude Include="include\event2\buffer.h" />
@@ -146,6 +147,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common.cpp" />
+    <ClCompile Include="HttpRequestProcess.cpp" />
     <ClCompile Include="libevent_http\libevent_http.cpp" />
     <ClCompile Include="lib_json\json_reader.cpp" />
     <ClCompile Include="lib_json\json_value.cpp" />
