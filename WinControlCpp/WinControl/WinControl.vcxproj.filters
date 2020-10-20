@@ -207,9 +207,6 @@
     <ClInclude Include="lib_json\json_tool.h">
       <Filter>lib_json</Filter>
     </ClInclude>
-    <ClInclude Include="codequeue.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -244,9 +241,6 @@
     </ClCompile>
     <ClCompile Include="lib_json\json_writer.cpp">
       <Filter>lib_json</Filter>
-    </ClCompile>
-    <ClCompile Include="codequeue.cpp">
-      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

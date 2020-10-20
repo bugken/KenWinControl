@@ -757,10 +757,10 @@ int _tmain(int argc, _TCHAR* argv[])
 	}
 	for (auto &Thread : arrProcessWorkerThreads)
 	{
-		Thread.detach();
+		Thread.join();
 	}
 
-	LoopCheckLottery();
+	//LoopCheckLottery();
 
 	return 0;
 }

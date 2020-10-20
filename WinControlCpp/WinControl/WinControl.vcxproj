@@ -86,7 +86,6 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="codequeue.h" />
     <ClInclude Include="Common.h" />
     <ClInclude Include="ErrorID.h" />
     <ClInclude Include="include\evdns.h" />
@@ -146,7 +145,6 @@
     <ClInclude Include="win_linux.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="codequeue.cpp" />
     <ClCompile Include="Common.cpp" />
     <ClCompile Include="libevent_http\libevent_http.cpp" />
     <ClCompile Include="lib_json\json_reader.cpp" />
